@@ -1,32 +1,45 @@
-import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import React from "react"
+import type { Metadata, Viewport } from 'next'
+import { DM_Sans, Playfair_Display } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
-const _geist = Geist({ subsets: ["latin"] });
-const _geistMono = Geist_Mono({ subsets: ["latin"] });
+const dmSans = DM_Sans({
+  subsets: ['latin'],
+  variable: '--font-dm-sans',
+})
+
+const playfair = Playfair_Display({
+  subsets: ['latin'],
+  variable: '--font-playfair',
+})
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.app',
-  icons: {
-    icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
-    ],
-    apple: '/apple-icon.png',
+  title: 'HorizonCapital | Invest in Dubai Real Estate',
+  description:
+    'Your trusted gateway to UAE property investment. Tax-free returns, booming market, and A-Z personal guidance for international investors looking to invest in Dubai real estate.',
+  keywords: [
+    'invest in Dubai real estate',
+    'UAE property investment',
+    'Dubai real estate',
+    'tax-free investment',
+    'Dubai property',
+    'UAE investment',
+  ],
+  openGraph: {
+    title: 'HorizonCapital | Invest in Dubai Real Estate',
+    description:
+      'Your trusted gateway to UAE property investment. Tax-free returns, booming market, and A-Z personal guidance.',
+    type: 'website',
   },
+}
+
+export const viewport: Viewport = {
+  themeColor: '#2c1e14',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
 }
 
 export default function RootLayout({
@@ -36,7 +49,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`font-sans antialiased`}>
+      <body
+        className={`${dmSans.variable} ${playfair.variable} font-sans antialiased`}
+      >
         {children}
         <Analytics />
       </body>
