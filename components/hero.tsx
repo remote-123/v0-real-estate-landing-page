@@ -46,7 +46,7 @@ export function Hero() {
             className="bg-accent text-accent-foreground hover:bg-accent/90"
             asChild
           >
-            <Link href="#contact">
+            <Link href="/contact">
               Book a Free Consultation
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
@@ -57,7 +57,7 @@ export function Hero() {
             className="border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10"
             asChild
           >
-            <Link href="#projects">Explore Projects</Link>
+            <Link href="/projects">Explore Projects</Link>
           </Button>
         </div>
 

@@ -1,36 +1,11 @@
 import Image from "next/image"
+import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
-import { MapPin, ArrowUpRight } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { MapPin, ArrowUpRight, ArrowRight } from "lucide-react"
+import { projects } from "@/lib/projects"
 
-const projects = [
-  {
-    title: "Marina Skyline Residences",
-    location: "Dubai Marina",
-    type: "Luxury Apartments",
-    startingPrice: "AED 1.8M",
-    roi: "8-10% Net Yield",
-    image: "/images/project-marina.jpg",
-    status: "Selling Now",
-  },
-  {
-    title: "Creek Villas by Emaar",
-    location: "Dubai Creek Harbour",
-    type: "Waterfront Villas",
-    startingPrice: "AED 3.5M",
-    roi: "6-8% Net Yield",
-    image: "/images/project-creek.jpg",
-    status: "Pre-Launch",
-  },
-  {
-    title: "Downtown Panorama Tower",
-    location: "Downtown Dubai",
-    type: "Premium Penthouses",
-    startingPrice: "AED 5.2M",
-    roi: "7-9% Net Yield",
-    image: "/images/project-downtown.jpg",
-    status: "Limited Units",
-  },
-]
+const featured = projects.slice(0, 3)
 
 export function FeaturedProjects() {
   return (
@@ -54,51 +29,71 @@ export function FeaturedProjects() {
         </div>
 
         <div className="grid gap-8 md:grid-cols-3">
-          {projects.map((project) => (
-            <article
-              key={project.title}
-              className="group cursor-pointer overflow-hidden rounded-xl border border-border bg-card transition-shadow hover:shadow-lg"
+          {featured.map((project) => (
+            <Link
+              key={project.slug}
+              href={`/projects/${project.slug}`}
+              className="group"
             >
-              <div className="relative aspect-[4/3] overflow-hidden">
-                <Image
-                  src={project.image || "/placeholder.svg"}
-                  alt={`${project.title} in ${project.location}`}
-                  fill
-                  className="object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-                <Badge className="absolute top-4 left-4 bg-accent text-accent-foreground">
-                  {project.status}
-                </Badge>
-              </div>
-
-              <div className="flex flex-col gap-3 p-6">
-                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                  <MapPin className="h-3.5 w-3.5" />
-                  {project.location}
+              <article className="flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card transition-shadow hover:shadow-lg">
+                <div className="relative aspect-[4/3] overflow-hidden">
+                  <Image
+                    src={project.image || "/placeholder.svg"}
+                    alt={`${project.title} in ${project.location}`}
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                  <Badge className="absolute top-4 left-4 bg-accent text-accent-foreground">
+                    {project.status}
+                  </Badge>
                 </div>
 
-                <h3 className="flex items-center gap-2 font-serif text-lg font-bold text-card-foreground">
-                  {project.title}
-                  <ArrowUpRight className="h-4 w-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
-                </h3>
-
-                <p className="text-sm text-muted-foreground">{project.type}</p>
-
-                <div className="mt-2 flex items-center justify-between border-t border-border pt-4">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Starting From</p>
-                    <p className="font-semibold text-card-foreground">
-                      {project.startingPrice}
-                    </p>
+                <div className="flex flex-1 flex-col gap-3 p-6">
+                  <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                    <MapPin className="h-3.5 w-3.5" />
+                    {project.location}
                   </div>
-                  <div className="text-right">
-                    <p className="text-xs text-muted-foreground">Expected ROI</p>
-                    <p className="font-semibold text-accent">{project.roi}</p>
+
+                  <h3 className="flex items-center gap-2 font-serif text-lg font-bold text-card-foreground">
+                    {project.title}
+                    <ArrowUpRight className="h-4 w-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+                  </h3>
+
+                  <p className="text-sm text-muted-foreground">{project.type}</p>
+
+                  <div className="mt-auto flex items-center justify-between border-t border-border pt-4">
+                    <div>
+                      <p className="text-xs text-muted-foreground">
+                        Starting From
+                      </p>
+                      <p className="font-semibold text-card-foreground">
+                        {project.startingPrice}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-muted-foreground">
+                        Expected ROI
+                      </p>
+                      <p className="font-semibold text-accent">{project.roi}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </article>
+              </article>
+            </Link>
           ))}
+        </div>
+
+        <div className="mt-12 text-center">
+          <Button
+            variant="outline"
+            size="lg"
+            asChild
+          >
+            <Link href="/projects">
+              View All Projects
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
         </div>
       </div>
     </section>
