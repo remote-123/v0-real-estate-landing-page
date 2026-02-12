@@ -132,6 +132,35 @@ export function LeadForm() {
                 </div>
 
                 <div className="flex flex-col gap-2">
+                  <Label htmlFor="goal">Primary Goal</Label>
+                  <Select>
+                    <SelectTrigger id="goal">
+                      <SelectValue placeholder="Select your primary goal" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="capital-appreciation">Capital Appreciation</SelectItem>
+                      <SelectItem value="passive-income">High Yield Passive Income</SelectItem>
+                      <SelectItem value="golden-visa">Golden Visa Residency</SelectItem>
+                      <SelectItem value="holiday-home">Holiday Home</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="timeline">Investment Timeline</Label>
+                  <Select>
+                    <SelectTrigger id="timeline">
+                      <SelectValue placeholder="Select your timeline" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="immediate">Immediate Deployment</SelectItem>
+                      <SelectItem value="3-6-months">3-6 Months</SelectItem>
+                      <SelectItem value="researching">Just Researching</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex flex-col gap-2">
                   <Label htmlFor="message">
                     Message{" "}
                     <span className="text-muted-foreground">(Optional)</span>

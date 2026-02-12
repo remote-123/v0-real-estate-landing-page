@@ -65,19 +65,13 @@ export function KnowledgeHub() {
                 >
                   <Link href={`/blog/${post.slug}`}>Read Analysis</Link>
                 </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="gap-1.5"
-                  asChild
+                <Link
+                  href={`/blog/${post.slug}`}
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#e53935] text-white transition-opacity hover:opacity-80"
+                  aria-label={`Watch breakdown for ${post.title}`}
                 >
-                  <Link href={`/blog/${post.slug}`}>
-                    <Play className="h-3.5 w-3.5" />
-                    <span className="sr-only sm:not-sr-only">
-                      Watch Breakdown
-                    </span>
-                  </Link>
-                </Button>
+                  <Play className="h-3.5 w-3.5 fill-current" />
+                </Link>
               </div>
             </article>
           ))}

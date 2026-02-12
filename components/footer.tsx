@@ -119,10 +119,17 @@ export function Footer() {
         </div>
 
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-primary-foreground/10 pt-8 md:flex-row">
-          <p className="text-sm text-primary-foreground/40">
-            &copy; {new Date().getFullYear()} HorizonCapital. All rights
-            reserved.
-          </p>
+          <div className="flex flex-col gap-2">
+            <p className="text-sm text-primary-foreground/40">
+              &copy; {new Date().getFullYear()} HorizonCapital. All rights
+              reserved.
+            </p>
+            <p className="max-w-xl text-xs leading-relaxed text-primary-foreground/25">
+              HorizonCapital is a marketing brand operated by [Your Name], a
+              registered RERA agent [License #] under Aeon & Trisl Real Estate
+              Broker LLC.
+            </p>
+          </div>
           <div className="flex gap-6">
             {["Privacy Policy", "Terms of Service", "Cookie Policy"].map(
               (label) => (
