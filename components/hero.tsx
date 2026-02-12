@@ -22,22 +22,21 @@ export function Hero() {
         <div className="inline-flex items-center gap-2 rounded-full border border-primary-foreground/20 bg-primary-foreground/10 px-4 py-1.5 backdrop-blur-sm">
           <span className="h-2 w-2 rounded-full bg-accent" />
           <span className="text-xs font-medium tracking-wide text-primary-foreground/90 uppercase">
-            Trusted Dubai Brokerage Partner
+            Boutique Investment Advisory
           </span>
         </div>
 
         <h1 className="max-w-3xl font-serif text-4xl leading-tight font-bold tracking-tight text-primary-foreground md:text-6xl lg:text-7xl">
           <span className="text-balance">
-            Your Gateway to{" "}
-            <span className="text-accent">Tax-Free</span> Real Estate
-            Investment in the UAE
+            Dubai Real Estate.{" "}
+            <span className="text-accent">North American</span> Standards.
           </span>
         </h1>
 
         <p className="max-w-xl text-lg leading-relaxed text-primary-foreground/80 md:text-xl">
-          From sourcing premium properties to closing the deal, we provide A-Z
-          personal guidance for international investors entering Dubai&apos;s
-          booming real estate market.
+          A boutique investment advisory for international capital. We provide
+          direct access to Dubai&apos;s premier developments with the
+          transparency and strategic planning North American investors expect.
         </p>
 
         <div className="flex flex-col gap-4 sm:flex-row">
@@ -47,7 +46,7 @@ export function Hero() {
             asChild
           >
             <Link href="/contact">
-              Book a Free Consultation
+              Start Your Portfolio
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
