@@ -8,6 +8,7 @@ import { FounderNote } from "@/components/founder-note"
 import { TrustSignals } from "@/components/trust-signals"
 import { LeadForm } from "@/components/lead-form"
 import { Footer } from "@/components/footer"
+import { HowWeWork } from "@/components/how-we-work"
 
 export default function Home() {
   return (
@@ -17,6 +18,7 @@ export default function Home() {
         <Hero />
         <StrategicAlliances />
         <ValueProps />
+        <HowWeWork />
         <TrackRecord />
         <KnowledgeHub />
         <FounderNote />

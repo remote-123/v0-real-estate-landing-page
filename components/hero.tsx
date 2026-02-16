@@ -22,20 +22,20 @@ export function Hero() {
         <div className="inline-flex items-center gap-2 rounded-full border border-primary-foreground/20 bg-primary-foreground/10 px-4 py-1.5 backdrop-blur-sm">
           <span className="h-2 w-2 rounded-full bg-accent" />
           <span className="text-xs font-medium tracking-wide text-primary-foreground/90 uppercase">
-            Exclusive Off-Market Access
+            building wealth is for everyone
           </span>
         </div>
 
         <h1 className="max-w-4xl font-serif text-4xl leading-tight font-bold tracking-tight text-primary-foreground md:text-6xl lg:text-7xl">
           <span className="text-balance">
-            The Private Doorway to Dubai’s <br />
-            <span className="text-accent">Premier Off-Market Units.</span>
+            Doorway to Dubai <br />
+            <span className="text-accent">Real Estate</span> <br/>
+            For North Americans
           </span>
         </h1>
 
         <p className="max-w-2xl text-lg leading-relaxed text-primary-foreground/80 md:text-xl">
-          We don&apos;t just sell property; we engineer portfolios. Skip the tourist traps and 
-          access vetted, high-appreciation assets with a strategic exit plan already in place.
+          RERA-licensed expertise and partnership with Dubai&apos;s leading brokerage, we help you bypass the tourist traps to access vetted, high-appreciation assets—complete with a strategic exit plan and no additional cost to you.
         </p>
 
         <div className="flex flex-col gap-4 sm:flex-row">

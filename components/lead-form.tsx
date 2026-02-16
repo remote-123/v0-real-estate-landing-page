@@ -1,8 +1,6 @@
 "use client"
 
-import React from "react"
-
-import { useState } from "react"
+import React, { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -13,178 +11,164 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
-import { ArrowRight, CheckCircle2 } from "lucide-react"
+import { ArrowRight, CheckCircle2, Calendar, ChevronLeft } from "lucide-react"
+
+const countryCodes = [
+  { code: "+1", label: "USA / CAN", flag: "🇺🇸/🇨🇦" },
+  { code: "+91", label: "India", flag: "🇮🇳" },
+  { code: "+44", label: "UK", flag: "🇬🇧" },
+  { code: "+86", label: "China", flag: "🇨🇳" },
+  { code: "+966", label: "Saudi Arabia", flag: "🇸🇦" },
+  { code: "+92", label: "Pakistan", flag: "🇵🇰" },
+  { code: "+7", label: "Russia", flag: "🇷🇺" },
+  { code: "+33", label: "France", flag: "🇫🇷" },
+  { code: "+49", label: "Germany", flag: "🇩🇪" },
+  { code: "+20", label: "Egypt", flag: "🇪🇬" },
+  { code: "other", label: "Other", flag: "🌐" },
+]
 
 export function LeadForm() {
-  const [submitted, setSubmitted] = useState(false)
+  const [step, setStep] = useState<"form" | "calendar">("form")
+  const [loading, setLoading] = useState(false)
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setSubmitted(true)
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  e.preventDefault();
+  setLoading(true);
+  
+  const formData = new FormData(e.currentTarget);
+  const payload = Object.fromEntries(formData.entries());
+
+  try {
+    const response = await fetch('/api/contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    if (response.ok) {
+      setLoading(false);
+      setStep("calendar"); // Successfully saved to Sheet, now show Calendar
+    } else {
+      throw new Error("Failed to save data");
+    }
+  } catch (error) {
+    setLoading(false);
+    alert("There was an error saving your profile. Please try again.");
   }
+}
 
   return (
     <section id="contact" className="bg-secondary py-20 md:py-28">
       <div className="mx-auto max-w-7xl px-6">
-        <div className="grid items-center gap-12 lg:grid-cols-2">
-          <div>
-            <p className="mb-3 text-sm font-semibold tracking-wide text-accent uppercase">
-              Get Started
-            </p>
-            <h2 className="font-serif text-3xl font-bold tracking-tight text-foreground md:text-4xl">
-              <span className="text-balance">
-                Book your free investment consultation
-              </span>
-            </h2>
-            <p className="mt-4 max-w-md text-lg leading-relaxed text-muted-foreground">
-              Speak with a dedicated UAE property advisor. No obligations, no
-              hidden fees -- just expert guidance tailored to your investment
-              goals.
-            </p>
+        <div className={`grid items-start gap-12 ${step === "form" ? "lg:grid-cols-2" : "grid-cols-1"}`}>
+          
+          {/* Left Column - Only shows during form step */}
+          {step === "form" && (
+            <div className="animate-in fade-in slide-in-from-left-4 duration-500">
+              <p className="mb-3 text-sm font-semibold tracking-wide text-accent uppercase">Boutique Advisory</p>
+              <h2 className="font-serif text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+                Secure your private strategy session
+              </h2>
+              <p className="mt-4 text-muted-foreground leading-relaxed">
+                We prepare custom ROI projections for every call. Share your goals to get started.
+              </p>
+              <ul className="mt-8 space-y-4">
+                {["Direct off-market access", "Portfolio engineering", "North American due-diligence"].map((text) => (
+                  <li key={text} className="flex items-center gap-3 text-sm font-medium">
+                    <CheckCircle2 className="h-5 w-5 text-accent" /> {text}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
-            <ul className="mt-8 flex flex-col gap-4">
-              {[
-                "Personalized property shortlist",
-                "ROI projections and market analysis",
-                "Legal and financing guidance",
-                "Virtual or in-person property tours",
-              ].map((item) => (
-                <li
-                  key={item}
-                  className="flex items-center gap-3 text-foreground"
-                >
-                  <CheckCircle2 className="h-5 w-5 shrink-0 text-accent" />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="rounded-xl border border-border bg-card p-8 shadow-lg md:p-10">
-            {submitted ? (
-              <div className="flex flex-col items-center gap-4 py-12 text-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-accent/10">
-                  <CheckCircle2 className="h-8 w-8 text-accent" />
+          <div className={`rounded-xl border border-border bg-card shadow-lg transition-all duration-500 ${step === "calendar" ? "p-4 md:p-6 w-full max-w-4xl mx-auto" : "p-8 md:p-10"}`}>
+            
+            {step === "calendar" ? (
+              <div className="animate-in fade-in zoom-in-95 duration-500">
+                <div className="mb-6 flex items-center justify-between border-b pb-4">
+                  <div>
+                    <h3 className="font-serif text-xl font-bold">Select a Time Slot</h3>
+                    <p className="text-sm text-muted-foreground">Your profile has been saved successfully.</p>
+                  </div>
+                  <Button variant="ghost" size="sm" onClick={() => setStep("form")} className="text-muted-foreground">
+                    <ChevronLeft className="mr-1 h-4 w-4" /> Edit Profile
+                  </Button>
                 </div>
-                <h3 className="font-serif text-2xl font-bold text-card-foreground">
-                  Thank you!
-                </h3>
-                <p className="max-w-sm text-muted-foreground">
-                  A member of our team will reach out within 24 hours to
-                  schedule your consultation.
-                </p>
+                
+                {/* Google Calendar Iframe Integration */}
+                <div className="overflow-hidden rounded-lg bg-white">
+                  <iframe 
+                    src="https://calendar.google.com/calendar/appointments/schedules/AcZssZ3Oba6IoSYm1-5yxUHZN9bx5zcFglpgSfVkN62KmQ2Ietc4Wi8dM_QPrsWFMkgEOHRyTz513PdU?gv=true" 
+                    style={{ border: 0 }} 
+                    width="100%" 
+                    height="600" 
+                    frameBorder="0"
+                  />
+                </div>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-                <div className="grid gap-5 sm:grid-cols-2">
-                  <div className="flex flex-col gap-2">
-                    <Label htmlFor="firstName">First Name</Label>
-                    <Input
-                      id="firstName"
-                      placeholder="John"
-                      required
-                    />
+              <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Input name="firstName" placeholder="First Name" required className="bg-background" />
+                  <Input name="lastName" placeholder="Last Name" required className="bg-background" />
+                </div>
+                <Input name="email" type="email" placeholder="Email Address" required className="bg-background" />
+                
+                <div className="flex gap-2">
+                  <Select name="countryCode" defaultValue="+1">
+                    <SelectTrigger className="w-[130px] bg-background"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {countryCodes.map((c) => (
+                        <SelectItem key={c.code} value={c.code}>{c.flag} {c.code === "other" ? "Other" : c.code}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Input name="phone" type="tel" placeholder="Phone Number" className="flex-1 bg-background" required />
+                </div>
+
+                <div className="space-y-4 pt-2">
+                  <div className="grid gap-2">
+                    <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Investment Budget</Label>
+                    <Select name="budget" required>
+                      <SelectTrigger className="bg-background"><SelectValue placeholder="Select Range" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1m-3m">AED 1M - 3M</SelectItem>
+                        <SelectItem value="3m-10m">AED 3M - 10M</SelectItem>
+                        <SelectItem value="10m+">AED 10M+</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <div className="flex flex-col gap-2">
-                    <Label htmlFor="lastName">Last Name</Label>
-                    <Input
-                      id="lastName"
-                      placeholder="Doe"
-                      required
-                    />
+
+                  <div className="grid gap-2">
+                    <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Primary Goal</Label>
+                    <Select name="goal" required>
+                      <SelectTrigger className="bg-background"><SelectValue placeholder="Primary Priority" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="yield">Passive Income</SelectItem>
+                        <SelectItem value="appreciation">Capital Growth</SelectItem>
+                        <SelectItem value="visa">Golden Visa</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Investment Timeline</Label>
+                    <Select name="timeline" required>
+                      <SelectTrigger className="bg-background"><SelectValue placeholder="Ready to deploy?" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="immediate">Immediate</SelectItem>
+                        <SelectItem value="3-6-months">3-6 Months</SelectItem>
+                        <SelectItem value="research">Researching</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="email">Email Address</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="john@example.com"
-                    required
-                  />
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    placeholder="+1 (555) 000-0000"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="budget">Investment Budget</Label>
-                  <Select>
-                    <SelectTrigger id="budget">
-                      <SelectValue placeholder="Select your budget range" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="500k-1m">AED 500K - 1M</SelectItem>
-                      <SelectItem value="1m-3m">AED 1M - 3M</SelectItem>
-                      <SelectItem value="3m-5m">AED 3M - 5M</SelectItem>
-                      <SelectItem value="5m-10m">AED 5M - 10M</SelectItem>
-                      <SelectItem value="10m+">AED 10M+</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="goal">Primary Goal</Label>
-                  <Select>
-                    <SelectTrigger id="goal">
-                      <SelectValue placeholder="Select your primary goal" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="capital-appreciation">Capital Appreciation</SelectItem>
-                      <SelectItem value="passive-income">High Yield Passive Income</SelectItem>
-                      <SelectItem value="golden-visa">Golden Visa Residency</SelectItem>
-                      <SelectItem value="holiday-home">Holiday Home</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="timeline">Investment Timeline</Label>
-                  <Select>
-                    <SelectTrigger id="timeline">
-                      <SelectValue placeholder="Select your timeline" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="immediate">Immediate Deployment</SelectItem>
-                      <SelectItem value="3-6-months">3-6 Months</SelectItem>
-                      <SelectItem value="researching">Just Researching</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="message">
-                    Message{" "}
-                    <span className="text-muted-foreground">(Optional)</span>
-                  </Label>
-                  <Textarea
-                    id="message"
-                    placeholder="Tell us about your investment goals..."
-                    rows={3}
-                  />
-                </div>
-
-                <Button
-                  type="submit"
-                  size="lg"
-                  className="mt-2 bg-accent text-accent-foreground hover:bg-accent/90"
-                >
-                  Book a Free Consultation
+                <Button type="submit" size="lg" disabled={loading} className="mt-4 bg-accent">
+                  {loading ? "Saving Profile..." : "Submit & Book Time Slot"}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
-
-                <p className="text-center text-xs text-muted-foreground">
-                  By submitting, you agree to our privacy policy. We will never
-                  share your information with third parties.
-                </p>
               </form>
             )}
           </div>
