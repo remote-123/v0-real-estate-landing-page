@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from 'next'
 import { DM_Sans, Playfair_Display } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
+import { WhatsAppButton } from "@/components/whatsapp-button"
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
@@ -53,6 +54,7 @@ export default function RootLayout({
         className={`${dmSans.variable} ${playfair.variable} font-sans antialiased`}
       >
         {children}
+        <WhatsAppButton/>
         <Analytics />
       </body>
     </html>
