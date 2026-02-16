@@ -20,7 +20,7 @@ export function WhatsAppButton() {
     >
       {/* Label that appears on hover */}
       <span className="mr-3 px-3 py-1 bg-background/80 backdrop-blur-md text-foreground text-sm font-medium rounded-full shadow-lg border border-border opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-        Chat with an agent
+        Chat with our consultant
       </span>
 
       <div className="relative">

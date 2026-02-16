@@ -22,21 +22,20 @@ export function Hero() {
         <div className="inline-flex items-center gap-2 rounded-full border border-primary-foreground/20 bg-primary-foreground/10 px-4 py-1.5 backdrop-blur-sm">
           <span className="h-2 w-2 rounded-full bg-accent" />
           <span className="text-xs font-medium tracking-wide text-primary-foreground/90 uppercase">
-            Boutique Investment Advisory
+            Exclusive Off-Market Access
           </span>
         </div>
 
-        <h1 className="max-w-3xl font-serif text-4xl leading-tight font-bold tracking-tight text-primary-foreground md:text-6xl lg:text-7xl">
+        <h1 className="max-w-4xl font-serif text-4xl leading-tight font-bold tracking-tight text-primary-foreground md:text-6xl lg:text-7xl">
           <span className="text-balance">
-            Dubai Real Estate.{" "}
-            <span className="text-accent">North American</span> Standards.
+            The Private Doorway to Dubai’s <br />
+            <span className="text-accent">Premier Off-Market Units.</span>
           </span>
         </h1>
 
-        <p className="max-w-xl text-lg leading-relaxed text-primary-foreground/80 md:text-xl">
-          A boutique investment advisory for international capital. We provide
-          direct access to Dubai&apos;s premier developments with the
-          transparency and strategic planning North American investors expect.
+        <p className="max-w-2xl text-lg leading-relaxed text-primary-foreground/80 md:text-xl">
+          We don&apos;t just sell property; we engineer portfolios. Skip the tourist traps and 
+          access vetted, high-appreciation assets with a strategic exit plan already in place.
         </p>
 
         <div className="flex flex-col gap-4 sm:flex-row">
@@ -72,7 +71,7 @@ export function Hero() {
               500+
             </p>
             <p className="text-sm text-primary-foreground/60">
-              Happy Investors
+              High-Net-Worth Partners
             </p>
           </div>
           <div>
@@ -80,7 +79,7 @@ export function Hero() {
               0%
             </p>
             <p className="text-sm text-primary-foreground/60">
-              Capital Gains Tax
+              Tax Efficiency
             </p>
           </div>
         </div>
