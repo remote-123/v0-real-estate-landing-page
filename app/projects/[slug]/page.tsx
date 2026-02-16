@@ -29,10 +29,10 @@ export async function generateMetadata({
   if (!project) return { title: "Project Not Found" }
 
   return {
-    title: `${project.title} | HorizonCapital`,
+    title: `${project.title} | NorthCapitalDXB`,
     description: project.description.slice(0, 160),
     openGraph: {
-      title: `${project.title} | HorizonCapital`,
+      title: `${project.title} | NorthCapitalDXB`,
       description: project.description.slice(0, 160),
       type: "website",
       images: [project.image],

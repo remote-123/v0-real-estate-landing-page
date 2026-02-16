@@ -5,7 +5,7 @@ const testimonials = [
     name: "James Hartley",
     role: "Property Investor, London",
     quote:
-      "HorizonCapital made my first Dubai investment seamless. From property selection to legal paperwork, their team handled everything. I'm now earning 9% net yield on my Marina apartment.",
+      "NorthCapitalDXB made my first Dubai investment seamless. From property selection to legal paperwork, their team handled everything. I'm now earning 9% net yield on my Marina apartment.",
     rating: 5,
   },
   {
@@ -19,7 +19,7 @@ const testimonials = [
     name: "Robert Muller",
     role: "Retired Executive, Zurich",
     quote:
-      "What sets HorizonCapital apart is their ongoing support. Property management, tenant sourcing, maintenance - they truly offer end-to-end service for international investors.",
+      "What sets NorthCapitalDXB apart is their ongoing support. Property management, tenant sourcing, maintenance - they truly offer end-to-end service for international investors.",
     rating: 5,
   },
 ]

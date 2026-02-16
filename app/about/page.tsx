@@ -16,13 +16,13 @@ import {
 } from "lucide-react"
 
 export const metadata: Metadata = {
-  title: "About HorizonCapital | Why Invest in UAE Real Estate",
+  title: "About NorthCapitalDXB | Why Invest in UAE Real Estate",
   description:
-    "Learn about HorizonCapital, your trusted Dubai investment advisory partner. Discover why the UAE is the world's most attractive destination for real estate investors.",
+    "Learn about NorthCapitalDXB, your trusted Dubai investment advisory partner. Discover why the UAE is the world's most attractive destination for real estate investors.",
   openGraph: {
-    title: "About HorizonCapital | Why Invest in UAE Real Estate",
+    title: "About NorthCapitalDXB | Why Invest in UAE Real Estate",
     description:
-      "Learn about HorizonCapital, your trusted Dubai investment advisory partner.",
+      "Learn about NorthCapitalDXB, your trusted Dubai investment advisory partner.",
     type: "website",
   },
 }
@@ -84,7 +84,7 @@ export default function AboutPage() {
               </span>
             </h1>
             <p className="max-w-xl text-lg leading-relaxed text-primary-foreground/70">
-              HorizonCapital is a premier investment advisory firm partnered with
+              NorthCapitalDXB is a premier investment advisory firm partnered with
               a fully licensed Dubai brokerage, bridging international investors
               with the UAE&apos;s most promising property opportunities.
             </p>
@@ -106,7 +106,7 @@ export default function AboutPage() {
                 </h2>
                 <div className="mt-6 flex flex-col gap-4 text-muted-foreground leading-relaxed">
                   <p>
-                    HorizonCapital was founded with a clear mission: to make UAE
+                    NorthCapitalDXB was founded with a clear mission: to make UAE
                     real estate investment accessible, transparent, and
                     profitable for international investors. Based in Dubai and
                     partnered with a RERA-licensed brokerage, we combine deep
@@ -122,7 +122,7 @@ export default function AboutPage() {
                   <p>
                     Whether you&apos;re a first-time buyer exploring off-plan
                     opportunities or a seasoned investor diversifying your
-                    portfolio, HorizonCapital provides the end-to-end guidance
+                    portfolio, NorthCapitalDXB provides the end-to-end guidance
                     you need to succeed in the UAE.
                   </p>
                 </div>
@@ -130,7 +130,7 @@ export default function AboutPage() {
               <div className="relative aspect-[4/3] overflow-hidden rounded-xl">
                 <Image
                   src="/images/about-team.jpg"
-                  alt="The HorizonCapital advisory team in our Dubai office"
+                  alt="The NorthCapitalDXB advisory team in our Dubai office"
                   fill
                   className="object-cover"
                 />
@@ -194,7 +194,7 @@ export default function AboutPage() {
                     </span>
                   </h2>
                   <p className="mt-4 text-lg leading-relaxed text-muted-foreground">
-                    HorizonCapital operates through a strategic partnership with
+                    NorthCapitalDXB operates through a strategic partnership with
                     a fully licensed and DLD-registered Dubai brokerage. This
                     ensures every transaction is legally compliant, fully
                     transparent, and protected by the UAE&apos;s robust

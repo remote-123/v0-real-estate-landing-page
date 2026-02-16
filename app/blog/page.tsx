@@ -8,11 +8,11 @@ import { ArrowUpRight, Clock } from "lucide-react"
 import { blogPosts } from "@/lib/blog"
 
 export const metadata: Metadata = {
-  title: "Blog & Insights | HorizonCapital",
+  title: "Blog & Insights | NorthCapitalDXB",
   description:
-    "Expert analysis on Dubai real estate trends, investment strategies, and UAE market insights. Stay informed with HorizonCapital.",
+    "Expert analysis on Dubai real estate trends, investment strategies, and UAE market insights. Stay informed with NorthCapitalDXB.",
   openGraph: {
-    title: "Blog & Insights | HorizonCapital",
+    title: "Blog & Insights | NorthCapitalDXB",
     description:
       "Expert analysis on Dubai real estate trends, investment strategies, and UAE market insights.",
     type: "website",

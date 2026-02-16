@@ -16,7 +16,7 @@ const playfair = Playfair_Display({
 })
 
 export const metadata: Metadata = {
-  title: 'HorizonCapital | Invest in Dubai Real Estate',
+  title: 'NorthCapitalDXB | Invest in Dubai Real Estate',
   description:
     'Your trusted gateway to UAE property investment. Tax-free returns, booming market, and A-Z personal guidance for international investors looking to invest in Dubai real estate.',
   keywords: [
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     'UAE investment',
   ],
   openGraph: {
-    title: 'HorizonCapital | Invest in Dubai Real Estate',
+    title: 'NorthCapitalDXB | Invest in Dubai Real Estate',
     description:
       'Your trusted gateway to UAE property investment. Tax-free returns, booming market, and A-Z personal guidance.',
     type: 'website',

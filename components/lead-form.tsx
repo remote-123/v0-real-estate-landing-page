@@ -1,6 +1,14 @@
 "use client"
 
 import React, { useState } from "react"
+// components/lead-form.tsx
+
+import { 
+  Phone,
+  Mail,    // Add this
+  MapPin,  // Add this
+  Clock    // Add this
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -65,8 +73,12 @@ export function LeadForm() {
           {/* Left Column - Only shows during form step */}
           {step === "form" && (
             <div className="animate-in fade-in slide-in-from-left-4 duration-500">
-              <p className="mb-3 text-sm font-semibold tracking-wide text-accent uppercase">Boutique Advisory</p>
-              <h2 className="font-serif text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+            {/* Left Side: Boutique Advisory & Get In Touch */}
+<div className="animate-in fade-in slide-in-from-left-4 duration-500">
+  <p className="mb-3 text-sm font-semibold tracking-wide text-accent uppercase">
+    Boutique Advisory
+  </p>
+  <h2 className="font-serif text-3xl font-bold tracking-tight text-foreground md:text-4xl">
                 Secure your private strategy session
               </h2>
               <p className="mt-4 text-muted-foreground leading-relaxed">
@@ -79,6 +91,47 @@ export function LeadForm() {
                   </li>
                 ))}
               </ul>
+
+  {/* NEW: Get In Touch Section */}
+  <div className="mt-12 space-y-8 border-t border-border pt-10">
+    <h3 className="font-serif text-xl font-bold text-foreground">Get in Touch</h3>
+    
+    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-1">
+      <div className="flex items-start gap-4">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent/10">
+          <Mail className="h-5 w-5 text-accent" />
+        </div>
+        <div>
+          <p className="text-xs uppercase tracking-wider text-muted-foreground font-bold">Email</p>
+          <p className="font-medium text-foreground">ceo@northcapitaldxb.com</p>
+        </div>
+      </div>
+
+        <div className="flex items-start gap-4">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent/10">
+              <Phone className="h-5 w-5 text-accent" />
+            </div>
+            <div>
+              
+              <p className="text-sm text-muted-foreground">
+                +971 55 400 6230 <br />
+                +1 (647) 703-9115 (Canada)
+              </p>
+            </div>
+          </div>
+
+      <div className="flex items-start gap-4">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent/10">
+          <Clock className="h-5 w-5 text-accent" />
+        </div>
+        <div>
+          <p className="text-xs uppercase tracking-wider text-muted-foreground font-bold">Hours</p>
+          <p className="font-medium text-foreground">Mon — Fri: 9AM - 6PM (GST)</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
             </div>
           )}
 

@@ -25,7 +25,7 @@ export const blogPosts: BlogPost[] = [
       "On the supply side, developers have been cautious about oversaturating the market. Unlike the 2008-2009 cycle, new launches are being carefully timed and priced. This disciplined approach has kept vacancy rates low -- around 8% across the emirate -- and rental yields healthy at 6-10% depending on the area.",
       "Key areas to watch in 2026 include Dubai South, which is benefiting from the Al Maktoum International Airport expansion; Dubai Creek Harbour, where Emaar's masterplan is maturing; and JVC/JVT, which continue to offer strong yields for budget-conscious investors.",
       "For international investors, the combination of zero income tax, strong rule of law, and world-class infrastructure makes Dubai one of the most compelling real estate markets globally. However, due diligence remains essential. Working with a licensed brokerage and experienced advisor can help you navigate the market confidently.",
-      "At HorizonCapital, we anticipate that 2026 will see continued price appreciation in prime areas (5-8%), stable to rising rental yields, and a growing volume of institutional investment flowing into the emirate. Now is an excellent time to position your portfolio for the next wave of growth.",
+      "At NorthCapitalDXB, we anticipate that 2026 will see continued price appreciation in prime areas (5-8%), stable to rising rental yields, and a growing volume of institutional investment flowing into the emirate. Now is an excellent time to position your portfolio for the next wave of growth.",
     ],
   },
   {
@@ -43,7 +43,7 @@ export const blogPosts: BlogPost[] = [
       "The benefits of the Golden Visa go far beyond residency. Holders enjoy the ability to sponsor family members (spouse, children, and parents), open bank accounts, and access the UAE's world-class healthcare and education systems. There are no minimum stay requirements, meaning you can maintain your visa even if you don't live in the UAE full-time.",
       "The application process is straightforward. After purchasing your property, you apply through the Federal Authority for Identity and Citizenship (ICP) or the General Directorate of Residency and Foreigners Affairs (GDRFA). Required documents include your passport, property title deed, and proof of health insurance. Processing typically takes 2-4 weeks.",
       "One common question is whether the Golden Visa leads to citizenship. Currently, the UAE does not offer a direct path from Golden Visa to citizenship. However, the long-term residency stability it provides is more than sufficient for most investors.",
-      "At HorizonCapital, we guide our clients through every step of the Golden Visa process alongside their property investment. Our team coordinates with legal partners to ensure your application is complete, accurate, and processed efficiently.",
+      "At NorthCapitalDXB, we guide our clients through every step of the Golden Visa process alongside their property investment. Our team coordinates with legal partners to ensure your application is complete, accurate, and processed efficiently.",
     ],
   },
   {
@@ -61,7 +61,7 @@ export const blogPosts: BlogPost[] = [
       "The trade-off is risk. Off-plan investors face construction delays, potential changes to the development, and the possibility that market conditions may shift before handover. To mitigate these risks, always invest with reputable developers (Emaar, DAMAC, Nakheel, Meraas) and ensure the project is registered with RERA's Oqood system.",
       "Ready properties, on the other hand, offer immediate rental income. You can view the actual unit, assess the build quality, and start earning returns from day one. Ready properties are also easier to finance through UAE mortgages, as banks are more willing to lend against completed assets.",
       "In terms of yields, ready properties in established areas like Dubai Marina, Downtown, and JVC typically deliver 6-9% net rental yields. Off-plan properties can deliver higher total returns (appreciation + rental income) but require patience and a longer investment horizon.",
-      "Our recommendation at HorizonCapital is often a blended approach: allocate a portion of your portfolio to high-growth off-plan projects for capital appreciation, and another portion to ready, income-generating assets for cash flow. This diversified strategy balances risk and return effectively.",
+      "Our recommendation at NorthCapitalDXB is often a blended approach: allocate a portion of your portfolio to high-growth off-plan projects for capital appreciation, and another portion to ready, income-generating assets for cash flow. This diversified strategy balances risk and return effectively.",
     ],
   },
 ]

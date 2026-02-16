@@ -9,11 +9,11 @@ import { MapPin, ArrowUpRight, ArrowRight } from "lucide-react"
 import { projects } from "@/lib/projects"
 
 export const metadata: Metadata = {
-  title: "Masterplans & Projects | HorizonCapital",
+  title: "Masterplans & Projects | NorthCapitalDXB",
   description:
     "Browse our handpicked selection of Dubai real estate developments. From waterfront villas to luxury penthouses, find your perfect investment property.",
   openGraph: {
-    title: "Masterplans & Projects | HorizonCapital",
+    title: "Masterplans & Projects | NorthCapitalDXB",
     description:
       "Browse our handpicked selection of Dubai real estate developments.",
     type: "website",

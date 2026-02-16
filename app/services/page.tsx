@@ -15,13 +15,13 @@ import {
 } from "lucide-react"
 
 export const metadata: Metadata = {
-  title: "Our Services | HorizonCapital Investment Process",
+  title: "Our Services | NorthCapitalDXB Investment Process",
   description:
-    "From initial consultation to property handover and beyond, HorizonCapital guides you through every step of investing in Dubai real estate.",
+    "From initial consultation to property handover and beyond, NorthCapitalDXB guides you through every step of investing in Dubai real estate.",
   openGraph: {
-    title: "Our Services | HorizonCapital Investment Process",
+    title: "Our Services | NorthCapitalDXB Investment Process",
     description:
-      "From initial consultation to property handover and beyond, HorizonCapital guides you through every step of investing in Dubai real estate.",
+      "From initial consultation to property handover and beyond, NorthCapitalDXB guides you through every step of investing in Dubai real estate.",
     type: "website",
   },
 }
@@ -200,7 +200,7 @@ export default function ServicesPage() {
                   </span>
                 </h2>
                 <p className="mt-4 text-lg leading-relaxed text-muted-foreground">
-                  When you partner with HorizonCapital, you get more than a
+                  When you partner with NorthCapitalDXB, you get more than a
                   transaction. You get a dedicated team invested in your success.
                 </p>
               </div>
