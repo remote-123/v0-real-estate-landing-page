@@ -6,8 +6,8 @@ export function StrategicAlliances() {
           Powered by Market Leaders
         </p>
 
-        <div className="flex flex-wrap items-center justify-center gap-10 md:gap-16">
-          {/* Aeon & Trisl - Execution Partner */}
+        <div className="flex flex-wrap items-center justify-center gap-10 md:gap-x-16 md:gap-y-12">
+          {/* Execution Partner */}
           <div className="flex flex-col items-center gap-2">
             <span className="font-serif text-xl font-bold tracking-tight text-foreground/40 md:text-2xl">
               Aeon & Trisl
@@ -29,6 +29,36 @@ export function StrategicAlliances() {
             </span>
           </div>
 
+          {/* Omniyat - High End/Luxury focus */}
+          <div className="flex flex-col items-center gap-2">
+            <span className="font-serif text-xl font-bold tracking-tight text-foreground/40 md:text-2xl">
+              Omniyat
+            </span>
+            <span className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
+              Development Partner
+            </span>
+          </div>
+
+          {/* Meraas */}
+          <div className="flex flex-col items-center gap-2">
+            <span className="font-serif text-xl font-bold tracking-tight text-foreground/40 md:text-2xl">
+              Meraas
+            </span>
+            <span className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
+              Development Partner
+            </span>
+          </div>
+
+          {/* Aldar - Important for Abu Dhabi & Dubai expansion */}
+          <div className="flex flex-col items-center gap-2">
+            <span className="font-serif text-xl font-bold tracking-tight text-foreground/40 md:text-2xl">
+              Aldar
+            </span>
+            <span className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
+              Development Partner
+            </span>
+          </div>
+
           {/* Nakheel */}
           <div className="flex flex-col items-center gap-2">
             <span className="font-serif text-xl font-bold tracking-tight text-foreground/40 md:text-2xl">
@@ -43,6 +73,35 @@ export function StrategicAlliances() {
           <div className="flex flex-col items-center gap-2">
             <span className="font-serif text-xl font-bold tracking-tight text-foreground/40 md:text-2xl">
               Sobha
+            </span>
+            <span className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
+              Development Partner
+            </span>
+          </div>
+
+          {/* Damac */}
+          <div className="flex flex-col items-center gap-2">
+            <span className="font-serif text-xl font-bold tracking-tight text-foreground/40 md:text-2xl">
+              DAMAC
+            </span>
+            <span className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
+              Development Partner
+            </span>
+          </div>
+
+          {/* Binghatti */}
+          <div className="flex flex-col items-center gap-2">
+            <span className="font-serif text-xl font-bold tracking-tight text-foreground/40 md:text-2xl">
+              Binghatti
+            </span>
+            <span className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
+              Development Partner
+            </span>
+          </div>
+          {/* Ellington */}
+          <div className="flex flex-col items-center gap-2">
+            <span className="font-serif text-xl font-bold tracking-tight text-foreground/40 md:text-2xl">
+              Ellington
             </span>
             <span className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
               Development Partner
