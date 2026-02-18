@@ -7,7 +7,7 @@ import { Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { NAV_LINKS, SITE_CONFIG } from "@/lib/constants" // Import here
-
+import { GoldenVisaWizard } from "@/components/golden-visa-wizard" // Import the new component
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const pathname = usePathname()
@@ -38,11 +38,14 @@ export function Navbar() {
           ))}
         </ul>
 
-        <div className="hidden lg:block">
-          <Button asChild className="bg-accent text-accent-foreground hover:bg-accent/90">
+                <div className="hidden lg:flex items-center gap-4">
+          <GoldenVisaWizard /> {/* <--- ADD THIS */}
+          <Button asChild className="bg-accent text-accent-foreground">
             <Link href="/contact">Get Started</Link>
           </Button>
         </div>
+
+      
 
         {/* ... Mobile Toggle Button ... */}
       </nav>

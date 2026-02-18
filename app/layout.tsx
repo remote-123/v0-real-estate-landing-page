@@ -5,6 +5,7 @@ import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 import { WhatsAppButton } from "@/components/whatsapp-button"
 import { MobileStickyBar } from "@/components/mobile-sticky-bar"
+import { ExitIntentPopup } from "@/components/exit-intent-popup"
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
@@ -57,6 +58,7 @@ export default function RootLayout({
         {children}
         <WhatsAppButton/>
         <MobileStickyBar />
+        <ExitIntentPopup />
         <Analytics />
       </body>
     </html>
