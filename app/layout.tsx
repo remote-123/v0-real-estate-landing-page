@@ -4,6 +4,7 @@ import { DM_Sans, Playfair_Display } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 import { WhatsAppButton } from "@/components/whatsapp-button"
+import { MobileStickyBar } from "@/components/mobile-sticky-bar"
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
@@ -55,6 +56,7 @@ export default function RootLayout({
       >
         {children}
         <WhatsAppButton/>
+        <MobileStickyBar />
         <Analytics />
       </body>
     </html>

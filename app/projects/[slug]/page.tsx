@@ -18,6 +18,9 @@ import {
 // Added 'Car' and 'FileText' icons
 import { CheckCircle2, MapPin, Download, Phone, Car, FileText, Lock } from "lucide-react"
 import { LeadForm } from "@/components/lead-form"
+import { ROICalculator } from "@/components/roi-calculator"
+
+
 
 // Generate SEO slugs
 export async function generateStaticParams() {
@@ -221,6 +224,8 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
                     <h3 className="font-serif text-2xl font-bold text-foreground">Register Interest</h3>
                     <p className="text-xs text-muted-foreground mt-2">Download brochure & floor plans.</p>
                   </div>
+
+                  <ROICalculator/>
                   
                   {/* POPUP TRIGGER */}
                   <Dialog>
