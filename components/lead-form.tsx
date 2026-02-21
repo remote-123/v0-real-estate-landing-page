@@ -36,7 +36,7 @@ const countryCodes = [
 ]
 
 interface LeadFormProps {
-  minimal?: boolean // NEW: Prop to control layout
+  minimal?: boolean
   className?: string
 }
 
@@ -55,6 +55,7 @@ export function LeadForm({ minimal = false, className }: LeadFormProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
+        keepalive: true, // FIXED: Moved inside the options object
       })
 
       if (response.ok) {
@@ -62,30 +63,16 @@ export function LeadForm({ minimal = false, className }: LeadFormProps) {
         setStep("calendar")
       }
     } catch (error) {
-      setLoading(false);
-      alert("Error saving data.");
+      setLoading(false)
+      alert("Error saving data.")
     }
   }
 
-  // THE FORM CONTENT (Reusable)
   const FormContent = (
-    <div className={cn("bg-card h-full", !minimal && "rounded-xl border border-border p-8 shadow-lg", className)}>
-      {step === "calendar" ? (
-         <div className="animate-in fade-in zoom-in-95 duration-500 h-full">
-            <div className="mb-4 flex items-center justify-between border-b pb-4">
-              <h3 className="font-serif text-lg font-bold">Select a Time</h3>
-              <Button variant="ghost" size="sm" onClick={() => setStep("form")} className="h-8 text-xs">
-                <ChevronLeft className="mr-1 h-3 w-3" /> Back
-              </Button>
-            </div>
-            <iframe 
-              src={SITE_CONFIG.calendarLink}
-              style={{ border: 0 }} 
-              width="100%" 
-              height="400" 
-            />
-         </div>
-      ) : (
+    <div className={cn("bg-card h-full relative", !minimal && "rounded-xl border border-border p-8 shadow-lg", className)}>
+      
+      {/* 1. THE FORM (Hidden when calendar is active) */}
+      <div className={cn(step === "form" ? "block" : "hidden")}>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           {!minimal && <h3 className="font-serif text-xl font-bold">Advisory Profile</h3>}
           
@@ -136,19 +123,42 @@ export function LeadForm({ minimal = false, className }: LeadFormProps) {
             Your data is secure. We do not share info with 3rd parties.
           </p>
         </form>
-      )}
+      </div>
+
+      {/* 2. THE CALENDAR (Preloaded off-screen, instantly revealed) */}
+      <div 
+        className={cn(
+          "h-full w-full transition-all duration-500", 
+          step === "calendar" 
+            ? "block animate-in fade-in zoom-in-95 relative z-10 opacity-100" 
+            : "absolute top-0 left-0 opacity-0 pointer-events-none -z-10" // This keeps it in the DOM loading, but invisible
+        )}
+      >
+        <div className="mb-4 flex items-center justify-between border-b pb-4">
+          <h3 className="font-serif text-lg font-bold">Select a Time</h3>
+          <Button variant="ghost" size="sm" onClick={() => setStep("form")} className="h-8 text-xs">
+            <ChevronLeft className="mr-1 h-3 w-3" /> Back
+          </Button>
+        </div>
+        
+        {/* I increased height to 600px to prevent awkward internal scrolling on Calendly */}
+        <iframe 
+          src={SITE_CONFIG.calendarLink}
+          style={{ border: 0 }} 
+          width="100%" 
+          height="600" 
+        />
+      </div>
+
     </div>
   )
 
-  // If minimal (Popup mode), just return the form without the section wrapper
   if (minimal) return FormContent
 
-  // Default (Contact Page mode) - Returns the full Section with Left Side info
   return (
     <section id="contact" className="bg-secondary py-20 md:py-28">
       <div className="mx-auto max-w-7xl px-6">
         <div className="grid items-start gap-12 lg:grid-cols-5">
-          {/* Left Side: Boutique Advisory */}
           <div className="lg:col-span-2">
              <p className="mb-3 text-sm font-semibold text-accent uppercase">Boutique Advisory</p>
              <h2 className="font-serif text-3xl font-bold">Secure your private strategy session</h2>
@@ -163,8 +173,6 @@ export function LeadForm({ minimal = false, className }: LeadFormProps) {
                 </div>
              </div>
           </div>
-
-          {/* Right Side: The Form */}
           <div className="lg:col-span-3">
             {FormContent}
           </div>

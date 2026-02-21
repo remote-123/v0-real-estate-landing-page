@@ -41,7 +41,7 @@ export function Navbar() {
                 <div className="hidden lg:flex items-center gap-4">
           <GoldenVisaWizard /> {/* <--- ADD THIS */}
           <Button asChild className="bg-accent text-accent-foreground">
-            <Link href="/contact">Get Started</Link>
+            <Link href="/calculator">What can I buy?</Link>
           </Button>
         </div>
 

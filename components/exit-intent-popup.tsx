@@ -23,6 +23,7 @@ const handleSubmit = async () => {
         source: "Exit Intent Popup", // <--- Tags the lead
         goal: "Requested Market Report"
       }),
+       keepalive: true,
     })
     setOpen(false) // Close popup on success
     alert("Report sent to your inbox!")

@@ -22,11 +22,13 @@ export function Footer() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, type: "Newsletter Signup" }),
+        keepalive: true
       })
       setSubscribed(true)
     } catch (error) {
       console.error("Signup failed", error)
     }
+    
   }
 
   return (

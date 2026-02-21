@@ -72,6 +72,7 @@ const handleSubmit = async (e: React.FormEvent) => {
         goal: intent,   // "invest" or "live"
         source: "Golden Visa Wizard" // <--- Tags the lead
       }),
+       keepalive: true,
     })
     setLoading(false)
     setStep(4) // Move to Success Screen
