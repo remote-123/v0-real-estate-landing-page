@@ -96,16 +96,27 @@ export default async function BlogPostPage({
               <span className="text-pretty">{post.title}</span>
             </h1>
 
-            <div className="prose-custom mt-10 flex flex-col gap-6">
-              {post.content.map((paragraph, i) => (
-                <p
-                  key={i}
-                  className="text-base leading-relaxed text-muted-foreground md:text-lg md:leading-relaxed"
-                >
-                  {paragraph}
-                </p>
-              ))}
-            </div>
+         {/* --- UPDATED RENDERING LOGIC --- */}
+            {Array.isArray(post.content) ? (
+              // Old way (for the first 3 posts)
+              <div className="prose-custom mt-10 flex flex-col gap-6">
+                {post.content.map((paragraph, i) => (
+                  <p
+                    key={i}
+                    className="text-base leading-relaxed text-muted-foreground md:text-lg md:leading-relaxed"
+                  >
+                    {paragraph}
+                  </p>
+                ))}
+              </div>
+            ) : (
+              // New way (for the 2026 Guide with raw HTML)
+              <div 
+                className="mt-10"
+                dangerouslySetInnerHTML={{ __html: post.content }} 
+              />
+            )}
+            {/* ------------------------------- */}
 
             {/* CTA */}
             <div className="mt-12 rounded-xl border border-border bg-secondary p-8 text-center">

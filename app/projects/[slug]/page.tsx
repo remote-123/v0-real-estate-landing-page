@@ -46,6 +46,42 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
   const project = getProjectBySlug(slug)
   if (!project) notFound()
 
+    // --- 1. PREPARE THE SCHEMA DATA ---
+  // Clean the price string (e.g., "AED 1,500,000" -> 1500000)
+  const numericPrice = project.startingPrice
+    ? parseInt(project.startingPrice.replace(/[^0-9]/g, ''))
+    : 0
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "RealEstateListing",
+    "name": project.title,
+    "image": [
+      `https://www.northcapitaldxb.com${project.image}`, // Ensure absolute URL
+      ...(project.gallery ? project.gallery.map(img => `https://www.northcapitaldxb.com${img}`) : [])
+    ],
+    "description": project.description,
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Dubai",
+      "addressRegion": "Dubai",
+      "addressCountry": "AE",
+      "streetAddress": project.location
+    },
+    "offers": {
+      "@type": "Offer",
+      "priceCurrency": "AED",
+      "price": numericPrice,
+      "availability": "https://schema.org/InStock",
+      "url": `https://www.northcapitaldxb.com/projects/${project.slug}`,
+      "category": "Real Estate > Residential > " + (project.details.find(d => d.label === "Type")?.value || "Apartment")
+    },
+    "brand": {
+      "@type": "Organization",
+      "name": project.developer
+    }
+  }
+
   return (
     <>
       <Navbar />
