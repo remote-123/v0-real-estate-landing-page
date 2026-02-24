@@ -17,22 +17,23 @@ export async function POST(req: Request) {
     const sheets = google.sheets({ version: 'v4', auth });
 
     // Prepare Data based on Source
-    // Columns: [Date, FirstName, LastName, Email, Phone, Budget, Goal, Timeline, SOURCE]
+    // Columns: [Date, FirstName, LastName, Email, Phone, Budget, Goal, Timeline, Source, InterestedProject]
     const row = [
         new Date().toLocaleString(),
-        body.firstName || "N/A",  // Wizard/Popup might not have names
+        body.firstName || "N/A", 
         body.lastName || "",
         body.email,
         body.phone ? `'${body.countryCode || ''} ${body.phone}` : "N/A",
         body.budget || "N/A",
-        body.goal || "N/A",       // "Intent" from Wizard goes here
+        body.goal || "N/A",       
         body.timeline || "N/A",
-        body.source || "Contact Form" // <--- NEW: Tracks where the lead came from
+        body.source || "Contact Form", 
+        body.interestedProject || "General Inquiry" // <--- NEW: Captures the Project Name!
     ];
 
     await sheets.spreadsheets.values.append({
       spreadsheetId: process.env.GOOGLE_SHEET_ID,
-      range: 'Sheet1!A:I', // Extended to Column I for Source
+      range: 'Sheet1!A:J', // <--- NEW: Extended range to Column J
       valueInputOption: 'USER_ENTERED',
       requestBody: {
         values: [row], 

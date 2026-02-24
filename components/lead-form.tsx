@@ -35,12 +35,15 @@ const countryCodes = [
   { code: "other", label: "Other", flag: "🌐" },
 ]
 
+// --- FIXED: Added projectName to the interface ---
 interface LeadFormProps {
   minimal?: boolean
   className?: string
+  projectName?: string 
 }
 
-export function LeadForm({ minimal = false, className }: LeadFormProps) {
+// --- FIXED: Destructured projectName here ---
+export function LeadForm({ minimal = false, className, projectName }: LeadFormProps) {
   const [step, setStep] = useState<"form" | "calendar">("form")
   const [loading, setLoading] = useState(false)
 
@@ -55,7 +58,7 @@ export function LeadForm({ minimal = false, className }: LeadFormProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
-        keepalive: true, // FIXED: Moved inside the options object
+        keepalive: true,
       })
 
       if (response.ok) {
@@ -74,6 +77,10 @@ export function LeadForm({ minimal = false, className }: LeadFormProps) {
       {/* 1. THE FORM (Hidden when calendar is active) */}
       <div className={cn(step === "form" ? "block" : "hidden")}>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          
+          {/* --- FIXED: Hidden input to pass the project name into the payload --- */}
+          {projectName && <input type="hidden" name="interestedProject" value={projectName} />}
+          
           {!minimal && <h3 className="font-serif text-xl font-bold">Advisory Profile</h3>}
           
           <div className="grid gap-3 sm:grid-cols-2">
@@ -125,13 +132,13 @@ export function LeadForm({ minimal = false, className }: LeadFormProps) {
         </form>
       </div>
 
-      {/* 2. THE CALENDAR (Preloaded off-screen, instantly revealed) */}
+      {/* 2. THE CALENDAR */}
       <div 
         className={cn(
           "h-full w-full transition-all duration-500", 
           step === "calendar" 
             ? "block animate-in fade-in zoom-in-95 relative z-10 opacity-100" 
-            : "absolute top-0 left-0 opacity-0 pointer-events-none -z-10" // This keeps it in the DOM loading, but invisible
+            : "absolute top-0 left-0 opacity-0 pointer-events-none -z-10" 
         )}
       >
         <div className="mb-4 flex items-center justify-between border-b pb-4">
@@ -141,7 +148,6 @@ export function LeadForm({ minimal = false, className }: LeadFormProps) {
           </Button>
         </div>
         
-        {/* I increased height to 600px to prevent awkward internal scrolling on Calendly */}
         <iframe 
           src={SITE_CONFIG.calendarLink}
           style={{ border: 0 }} 

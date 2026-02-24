@@ -265,7 +265,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
                                  </DialogDescription>
                               </DialogHeader>
                               <div className="p-6 pt-0">
-                                <LeadForm minimal={true} />
+                                <LeadForm minimal={true} projectName={project.title}/>
                               </div>
                            </div>
                         </DialogContent>
@@ -322,7 +322,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
                              </DialogDescription>
                           </DialogHeader>
                           <div className="p-6 pt-0">
-                            <LeadForm minimal={true} />
+                            <LeadForm minimal={true} projectName={project.title}/>
                           </div>
                        </div>
                     </DialogContent>
