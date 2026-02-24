@@ -7,11 +7,10 @@ import { ArrowRight, ShieldCheck, Globe2 } from "lucide-react"
 
 export function Hero() {
   return (
-    <section className="relative flex min-h-[90vh] items-center justify-center overflow-hidden bg-primary pt-20">
+    <section className="relative flex min-h-[90vh] items-center justify-center overflow-hidden bg-slate-950 pt-20">
       {/* Background with Overlay */}
       <div className="absolute inset-0 z-0">
-
-            <Image
+        <Image
           src="/images/hero-dubai.jpg"
           alt="Panoramic view of the Dubai skyline at golden hour"
           fill
@@ -19,16 +18,12 @@ export function Hero() {
           priority
           quality={90}
         />
-        <div className="absolute inset-0 bg-foreground/60" />
-        <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary/95 to-primary/40 z-10" />
-        <img
-          src="/images/hero-dubai-skyline.jpg" // Ensure you have a good background image here
-          alt="Dubai Skyline"
-          className="h-full w-full object-cover opacity-60"
-        />
+        {/* FIXED: Hardcoded black overlays so it never turns white in dark mode */}
+        <div className="absolute inset-0 bg-black/50" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/50 to-transparent z-10" />
       </div>
 
-      <div className="relative z-20 mx-auto max-w-7xl px-6 text-center md:text-left">
+      <div className="relative z-20 mx-auto w-full max-w-7xl px-6 text-center md:text-left">
         <div className="grid gap-12 md:grid-cols-2 items-center">
           
           {/* Text Content */}
@@ -40,31 +35,33 @@ export function Hero() {
               </span>
             </div>
             
-            <h1 className="font-serif text-5xl font-bold leading-tight text-primary-foreground md:text-6xl lg:text-7xl">
+            {/* FIXED: Enforced text-white so it's always readable against the dark image */}
+            <h1 className="font-serif text-5xl font-bold leading-tight text-white md:text-6xl lg:text-7xl">
               Dubai Real Estate.<br />
               <span className="text-accent">Zero Ambiguity.</span>
             </h1>
             
-            <p className="max-w-xl text-lg text-primary-foreground/80 leading-relaxed">
+            <p className="max-w-xl text-lg text-white/80 leading-relaxed">
               We bridge the gap between global capital and Dubai opportunity. 
               Experience institutional-grade advisory, independent due diligence, 
               and a seamless buying process—no matter where you reside.
             </p>
 
             <div className="flex flex-col gap-4 sm:flex-row">
-              <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90" asChild>
+              <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 border-0" asChild>
                 <Link href="/projects">
                   Explore Opportunities <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" className="border-primary-foreground/20 text-black hover:bg-primary-foreground/10" asChild>
+              {/* FIXED: Changed text-black to text-white for the secondary button */}
+              <Button size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/10 hover:text-white bg-transparent" asChild>
                 <Link href="/contact">
                   Book Strategy Call
                 </Link>
               </Button>
             </div>
 
-            <div className="flex items-center gap-6 pt-4 text-sm text-primary-foreground/60">
+            <div className="flex items-center gap-6 pt-4 text-sm text-white/70">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="h-4 w-4 text-accent" />
                 <span>RERA Licensed</span>
@@ -79,7 +76,6 @@ export function Hero() {
           {/* Optional: Right Side Visual (Stats or Founder Image) */}
           <div className="hidden md:block relative">
              <div className="absolute -inset-4 rounded-full bg-accent/20 blur-3xl opacity-50"></div>
-             {/* You can place a "Market Report" card or a "Founder Image" here later */}
           </div>
 
         </div>

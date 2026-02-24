@@ -9,6 +9,7 @@ import { TrustSignals } from "@/components/trust-signals"
 import { LeadForm } from "@/components/lead-form"
 import { Footer } from "@/components/footer"
 import { HowWeWork } from "@/components/how-we-work"
+import { FaqSection } from "@/components/faq-section"
 
 export default function Home() {
   return (
@@ -23,7 +24,9 @@ export default function Home() {
         <KnowledgeHub />
         <FounderNote />
         <TrustSignals />
+        <FaqSection />
         <LeadForm />
+
       </main>
       <Footer />
     </>

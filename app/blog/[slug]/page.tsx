@@ -1,189 +1,118 @@
-import type { Metadata } from "next"
 import Image from "next/image"
-import Link from "next/link"
 import { notFound } from "next/navigation"
+import { client } from "@/sanity/lib/client"
+import { PortableText } from "next-sanity" // <-- This is the magic rich text renderer!
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { ArrowLeft, ArrowRight, Clock, CalendarDays } from "lucide-react"
-import { blogPosts, getBlogPostBySlug } from "@/lib/blog"
+import { Clock, User } from "lucide-react"
+
+export const revalidate = 60
+
+const query = `*[_type == "post" && slug.current == $slug][0]{
+  title,
+  "slug": slug.current,
+  excerpt,
+  category,
+  date,
+  author,
+  readTime,
+  "image": image.asset->url,
+  content
+}`
 
 export async function generateStaticParams() {
-  return blogPosts.map((p) => ({ slug: p.slug }))
+  const slugs = await client.fetch(`*[_type == "post" && defined(slug.current)]{"slug": slug.current}`)
+  return slugs
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ slug: string }>
-}): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const post = getBlogPostBySlug(slug)
+  const post = await client.fetch(query, { slug })
   if (!post) return { title: "Post Not Found" }
-
   return {
     title: `${post.title} | NorthCapitalDXB Blog`,
     description: post.excerpt,
-    openGraph: {
-      title: post.title,
-      description: post.excerpt,
-      type: "article",
-      images: [post.image],
-    },
+    openGraph: { images: [post.image] },
   }
 }
 
-export default async function BlogPostPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>
-}) {
+// Optional: Custom styling for your rich text so it matches your brand
+const ptComponents = {
+  types: {
+    image: ({ value }: any) => {
+      if (!value?.asset?._ref) return null
+      // Sanity image builder logic could go here, but for now we'll handle basic images
+      return (
+        <div className="relative w-full h-96 my-8 rounded-xl overflow-hidden">
+          {/* Note: In a full setup, you'd use @sanity/image-url to parse the asset ref to a URL */}
+          <div className="bg-muted w-full h-full flex items-center justify-center text-muted-foreground">Image Block</div>
+        </div>
+      )
+    }
+  },
+  block: {
+    h2: ({ children }: any) => <h2 className="text-3xl font-serif font-bold mt-12 mb-6 text-foreground">{children}</h2>,
+    h3: ({ children }: any) => <h3 className="text-2xl font-serif font-bold mt-8 mb-4 text-foreground">{children}</h3>,
+    normal: ({ children }: any) => <p className="text-lg leading-relaxed mb-6 text-muted-foreground">{children}</p>,
+  },
+  list: {
+    bullet: ({ children }: any) => <ul className="list-disc pl-6 mb-8 space-y-2 text-lg text-muted-foreground">{children}</ul>,
+    number: ({ children }: any) => <ol className="list-decimal pl-6 mb-8 space-y-2 text-lg text-muted-foreground">{children}</ol>,
+  },
+}
+
+export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const post = getBlogPostBySlug(slug)
+  const post = await client.fetch(query, { slug })
 
-  if (!post) {
-    notFound()
-  }
-
-  const currentIndex = blogPosts.findIndex((p) => p.slug === slug)
-  const relatedPosts = blogPosts.filter((_, i) => i !== currentIndex).slice(0, 2)
+  if (!post) notFound()
 
   return (
     <>
       <Navbar />
-      <main>
-        {/* Hero Image */}
-        <section className="relative pt-20">
-          <div className="relative aspect-[21/9] w-full overflow-hidden">
-            <Image
-              src={post.image || "/placeholder.svg"}
-              alt={post.title}
-              fill
-              className="object-cover"
-              priority
-            />
-            <div className="absolute inset-0 bg-foreground/50" />
-          </div>
-        </section>
-
-        {/* Article */}
-        <section className="bg-background py-16 md:py-24">
-          <div className="mx-auto max-w-3xl px-6">
-            <Link
-              href="/blog"
-              className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to All Articles
-            </Link>
-
-            <div className="mb-6 flex flex-wrap items-center gap-3">
-              <Badge variant="secondary" className="bg-accent/10 text-accent">
-                {post.category}
-              </Badge>
-              <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                <CalendarDays className="h-3 w-3" />
-                {post.date}
-              </span>
-              <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                <Clock className="h-3 w-3" />
-                {post.readTime}
-              </span>
-            </div>
-
-            <h1 className="font-serif text-3xl font-bold tracking-tight text-foreground md:text-4xl lg:text-5xl">
-              <span className="text-pretty">{post.title}</span>
+      <main className="bg-background pt-32 pb-20">
+        <article className="mx-auto max-w-3xl px-6">
+          
+          {/* Article Header */}
+          <header className="mb-12 text-center">
+            <Badge className="mb-6 bg-accent text-accent-foreground">{post.category}</Badge>
+            <h1 className="font-serif text-4xl font-bold tracking-tight text-foreground md:text-5xl lg:text-6xl mb-6">
+              {post.title}
             </h1>
-
-         {/* --- UPDATED RENDERING LOGIC --- */}
-            {Array.isArray(post.content) ? (
-              // Old way (for the first 3 posts)
-              <div className="prose-custom mt-10 flex flex-col gap-6">
-                {post.content.map((paragraph, i) => (
-                  <p
-                    key={i}
-                    className="text-base leading-relaxed text-muted-foreground md:text-lg md:leading-relaxed"
-                  >
-                    {paragraph}
-                  </p>
-                ))}
+            
+            <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <User className="h-4 w-4 text-accent" />
+                <span>{post.author}</span>
               </div>
-            ) : (
-              // New way (for the 2026 Guide with raw HTML)
-              <div 
-                className="mt-10"
-                dangerouslySetInnerHTML={{ __html: post.content }} 
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-accent" />
+                <span>{post.readTime}</span>
+              </div>
+              <time>{post.date}</time>
+            </div>
+          </header>
+
+          {/* Featured Image */}
+          {post.image && (
+            <div className="relative aspect-video w-full overflow-hidden rounded-2xl mb-12 shadow-lg">
+              <Image
+                src={post.image}
+                alt={post.title}
+                fill
+                className="object-cover"
+                priority
               />
-            )}
-            {/* ------------------------------- */}
-
-            {/* CTA */}
-            <div className="mt-12 rounded-xl border border-border bg-secondary p-8 text-center">
-              <h3 className="font-serif text-xl font-bold text-foreground">
-                Ready to invest in Dubai?
-              </h3>
-              <p className="mt-2 text-muted-foreground">
-                Book a free consultation and get expert advice tailored to your
-                goals.
-              </p>
-              <Button
-                className="mt-4 bg-accent text-accent-foreground hover:bg-accent/90"
-                asChild
-              >
-                <Link href="/contact">
-                  Get Started
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
             </div>
+          )}
+
+          {/* The Rich Text Content */}
+          <div className="prose prose-lg dark:prose-invert max-w-none">
+            <PortableText value={post.content} components={ptComponents} />
           </div>
-        </section>
-
-        {/* Related Posts */}
-        {relatedPosts.length > 0 && (
-          <section className="bg-secondary py-16 md:py-24">
-            <div className="mx-auto max-w-7xl px-6">
-              <h2 className="mb-8 font-serif text-2xl font-bold text-foreground">
-                More from the Blog
-              </h2>
-              <div className="grid gap-8 md:grid-cols-2">
-                {relatedPosts.map((related) => (
-                  <Link
-                    key={related.slug}
-                    href={`/blog/${related.slug}`}
-                    className="group"
-                  >
-                    <article className="flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card transition-shadow hover:shadow-lg">
-                      <div className="relative aspect-[16/9] overflow-hidden">
-                        <Image
-                          src={related.image || "/placeholder.svg"}
-                          alt={related.title}
-                          fill
-                          className="object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                      </div>
-                      <div className="flex flex-1 flex-col gap-3 p-6">
-                        <Badge
-                          variant="secondary"
-                          className="w-fit bg-accent/10 text-accent"
-                        >
-                          {related.category}
-                        </Badge>
-                        <h3 className="font-serif text-lg font-bold text-card-foreground">
-                          {related.title}
-                        </h3>
-                        <p className="flex-1 text-sm leading-relaxed text-muted-foreground">
-                          {related.excerpt}
-                        </p>
-                      </div>
-                    </article>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
+          
+        </article>
       </main>
       <Footer />
     </>

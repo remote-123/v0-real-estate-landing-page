@@ -1,8 +1,7 @@
 import React from "react"
 import Image from "next/image"
-import Link from "next/link"
 import { notFound } from "next/navigation"
-import { getProjectBySlug, projects } from "@/lib/projects"
+import { client } from "@/sanity/lib/client" // <-- NEW: Import the Sanity client
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
@@ -15,39 +14,69 @@ import {
   DialogTitle, 
   DialogTrigger 
 } from "@/components/ui/dialog"
-// Added 'Car' and 'FileText' icons
 import { CheckCircle2, MapPin, Download, Phone, Car, FileText, Lock } from "lucide-react"
 import { LeadForm } from "@/components/lead-form"
 import { ROICalculator } from "@/components/roi-calculator"
+import { urlForImage } from "@/sanity/lib/image" // <-- NEW: Import the image URL builder
 
+// --- THE GROQ QUERY ---
+// This asks Sanity for a project where the slug matches the URL
+// --- UPDATED GROQ QUERY ---
+// Notice we no longer ask for "asset->url", we just want the raw image objects!
+const query = `*[_type == "project" && slug.current == $slug][0]{
+  title,
+  "slug": slug.current,
+  location,
+  developer,
+  type,
+  category,
+  startingPrice,
+  roi,
+  status,
+  completion,
+  paymentPlan,
+  uniquenessTitle,
+  uniquenessDescription,
+  description,
+  amenities,
+  details,
+  connectivity,
+  image,
+  gallery,
+  masterplanImage,
+  paymentPlanImage,
+  floorPlanImage
+}`
 
-
-// Generate SEO slugs
+// Generate SEO slugs dynamically from Sanity for incredibly fast loading
 export async function generateStaticParams() {
-  return projects.map((project) => ({ slug: project.slug }))
+  const slugs = await client.fetch(`*[_type == "project" && defined(slug.current)]{"slug": slug.current}`)
+  return slugs
 }
 
 // Fixed Metadata for Next.js 15
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const project = getProjectBySlug(slug)
+  const project = await client.fetch(query, { slug })
 
   if (!project) return { title: "Project Not Found" }
 
   return {
     title: `${project.title} | NorthCapitalDXB`,
-    description: project.description.slice(0, 160),
+    description: project.description?.slice(0, 160) || "Explore premium Dubai real estate.",
     openGraph: { images: [project.image] },
   }
 }
 
 export default async function ProjectPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const project = getProjectBySlug(slug)
+  
+  // FETCH THE DATA FROM SANITY
+  const project = await client.fetch(query, { slug })
+  
   if (!project) notFound()
 
-    // --- 1. PREPARE THE SCHEMA DATA ---
-  // Clean the price string (e.g., "AED 1,500,000" -> 1500000)
+  // Clean the price string for JSON-LD (e.g., "AED 1,500,000" -> 1500000)
   const numericPrice = project.startingPrice
     ? parseInt(project.startingPrice.replace(/[^0-9]/g, ''))
     : 0
@@ -57,9 +86,9 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
     "@type": "RealEstateListing",
     "name": project.title,
     "image": [
-      `https://www.northcapitaldxb.com${project.image}`, // Ensure absolute URL
-      ...(project.gallery ? project.gallery.map(img => `https://www.northcapitaldxb.com${img}`) : [])
-    ],
+      project.image ? `https://www.northcapitaldxb.com${project.image}` : '',
+      ...(project.gallery ? project.gallery.map((img: string) => `https://www.northcapitaldxb.com${img}`) : [])
+    ].filter(Boolean),
     "description": project.description,
     "address": {
       "@type": "PostalAddress",
@@ -74,7 +103,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
       "price": numericPrice,
       "availability": "https://schema.org/InStock",
       "url": `https://www.northcapitaldxb.com/projects/${project.slug}`,
-      "category": "Real Estate > Residential > " + (project.details.find(d => d.label === "Type")?.value || "Apartment")
+      "category": "Real Estate > Residential"
     },
     "brand": {
       "@type": "Organization",
@@ -84,18 +113,25 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
 
   return (
     <>
+      {/* Inject JSON-LD for SEO */}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      
       <Navbar />
       <main className="bg-background pt-24 pb-20">
         
         {/* HERO */}
         <section className="relative h-[60vh] w-full overflow-hidden md:h-[70vh]">
-          <Image
-            src={project.image}
-            alt={project.title}
-            fill
-            className="object-cover brightness-75"
-            priority
-          />
+          {project.image && (
+            <Image
+              // 1. Pass the Sanity image object to the utility
+              // 2. Tell Sanity exactly how wide you want the image (e.g., 1200px)
+              // 3. Get the final URL
+              src={urlForImage(project.image).width(1200).url()} 
+              alt={project.title}
+              fill
+              className="object-cover"
+            />
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
           <div className="absolute bottom-0 left-0 right-0 p-6 md:p-12">
             <div className="mx-auto max-w-7xl">
@@ -122,7 +158,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
                 </div>
                 <div>
                   <p className="text-[10px] uppercase text-muted-foreground font-bold">Payment Plan</p>
-                  <p className="text-xl font-bold text-foreground">{project.details.find(d => d.label === "Payment Plan")?.value || "Flexible"}</p>
+                  <p className="text-xl font-bold text-foreground">{project.paymentPlan || "Flexible"}</p>
                 </div>
                 <div>
                   <p className="text-[10px] uppercase text-muted-foreground font-bold">Handover</p>
@@ -143,17 +179,23 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
                 <section id="masterplan">
                   <h2 className="font-serif text-2xl font-bold text-foreground mb-6">Masterplan & Layout</h2>
                   <div className="overflow-hidden rounded-2xl border border-border shadow-lg">
-                    <Image src={project.masterplanImage} alt="Masterplan" width={1000} height={600} className="w-full object-cover" />
+                    <Image 
+                      src={urlForImage(project.masterplanImage).width(1200).url()} 
+                      alt="Masterplan" 
+                      width={1200} 
+                      height={800} 
+                      className="w-full h-auto object-cover" 
+                    />
                   </div>
                 </section>
               )}
 
-              {/* NEW SECTION 1: CONNECTIVITY */}
+              {/* CONNECTIVITY */}
               {project.connectivity && project.connectivity.length > 0 && (
                 <section>
                   <h2 className="font-serif text-2xl font-bold text-foreground mb-6">Location & Connectivity</h2>
                   <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
-                    {project.connectivity.map((item, i) => (
+                    {project.connectivity.map((item: any, i: number) => (
                       <div key={i} className="flex flex-col items-center justify-center rounded-xl border border-border bg-card p-4 text-center shadow-sm transition-all hover:border-accent/50">
                         <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-accent/10 text-accent">
                           <Car className="h-5 w-5" />
@@ -167,21 +209,21 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
               )}
 
               {/* Amenities */}
-              <section>
-                <h2 className="font-serif text-2xl font-bold text-foreground mb-6">World-Class Amenities</h2>
-                <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-                  {project.amenities?.map((amenity) => (
-                    <div key={amenity} className="flex items-center gap-3 rounded-lg border border-border bg-card p-4">
-                      <CheckCircle2 className="h-5 w-5 text-accent shrink-0" />
-                      <span className="text-sm font-medium">{amenity}</span>
-                    </div>
-                  ))}
-                </div>
-              </section>
+              {project.amenities && project.amenities.length > 0 && (
+                <section>
+                  <h2 className="font-serif text-2xl font-bold text-foreground mb-6">World-Class Amenities</h2>
+                  <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+                    {project.amenities.map((amenity: string) => (
+                      <div key={amenity} className="flex items-center gap-3 rounded-lg border border-border bg-card p-4">
+                        <CheckCircle2 className="h-5 w-5 text-accent shrink-0" />
+                        <span className="text-sm font-medium">{amenity}</span>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
 
-
-
-                  {/* NEW SECTION 2: FLOOR PLAN W/ LOCKED CONTENT */}
+              {/* FLOOR PLAN W/ LOCKED CONTENT */}
               {project.floorPlanImage && (
                 <section id="floorplans" className="scroll-mt-24">
                   <div className="mb-6 flex items-center justify-between">
@@ -190,26 +232,23 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
                   </div>
                   
                   <div className="relative overflow-hidden rounded-2xl border border-border bg-muted shadow-lg">
-                    {/* The Placeholder Image (Blurred or Clear) */}
                     <div className="relative aspect-[16/9] w-full">
                        <Image 
-                        src={project.floorPlanImage} 
-                        alt="Unit Layouts" 
-                        fill
-                        className="object-contain p-4"
-                      />
-                      {/* Optional: Blur overlay to encourage click */}
+                      src={urlForImage(project.floorPlanImage).width(1200).url()} 
+                      alt="Floor Plan" 
+                      width={1200} 
+                      height={800} 
+                      className="w-full h-auto object-cover" 
+                    />
                       <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
                     </div>
 
-                    {/* The CTA Overlay */}
                     <div className="absolute bottom-0 left-0 right-0 flex flex-col items-center justify-center bg-background/95 p-8 backdrop-blur-sm border-t border-border">
                        <div className="mb-4 flex items-center gap-2 text-muted-foreground">
                           <Lock className="h-4 w-4" />
                           <span className="text-sm">Unlock full brochure with unit sizes & types</span>
                        </div>
 
-{/* The Popup Trigger */}
                        <Dialog>
                         <DialogTrigger asChild>
                           <Button size="lg" className="bg-foreground text-background hover:bg-foreground/90 w-full sm:w-auto">
@@ -236,14 +275,19 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
                 </section>
               )}
 
-
-
               {/* Payment Plan */}
               {project.paymentPlanImage && (
                 <section id="payment">
                   <h2 className="font-serif text-2xl font-bold text-foreground mb-6">Payment Schedule</h2>
                   <div className="overflow-hidden rounded-2xl border border-border shadow-lg">
-                     <Image src={project.paymentPlanImage} alt="Payment Plan" width={1000} height={600} className="w-full object-cover" />
+                    <Image 
+                      src={urlForImage(project.paymentPlanImage).width(1200).url()} 
+                      alt="Payment Plan" 
+                      width={1200} 
+                      height={800} 
+                      className="w-full h-auto object-cover" 
+                    />
+                  
                   </div>
                 </section>
               )}
@@ -253,7 +297,6 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
             <div className="lg:col-span-1">
               <div className="sticky top-28 space-y-6">
                 
-                {/* REGISTER CARD */}
                 <div className="rounded-xl border border-border bg-card p-6 shadow-xl">
                   <div className="mb-6 text-center">
                     <p className="text-xs font-bold uppercase text-muted-foreground">Limited Availability</p>
@@ -263,7 +306,6 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
 
                   <ROICalculator/>
                   
-                  {/* POPUP TRIGGER */}
                   <Dialog>
                     <DialogTrigger asChild>
                       <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
@@ -272,7 +314,6 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden bg-transparent border-none shadow-none">
-                       {/* Using the new MINIMAL mode */}
                        <div className="bg-card border border-border rounded-xl shadow-2xl overflow-hidden">
                           <DialogHeader className="p-6 pb-2">
                              <DialogTitle>Download Brochure</DialogTitle>

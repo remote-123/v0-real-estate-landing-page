@@ -1,6 +1,4 @@
-"use client"
-
-import React, { useState } from "react"
+import React from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Navbar } from "@/components/navbar"
@@ -8,18 +6,48 @@ import { Footer } from "@/components/footer"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { MapPin, ArrowUpRight, ArrowRight, Calendar, Filter } from "lucide-react"
-import { projects } from "@/lib/projects"
+import { client } from "@/sanity/lib/client" // <-- NEW: Import the Sanity client
 import { cn } from "@/lib/utils"
+import { urlForImage } from "@/sanity/lib/image" // <-- NEW: Import the image URL builder
+// Tell Next.js to re-fetch the data from Sanity periodically so it's never stale
+export const revalidate = 60 
 
-// Extract unique categories from your data automatically
 const ALL_CATEGORY = "All Projects"
-const categories = [ALL_CATEGORY, ...Array.from(new Set(projects.map((p) => p.category || "Apartments")))]
 
-export default function ProjectsPage() {
-  const [activeCategory, setActiveCategory] = useState(ALL_CATEGORY)
+// --- THE GROQ QUERY ---
+const query = `*[_type == "project"]{
+  "slug": slug.current,
+  title,
+  location,
+  developer,
+  category,
+  startingPrice,
+  roi,
+  status,
+  completion,
+  image
+}`
 
-  // Filter logic
-  const filteredProjects = projects.filter((project) => {
+export default async function ProjectsPage({ 
+  searchParams 
+}: { 
+  searchParams: Promise<{ category?: string }> 
+}) {
+  // Await search params in Next.js 15
+  const params = await searchParams
+  const activeCategory = params.category || ALL_CATEGORY
+
+  // Fetch all projects from Sanity
+  const projects = await client.fetch(query)
+
+  // Extract unique categories dynamically from the live data
+  const categories = [
+    ALL_CATEGORY, 
+    ...Array.from(new Set(projects.map((p: any) => p.category).filter(Boolean)))
+  ] as string[]
+
+  // Filter logic based on the URL parameter
+  const filteredProjects = projects.filter((project: any) => {
     if (activeCategory === ALL_CATEGORY) return true
     return project.category === activeCategory
   })
@@ -49,16 +77,17 @@ export default function ProjectsPage() {
         <section className="bg-background py-12 md:py-20">
           <div className="mx-auto max-w-7xl px-6">
             
-            {/* Category Filter */}
+            {/* Category Filter using URL params */}
             <div className="mb-10 flex flex-wrap items-center gap-2 border-b border-border pb-6">
               <div className="mr-2 flex items-center gap-2 text-sm font-medium text-muted-foreground">
                 <Filter className="h-4 w-4" />
                 Filter:
               </div>
               {categories.map((cat) => (
-                <button
+                <Link
                   key={cat}
-                  onClick={() => setActiveCategory(cat)}
+                  href={cat === ALL_CATEGORY ? "/projects" : `/projects?category=${cat}`}
+                  scroll={false} // Prevents the page from aggressively scrolling to top when clicked
                   className={cn(
                     "rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200",
                     activeCategory === cat
@@ -67,14 +96,14 @@ export default function ProjectsPage() {
                   )}
                 >
                   {cat}
-                </button>
+                </Link>
               ))}
             </div>
 
             {/* Projects Grid */}
             {filteredProjects.length > 0 ? (
               <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-                {filteredProjects.map((project) => (
+                {filteredProjects.map((project: any) => (
                   <Link
                     key={project.slug}
                     href={`/projects/${project.slug}`}
@@ -84,8 +113,9 @@ export default function ProjectsPage() {
                       
                       {/* Image Container */}
                       <div className="relative aspect-[4/3] overflow-hidden bg-muted">
-                        <Image
-                          src={project.image || "/placeholder.svg"}
+                       <Image
+                          // Tell Sanity to compress this image and make it a max width of 800px!
+                          src={project.image ? urlForImage(project.image).width(800).url() : "/placeholder.svg"}
                           alt={`${project.title} in ${project.location}`}
                           fill
                           className="object-cover transition-transform duration-700 group-hover:scale-110"
@@ -96,8 +126,8 @@ export default function ProjectsPage() {
                            <Badge className={cn(
                             "border-none shadow-sm uppercase tracking-wider text-[10px] font-bold px-3 py-1",
                             (project.status === "Upcoming" || project.status === "Pre-Launch")
-                              ? "bg-accent text-accent-foreground" // Gold/Accent for New Stuff
-                              : "bg-primary text-primary-foreground" // Dark/Primary for Regular
+                              ? "bg-accent text-accent-foreground"
+                              : "bg-primary text-primary-foreground"
                           )}>
                             {project.status}
                           </Badge>
@@ -106,20 +136,17 @@ export default function ProjectsPage() {
 
                       {/* Content */}
                       <div className="flex flex-1 flex-col p-6">
-                        {/* Top Meta */}
                         <div className="mb-3 flex items-center justify-between text-xs text-muted-foreground">
                           <div className="flex items-center gap-1">
                             <MapPin className="h-3.5 w-3.5 text-accent" />
                             {project.location}
                           </div>
-                          {/* Completion Date (if available in data) */}
                           <div className="flex items-center gap-1">
                             <Calendar className="h-3.5 w-3.5" />
                             {project.completion || "Coming Soon"}
                           </div>
                         </div>
 
-                        {/* Title */}
                         <h2 className="mb-1 font-serif text-xl font-bold text-card-foreground group-hover:text-accent transition-colors">
                           {project.title}
                         </h2>
@@ -127,7 +154,6 @@ export default function ProjectsPage() {
                           by {project.developer}
                         </p>
 
-                        {/* Divider */}
                         <div className="mt-auto border-t border-border/50 pt-4">
                           <div className="flex items-end justify-between">
                             <div>
@@ -154,10 +180,10 @@ export default function ProjectsPage() {
                 <p className="text-lg text-muted-foreground">No projects found in this category.</p>
                 <Button 
                   variant="link" 
-                  onClick={() => setActiveCategory(ALL_CATEGORY)}
                   className="mt-2 text-accent"
+                  asChild
                 >
-                  Clear Filters
+                  <Link href="/projects">Clear Filters</Link>
                 </Button>
               </div>
             )}

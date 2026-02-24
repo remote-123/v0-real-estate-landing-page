@@ -5,7 +5,7 @@ import Link from "next/link"
 import { Mail, Phone, MapPin, ArrowRight, ShieldCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { SITE_CONFIG, NAV_LINKS } from "@/lib/constants"
+import { SITE_CONFIG, NAV_LINKS, NAV_LINKS_FOOTER } from "@/lib/constants"
 
 
 export function Footer() {
@@ -54,7 +54,7 @@ export function Footer() {
           </h4>
           {/* Using a grid with 2 columns specifically for the links */}
           <ul className="grid grid-cols-2 gap-x-4 gap-y-3">
-            {NAV_LINKS.map((link) => (
+            {NAV_LINKS_FOOTER.map((link) => (
               <li key={link.label}>
                 <Link
                   href={link.href}
@@ -64,6 +64,7 @@ export function Footer() {
                 </Link>
               </li>
             ))}
+            
           </ul>
         </div>
 

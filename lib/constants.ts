@@ -27,3 +27,13 @@ export const NAV_LINKS = [
   { label: "Contact", href: "/contact" },
 
 ]
+export const NAV_LINKS_FOOTER = [
+  { label: "Home", href: "/" },
+  { label: "About", href: "/about" },
+  { label: "Services", href: "/services" },
+  { label: "Projects", href: "/projects" },
+  { label: "Blog", href: "/blog" },
+  { label: "Contact", href: "/contact" },
+  { label: "Glossary", href: "/glossary" },
+
+]

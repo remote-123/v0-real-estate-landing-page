@@ -8,7 +8,7 @@ import { MobileStickyBar } from "@/components/mobile-sticky-bar"
 import { ExitIntentPopup } from "@/components/exit-intent-popup"
 import Script from "next/script"
 import { GoogleAnalytics } from '@next/third-parties/google'
-
+import { ThemeProvider } from "@/components/theme-provider"
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
@@ -54,14 +54,20 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${dmSans.variable} ${playfair.variable} font-sans antialiased`}
       >
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
         {children}
         <WhatsAppButton/>
         <MobileStickyBar />
-        <ExitIntentPopup />
+        {/* <ExitIntentPopup /> */}
         <Analytics />
         <Script id="microsoft-clarity" strategy="afterInteractive">
           {`
@@ -74,7 +80,7 @@ export default function RootLayout({
         </Script>
         <GoogleAnalytics gaId="G-1CYNHNZQV0" />
         
-        
+        </ThemeProvider> 
         </body>
     </html>
   )

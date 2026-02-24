@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { NAV_LINKS, SITE_CONFIG } from "@/lib/constants" // Import here
 import { GoldenVisaWizard } from "@/components/golden-visa-wizard" // Import the new component
+import { ThemeToggle } from "./theme-toggle"
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const pathname = usePathname()
@@ -36,6 +37,7 @@ export function Navbar() {
               </Link>
             </li>
           ))}
+          <ThemeToggle />
         </ul>
 
                 <div className="hidden lg:flex items-center gap-4">
@@ -68,6 +70,7 @@ export function Navbar() {
                 </Link>
               </li>
             ))}
+            <ThemeToggle />
           </ul>
         </div>
       )}

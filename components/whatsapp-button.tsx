@@ -1,10 +1,18 @@
 "use client"
 
 import React from 'react'
+import { usePathname } from 'next/navigation' // <-- NEW: Import the hook
 import { MessageCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export function WhatsAppButton() {
+  const pathname = usePathname() // <-- NEW: Get the current URL path
+
+  // Hide the button completely on admin and studio routes
+  if (pathname.startsWith('/admin') || pathname.startsWith('/studio')) {
+    return null
+  }
+
   // Update with your business number (include country code, no '+')
   const phoneNumber = "971554006230" 
   const message = encodeURIComponent("Hello! I'm interested in learning more about dubai real estate.")

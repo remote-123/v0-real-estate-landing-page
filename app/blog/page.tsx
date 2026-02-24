@@ -5,22 +5,41 @@ import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { Badge } from "@/components/ui/badge"
 import { ArrowUpRight, Clock } from "lucide-react"
-import { blogPosts } from "@/lib/blog"
+import { client } from "@/sanity/lib/client" // <-- Import Sanity client
+
+export const revalidate = 60 // Refresh data periodically
 
 export const metadata: Metadata = {
   title: "Blog & Insights | NorthCapitalDXB",
-  description:
-    "Expert analysis on Dubai real estate trends, investment strategies, and UAE market insights. Stay informed with NorthCapitalDXB.",
-  openGraph: {
-    title: "Blog & Insights | NorthCapitalDXB",
-    description:
-      "Expert analysis on Dubai real estate trends, investment strategies, and UAE market insights.",
-    type: "website",
-  },
+  description: "Expert analysis on Dubai real estate trends, investment strategies, and UAE market insights.",
 }
 
-export default function BlogPage() {
-  const [featured, ...rest] = blogPosts
+// GROQ QUERY: Fetch all posts, ordered by newest date
+const query = `*[_type == "post"] | order(date desc) {
+  title,
+  "slug": slug.current,
+  excerpt,
+  category,
+  date,
+  readTime,
+  "image": image.asset->url
+}`
+
+export default async function BlogPage() {
+  // Fetch live from Sanity
+  const posts = await client.fetch(query)
+  
+  if (posts.length === 0) {
+    return (
+      <div className="pt-40 text-center pb-20 min-h-screen">
+        <Navbar />
+        <h1 className="text-3xl font-serif">No posts found. Publish one in Sanity Studio!</h1>
+      </div>
+    )
+  }
+
+  // Split the first post as "Featured" and the rest below
+  const [featured, ...rest] = posts
 
   return (
     <>
@@ -38,8 +57,7 @@ export default function BlogPage() {
               </span>
             </h1>
             <p className="mt-4 max-w-xl text-lg leading-relaxed text-primary-foreground/70">
-              Stay informed with expert analysis from our team of Dubai real
-              estate professionals.
+              Stay informed with expert analysis from our team of Dubai real estate professionals.
             </p>
           </div>
         </section>
@@ -59,10 +77,7 @@ export default function BlogPage() {
                 </div>
                 <div className="flex flex-col justify-center gap-4 p-8 md:p-12">
                   <div className="flex items-center gap-3">
-                    <Badge
-                      variant="secondary"
-                      className="bg-accent/10 text-accent"
-                    >
+                    <Badge variant="secondary" className="bg-accent/10 text-accent">
                       {featured.category}
                     </Badge>
                     <span className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -80,23 +95,17 @@ export default function BlogPage() {
                     Read Article
                     <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    {featured.date}
-                  </p>
+                  <p className="text-xs text-muted-foreground">{featured.date}</p>
                 </div>
               </article>
             </Link>
 
             {/* Rest of Posts */}
             {rest.length > 0 && (
-              <div className="mt-12 grid gap-8 md:grid-cols-2">
-                {rest.map((post) => (
-                  <Link
-                    key={post.slug}
-                    href={`/blog/${post.slug}`}
-                    className="group"
-                  >
-                    <article className="flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card transition-shadow hover:shadow-lg">
+              <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+                {rest.map((post: any) => (
+                  <Link key={post.slug} href={`/blog/${post.slug}`} className="group flex flex-col h-full">
+                    <article className="flex flex-1 h-full flex-col overflow-hidden rounded-xl border border-border bg-card transition-shadow hover:shadow-lg">
                       <div className="relative aspect-[16/9] overflow-hidden">
                         <Image
                           src={post.image || "/placeholder.svg"}
@@ -107,10 +116,7 @@ export default function BlogPage() {
                       </div>
                       <div className="flex flex-1 flex-col gap-3 p-6">
                         <div className="flex items-center gap-3">
-                          <Badge
-                            variant="secondary"
-                            className="bg-accent/10 text-accent"
-                          >
+                          <Badge variant="secondary" className="bg-accent/10 text-accent">
                             {post.category}
                           </Badge>
                           <span className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -124,9 +130,7 @@ export default function BlogPage() {
                         <p className="flex-1 text-sm leading-relaxed text-muted-foreground">
                           {post.excerpt}
                         </p>
-                        <p className="text-xs text-muted-foreground">
-                          {post.date}
-                        </p>
+                        <p className="text-xs text-muted-foreground">{post.date}</p>
                       </div>
                     </article>
                   </Link>
