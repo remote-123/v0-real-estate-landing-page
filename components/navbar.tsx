@@ -6,9 +6,10 @@ import { usePathname } from "next/navigation"
 import { Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { NAV_LINKS, SITE_CONFIG } from "@/lib/constants" // Import here
-import { GoldenVisaWizard } from "@/components/golden-visa-wizard" // Import the new component
+import { NAV_LINKS, SITE_CONFIG } from "@/lib/constants"
+import { GoldenVisaWizard } from "@/components/golden-visa-wizard"
 import { ThemeToggle } from "./theme-toggle"
+
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const pathname = usePathname()
@@ -40,16 +41,28 @@ export function Navbar() {
           <ThemeToggle />
         </ul>
 
-                <div className="hidden lg:flex items-center gap-4">
-          <GoldenVisaWizard /> {/* <--- ADD THIS */}
-          <Button asChild className="bg-accent text-accent-foreground">
+        {/* Desktop Actions */}
+        <div className="hidden lg:flex items-center gap-4">
+          <GoldenVisaWizard />
+          <Button asChild className="bg-accent text-accent-foreground hover:bg-accent/90">
             <Link href="/calculator">What can I buy?</Link>
           </Button>
         </div>
 
-      
-
-        {/* ... Mobile Toggle Button ... */}
+        {/* Mobile Toggle Button - THIS WAS MISSING! */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="lg:hidden"
+          onClick={() => setMobileOpen(!mobileOpen)}
+          aria-label="Toggle menu"
+        >
+          {mobileOpen ? (
+            <X className="h-6 w-6 text-foreground" />
+          ) : (
+            <Menu className="h-6 w-6 text-foreground" />
+          )}
+        </Button>
       </nav>
 
       {/* Mobile Menu */}
@@ -61,8 +74,8 @@ export function Navbar() {
                 <Link
                   href={link.href}
                   className={cn(
-                    "block rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                    pathname === link.href ? "bg-secondary text-accent" : "text-muted-foreground"
+                    "block rounded-lg px-3 py-3 text-sm font-medium transition-colors",
+                    pathname === link.href ? "bg-secondary text-accent" : "text-muted-foreground hover:bg-secondary/50"
                   )}
                   onClick={() => setMobileOpen(false)}
                 >
@@ -70,7 +83,20 @@ export function Navbar() {
                 </Link>
               </li>
             ))}
-            <ThemeToggle />
+            
+            {/* Added Theme Toggle to mobile menu for easy access */}
+            <li className="px-3 py-3 border-t border-border/50 mt-2 flex items-center justify-between">
+              <span className="text-sm font-medium text-muted-foreground">Theme</span>
+              <ThemeToggle />
+            </li>
+            
+            {/* Added Mobile CTAs so they don't miss out on these features */}
+            <li className="flex flex-col gap-3 mt-4">
+              <GoldenVisaWizard />
+              <Button asChild className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
+                <Link href="/calculator" onClick={() => setMobileOpen(false)}>What can I buy?</Link>
+              </Button>
+            </li>
           </ul>
         </div>
       )}
