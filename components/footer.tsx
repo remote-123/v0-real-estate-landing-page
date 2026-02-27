@@ -22,7 +22,7 @@ export function Footer() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, type: "Newsletter Signup" }),
-        keepalive: true
+        keepalive: true // This belongs inside the object!
       })
       setSubscribed(true)
     } catch (error) {

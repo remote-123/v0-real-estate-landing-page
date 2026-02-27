@@ -17,7 +17,9 @@ import {
 import { CheckCircle2, MapPin, Download, Phone, Car, FileText, Lock } from "lucide-react"
 import { LeadForm } from "@/components/lead-form"
 import { ROICalculator } from "@/components/roi-calculator"
+import { Breadcrumbs } from "@/components/breadcrumbs"
 import { urlForImage } from "@/sanity/lib/image" // <-- NEW: Import the image URL builder
+
 
 // --- THE GROQ QUERY ---
 // This asks Sanity for a project where the slug matches the URL
@@ -118,7 +120,13 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
       
       <Navbar />
       <main className="bg-background pt-24 pb-20">
-        
+        {/* ADD THIS HERE */}
+               <Breadcrumbs 
+          items={[
+            { label: "All Projects", href: "/projects" },
+            { label: project.title, href: `/projects/${project.slug}`, active: true }
+          ]} 
+        />
         {/* HERO */}
         <section className="relative h-[60vh] w-full overflow-hidden md:h-[70vh]">
           {project.image && (
@@ -132,9 +140,12 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
               className="object-cover"
             />
           )}
+            
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+       
           <div className="absolute bottom-0 left-0 right-0 p-6 md:p-12">
             <div className="mx-auto max-w-7xl">
+        
               <Badge className="mb-4 bg-accent text-accent-foreground">{project.status}</Badge>
               <h1 className="font-serif text-4xl font-bold text-white md:text-6xl">{project.title}</h1>
               <p className="mt-2 text-lg text-white/90 flex items-center gap-2">
