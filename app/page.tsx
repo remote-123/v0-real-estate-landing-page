@@ -10,6 +10,7 @@ import { LeadForm } from "@/components/lead-form"
 import { Footer } from "@/components/footer"
 import { HowWeWork } from "@/components/how-we-work"
 import { FaqSection } from "@/components/faq-section"
+import { FeaturedProjects } from "@/components/featured-projects"
 
 export default function Home() {
   return (
@@ -18,6 +19,7 @@ export default function Home() {
       <main>
         <Hero />
         <StrategicAlliances />
+        <FeaturedProjects />
         <ValueProps />
         <HowWeWork />
         <TrackRecord />

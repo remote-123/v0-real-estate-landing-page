@@ -49,13 +49,18 @@ export async function POST(req: Request) {
     const jsonString = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
     const extractedData = JSON.parse(jsonString);
 
-    // 4. ADD SANITY IDENTIFIERS
+// 4. ADD SANITY IDENTIFIERS
     const generateKey = () => Math.random().toString(36).substring(2, 9);
+    
     if (Array.isArray(extractedData.details)) {
       extractedData.details = extractedData.details.map((item: any) => ({ ...item, _key: generateKey() }));
     }
     if (Array.isArray(extractedData.connectivity)) {
       extractedData.connectivity = extractedData.connectivity.map((item: any) => ({ ...item, _key: generateKey() }));
+    }
+    // ADD THIS NEW BLOCK:
+    if (Array.isArray(extractedData.faqs)) {
+      extractedData.faqs = extractedData.faqs.map((item: any) => ({ ...item, _key: generateKey() }));
     }
 
     // 5. SAVE TO SANITY AS A DRAFT

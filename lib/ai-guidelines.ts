@@ -43,31 +43,34 @@ TASK: Read the attached developer factsheet/brochure. Extract the data and analy
 Return the output STRICTLY as a JSON object with no markdown formatting or extra text. If data is missing, return null.
 
 {
-  "title": "Project Name (e.g., Altan at Dubai Creek)",
+  "title": "Project Name",
   "developer": "Developer Name",
   "location": "Project Location / Community",
-  "type": "Property Type Subtitle (e.g., Waterfront Apartments)",
+  "type": "Property Type Subtitle",
   "category": "MUST BE EXACTLY ONE OF: Apartments, Villas, Townhouses, or Penthouses",
   "status": "MUST BE EXACTLY ONE OF: Upcoming, Featured, Selling Now, Pre-Launch, or Sold Out",
-  "startingPrice": "e.g., AED 1.8M (Extract exactly)",
-  "paymentPlan": "e.g., 80/20 (Extract exactly)",
-  "completion": "e.g., Q4 2028 (Extract exactly)",
-  "roi": "Expected ROI (Estimate strictly based on current market averages for this area if not explicitly stated)",
-  "uniquenessTitle": "A short, analytical title about the macro thesis (e.g., 'Severely Undersupplied Waterfront Infrastructure')",
-  "uniquenessDescription": "Write 2 paragraphs here. Paragraph 1: The Macro Thesis. Paragraph 2: The Bull Case. (Use the Wealth Advisor tone, no fluff).",
-  "description": "Write 2 paragraphs here. Paragraph 1: The Bear Case (Who Should Pass). Paragraph 2: The North Capital Verdict.",
-  "amenities": ["List max 6 key amenities, removing adjectives. E.g., 'Infinity Pool', not 'Stunning Azure Infinity Pool'"],
+  "startingPrice": "e.g., AED 1.8M",
+  "paymentPlan": "e.g., 80/20",
+  "completion": "e.g., Q4 2028",
+  "roi": "Expected ROI",
+  "uniquenessTitle": "A short, analytical title about the macro thesis",
+  "uniquenessDescription": "Paragraph 1: The Macro Thesis. Paragraph 2: The Bull Case.",
+  "description": "Paragraph 1: The Bear Case. Paragraph 2: The North Capital Verdict.",
+  "amenities": ["List max 6 key amenities"],
   "details": [
-    { "label": "Unit Types", "value": "1, 2, 3 BR" },
-    { "label": "Building Heights", "value": "G+P+20" }
+    { "label": "Unit Types", "value": "1, 2, 3 BR" }
   ],
   "connectivity": [
     { "location": "Downtown Dubai", "duration": "10 Min" }
+  ],
+  "faqs": [
+    { 
+      "question": "Phrase the question exactly how an investor would ask Google/Perplexity (e.g., 'What is the payment plan for [Project Name]?'). Make sure to get 3-5 questions that cover the key concerns an investor would have after reading the description.", 
+      "answer": "A concise, objective 2-3 sentence answer based on the PDF." 
+    }
   ]
 }
 `;
-
-
 
 // Helper function to dynamically inject formatting rules
 export const getGeminiPrompt = (taskFormat: string) => {

@@ -96,7 +96,7 @@ export async function POST(req: Request) {
       _id: `drafts.ai-blog-${Date.now()}`,
       title: safeTitle,
       slug: { current: safeTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') },
-      author: 'NorthCapital AI',
+      author: 'NorthCapital Research',
       excerpt: aiData.excerpt || "",
       keyTakeaways: aiData.keyTakeaways || [],
       faqs: aiData.faqs || [],

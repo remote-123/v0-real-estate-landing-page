@@ -47,7 +47,8 @@ const query = `*[_type == "project" && slug.current == $slug][0]{
   gallery,
   masterplanImage,
   paymentPlanImage,
-  floorPlanImage
+  floorPlanImage,
+  Faqs
 }`
 
 // Generate SEO slugs dynamically from Sanity for incredibly fast loading
@@ -113,10 +114,27 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
     }
   }
 
+  // ADD THIS NEW SCHEMA GENERATOR:
+  const faqSchema = project.faqs && project.faqs.length > 0 ? {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": project.faqs.map((faq: any) => ({
+      "@type": "Question",
+      "name": faq.question,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": faq.answer
+      }
+    }))
+  } : null;
+
   return (
     <>
-      {/* Inject JSON-LD for SEO */}
+{/* Inject BOTH JSON-LD scripts for SEO/AEO */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      {faqSchema && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
+      )}
       
       <Navbar />
       <main className="bg-background pt-24 pb-20">

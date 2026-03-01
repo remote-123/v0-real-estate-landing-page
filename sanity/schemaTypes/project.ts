@@ -160,5 +160,19 @@ export const projectType = defineType({
       title: 'Floor Plan Image',
       type: 'image',
     }),
+    defineField({
+      name: 'faqs',
+      title: 'Frequently Asked Questions (AEO/SEO)',
+      type: 'array',
+      of: [
+        {
+          type: 'object',
+          fields: [
+            { name: 'question', title: 'Question', type: 'string' },
+            { name: 'answer', title: 'Answer', type: 'text' },
+          ],
+        },
+      ],
+    }),
   ],
 })

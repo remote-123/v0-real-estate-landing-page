@@ -5,7 +5,7 @@ import { ArrowRight, Play, Clock } from "lucide-react"
 import { client } from "@/sanity/lib/client"
 
 // GROQ Query: Fetch the 3 newest blog posts
-const query = `*[_type == "post"] | order(publishedAt desc)[0...3] {
+const query = `*[_type == "post"] | order(publishedAt desc)[0...6] {
   title,
   "slug": slug.current,
   excerpt,

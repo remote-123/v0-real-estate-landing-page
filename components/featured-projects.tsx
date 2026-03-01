@@ -1,100 +1,107 @@
 import Image from "next/image"
 import Link from "next/link"
+import { ArrowRight, MapPin } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { MapPin, ArrowUpRight, ArrowRight } from "lucide-react"
-import { projects } from "@/lib/projects"
+import { client } from "@/sanity/lib/client"
+import { urlForImage } from "@/sanity/lib/image"
 
-const featured = projects.slice(0, 3)
+// GROQ Query to get the 3 newest projects
+const query = `*[_type == "project" && defined(slug.current)] | order(_createdAt desc)[0...3] {
+  title,
+  "slug": slug.current,
+  location,
+  startingPrice,
+  status,
+  category,
+  image
+}`
 
-export function FeaturedProjects() {
+export async function FeaturedProjects() {
+  const projects = await client.fetch(query)
+
+  if (!projects || projects.length === 0) return null
+
   return (
-    <section id="projects" className="bg-background py-20 md:py-28">
+    <section className="bg-background py-20 md:py-28">
       <div className="mx-auto max-w-7xl px-6">
-        <div className="mb-16 flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
+        
+        <div className="mb-12 flex flex-col items-start justify-between gap-6 md:flex-row md:items-end">
           <div className="max-w-2xl">
             <p className="mb-3 text-sm font-semibold tracking-wide text-accent uppercase">
-              Featured Projects
+              Exclusive Inventory
             </p>
             <h2 className="font-serif text-3xl font-bold tracking-tight text-foreground md:text-4xl">
-              <span className="text-balance">
-                Handpicked masterplans with proven returns
-              </span>
+              Featured Investment Opportunities
             </h2>
           </div>
-          <p className="max-w-sm text-muted-foreground">
-            Each project is vetted by our team for location quality, developer
-            track record, and investment upside.
-          </p>
+          <Link
+            href="/projects"
+            className="group flex shrink-0 items-center gap-2 text-sm font-medium text-accent transition-colors hover:text-accent/80"
+          >
+            View all projects
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </Link>
         </div>
 
-        <div className="grid gap-8 md:grid-cols-3">
-          {featured.map((project) => (
-            <Link
-              key={project.slug}
-              href={`/projects/${project.slug}`}
-              className="group"
-            >
-              <article className="flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card transition-shadow hover:shadow-lg">
-                <div className="relative aspect-[4/3] overflow-hidden">
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+          {projects.map((project: any) => (
+            <Link key={project.slug} href={`/projects/${project.slug}`} className="group flex flex-col h-full">
+              <article className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all hover:shadow-xl hover:-translate-y-1">
+                
+                {/* Image & Badges */}
+                <div className="relative aspect-[4/3] w-full overflow-hidden">
                   <Image
-                    src={project.image || "/placeholder.svg"}
-                    alt={`${project.title} in ${project.location}`}
+                    src={project.image ? urlForImage(project.image).width(800).url() : "/placeholder.svg"}
+                    alt={project.title}
                     fill
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    className="object-cover transition-transform duration-700 group-hover:scale-105"
                   />
-                  <Badge className="absolute top-4 left-4 bg-accent text-accent-foreground">
-                    {project.status}
-                  </Badge>
-                </div>
-
-                <div className="flex flex-1 flex-col gap-3 p-6">
-                  <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                    <MapPin className="h-3.5 w-3.5" />
-                    {project.location}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80" />
+                  
+                  <div className="absolute top-4 left-4 flex gap-2">
+                    {project.status && (
+                      <Badge className="bg-accent text-accent-foreground border-none font-semibold shadow-md">
+                        {project.status}
+                      </Badge>
+                    )}
+                    {project.category && (
+                      <Badge variant="secondary" className="bg-white/90 text-black border-none font-semibold shadow-md">
+                        {project.category}
+                      </Badge>
+                    )}
                   </div>
 
-                  <h3 className="flex items-center gap-2 font-serif text-lg font-bold text-card-foreground">
+                  {/* Price overlay at the bottom of the image */}
+                  <div className="absolute bottom-4 left-4 right-4">
+                    <p className="text-xs font-medium text-white/80 uppercase tracking-wider mb-1">Starting From</p>
+                    <p className="text-2xl font-bold text-white">{project.startingPrice || "Price on Request"}</p>
+                  </div>
+                </div>
+
+                {/* Content Box */}
+                <div className="flex flex-col gap-3 p-6">
+                  <h3 className="font-serif text-xl font-bold text-card-foreground line-clamp-1">
                     {project.title}
-                    <ArrowUpRight className="h-4 w-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
                   </h3>
+                  
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <MapPin className="h-4 w-4 text-accent shrink-0" />
+                    <span className="text-sm line-clamp-1">{project.location || "Dubai, UAE"}</span>
+                  </div>
 
-                  <p className="text-sm text-muted-foreground">{project.type}</p>
-
-                  <div className="mt-auto flex items-center justify-between border-t border-border pt-4">
-                    <div>
-                      <p className="text-xs text-muted-foreground">
-                        Starting From
-                      </p>
-                      <p className="font-semibold text-card-foreground">
-                        {project.startingPrice}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs text-muted-foreground">
-                        Expected ROI
-                      </p>
-                      <p className="font-semibold text-accent">{project.roi}</p>
-                    </div>
+                  <div className="mt-4 pt-4 border-t border-border/50 flex items-center justify-between">
+                    <span className="text-sm font-medium text-foreground group-hover:text-accent transition-colors">
+                      View Investment Thesis
+                    </span>
+                    <ArrowRight className="h-4 w-4 text-accent transition-transform group-hover:translate-x-1" />
                   </div>
                 </div>
+
               </article>
             </Link>
           ))}
         </div>
 
-        <div className="mt-12 text-center">
-          <Button
-            variant="outline"
-            size="lg"
-            asChild
-          >
-            <Link href="/projects">
-              View All Projects
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
-          </Button>
-        </div>
       </div>
     </section>
   )
