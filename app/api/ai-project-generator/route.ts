@@ -34,7 +34,7 @@ export async function POST(req: Request) {
     const base64Pdf = Buffer.from(pdfBuffer).toString('base64');
 
     // 3. WAKE UP GEMINI
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); 
+    const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" }); 
     const prompt = getGeminiPrompt(PROJECT_JSON_FORMAT);
 
     console.log("🧠 Sending PDF to Gemini...");
