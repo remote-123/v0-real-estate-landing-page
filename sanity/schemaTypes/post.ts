@@ -7,30 +7,16 @@ export const postType = defineType({
   fields: [
     defineField({
       name: 'title',
-      title: 'Post Title',
+      title: 'Title',
       type: 'string',
       validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'slug',
-      title: 'URL Slug',
+      title: 'Slug',
       type: 'slug',
       options: { source: 'title', maxLength: 96 },
       validation: (Rule) => Rule.required(),
-    }),
-    defineField({
-      name: 'category',
-      title: 'Category',
-      type: 'string',
-      options: {
-        list: ['Market Trends', 'Investment Guide', 'Investment Tips', 'Market Guides', 'News'],
-      },
-    }),
-    defineField({
-      name: 'excerpt',
-      title: 'Short Excerpt',
-      type: 'text',
-      description: 'A 1-2 sentence summary for the blog card.',
     }),
     defineField({
       name: 'author',
@@ -39,32 +25,52 @@ export const postType = defineType({
       initialValue: 'NorthCapital Advisory',
     }),
     defineField({
-      name: 'readTime',
-      title: 'Read Time',
-      type: 'string',
-      description: 'e.g., 6 min read',
-    }),
-    defineField({
-      name: 'date',
-      title: 'Publish Date',
-      type: 'date',
-      options: { dateFormat: 'MMMM D, YYYY' },
-    }),
-    defineField({
-      name: 'image',
-      title: 'Featured Image',
+      name: 'mainImage',
+      title: 'Main image',
       type: 'image',
       options: { hotspot: true },
     }),
-    // THIS IS THE MAGIC FIELD - It creates a Rich Text Editor in Sanity
     defineField({
-      name: 'content',
-      title: 'Blog Content',
+      name: 'publishedAt',
+      title: 'Published at',
+      type: 'datetime',
+      initialValue: () => new Date().toISOString(),
+    }),
+    defineField({
+      name: 'excerpt',
+      title: 'Excerpt (Meta Description)',
+      type: 'text',
+      rows: 3,
+    }),
+    // --- AEO FEATURE 1: KEY TAKEAWAYS ---
+    defineField({
+      name: 'keyTakeaways',
+      title: 'Key Takeaways (AEO Summary)',
+      description: 'Bullet points that AI engines will scrape for quick answers.',
+      type: 'array',
+      of: [{ type: 'string' }],
+    }),
+    // --- AEO FEATURE 2: FAQ SCHEMA DATA ---
+    defineField({
+      name: 'faqs',
+      title: 'Frequently Asked Questions (AEO)',
+      description: 'Strict Q&A format. This will be injected as JSON-LD hidden code for AI bots.',
       type: 'array',
       of: [
-        { type: 'block' }, // Standard text (paragraphs, headings, lists)
-        { type: 'image', options: { hotspot: true } } // Allows you to drop images in the middle of a post
-      ],
+        {
+          type: 'object',
+          fields: [
+            { name: 'question', type: 'string', title: 'Question' },
+            { name: 'answer', type: 'text', title: 'Answer' }
+          ]
+        }
+      ]
+    }),
+    defineField({
+      name: 'body',
+      title: 'Body Content',
+      type: 'array',
+      of: [{ type: 'block' }, { type: 'image', options: { hotspot: true } }],
     }),
   ],
 })

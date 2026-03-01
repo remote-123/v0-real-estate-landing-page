@@ -1,24 +1,25 @@
 import Image from "next/image"
 import { notFound } from "next/navigation"
 import { client } from "@/sanity/lib/client"
-import { PortableText } from "next-sanity" // <-- This is the magic rich text renderer!
+import { urlForImage } from "@/sanity/lib/image" // Added your image optimizer
+import { PortableText } from "next-sanity"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
-import { Badge } from "@/components/ui/badge"
-import { Clock, User } from "lucide-react"
+import { Clock, User, CheckCircle2, HelpCircle } from "lucide-react"
 
 export const revalidate = 60
 
+// 1. UPDATED QUERY: Pulling your exact AEO schema fields
 const query = `*[_type == "post" && slug.current == $slug][0]{
   title,
   "slug": slug.current,
   excerpt,
-  category,
-  date,
   author,
-  readTime,
-  "image": image.asset->url,
-  content
+  publishedAt,
+  mainImage,
+  keyTakeaways,
+  faqs,
+  body
 }`
 
 export async function generateStaticParams() {
@@ -29,24 +30,31 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
   const post = await client.fetch(query, { slug })
+  
   if (!post) return { title: "Post Not Found" }
+  
+  const ogImage = post.mainImage ? urlForImage(post.mainImage).width(1200).height(630).url() : ""
+
   return {
-    title: `${post.title} | NorthCapitalDXB Blog`,
+    title: `${post.title} | NorthCapitalDXB Insights`,
     description: post.excerpt,
-    openGraph: { images: [post.image] },
+    openGraph: { images: [ogImage] },
   }
 }
 
-// Optional: Custom styling for your rich text so it matches your brand
+// Custom styling for your rich text so it matches your brand
 const ptComponents = {
   types: {
     image: ({ value }: any) => {
       if (!value?.asset?._ref) return null
-      // Sanity image builder logic could go here, but for now we'll handle basic images
       return (
-        <div className="relative w-full h-96 my-8 rounded-xl overflow-hidden">
-          {/* Note: In a full setup, you'd use @sanity/image-url to parse the asset ref to a URL */}
-          <div className="bg-muted w-full h-full flex items-center justify-center text-muted-foreground">Image Block</div>
+        <div className="relative w-full h-96 my-8 rounded-xl overflow-hidden shadow-lg border border-border">
+          <Image 
+            src={urlForImage(value).width(800).url()} 
+            alt="Blog inline image" 
+            fill 
+            className="object-cover"
+          />
         </div>
       )
     }
@@ -68,37 +76,62 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
   if (!post) notFound()
 
+  // 2. AEO: GENERATE THE INVISIBLE FAQ JSON-LD FOR BOTS
+  const faqSchema = post.faqs && post.faqs.length > 0 ? {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": post.faqs.map((faq: any) => ({
+      "@type": "Question",
+      "name": faq.question,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": faq.answer
+      }
+    }))
+  } : null;
+
+  // Format the date nicely
+  const formattedDate = post.publishedAt 
+    ? new Date(post.publishedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+    : 'Recently Published'
+
   return (
     <>
+      {/* INJECT THE AI SCHEMA INTO THE HTML HEAD */}
+      {faqSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        />
+      )}
+
       <Navbar />
       <main className="bg-background pt-32 pb-20">
         <article className="mx-auto max-w-3xl px-6">
           
           {/* Article Header */}
           <header className="mb-12 text-center">
-            <Badge className="mb-6 bg-accent text-accent-foreground">{post.category}</Badge>
-            <h1 className="font-serif text-4xl font-bold tracking-tight text-foreground md:text-5xl lg:text-6xl mb-6">
+            <h1 className="font-serif text-4xl font-bold tracking-tight text-foreground md:text-5xl lg:text-6xl mb-6 text-balance">
               {post.title}
             </h1>
             
             <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
                 <User className="h-4 w-4 text-accent" />
-                <span>{post.author}</span>
+                <span className="font-medium">{post.author}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-accent" />
-                <span>{post.readTime}</span>
+                <time>{formattedDate}</time>
               </div>
-              <time>{post.date}</time>
             </div>
           </header>
 
           {/* Featured Image */}
-          {post.image && (
-            <div className="relative aspect-video w-full overflow-hidden rounded-2xl mb-12 shadow-lg">
+          {post.mainImage && (
+            <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl mb-12 shadow-xl border border-border">
               <Image
-                src={post.image}
+                src={urlForImage(post.mainImage).width(1200).url()}
                 alt={post.title}
                 fill
                 className="object-cover"
@@ -107,10 +140,52 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             </div>
           )}
 
-          {/* The Rich Text Content */}
+          {/* 3. AEO: THE "KEY TAKEAWAYS" BOX FOR HUMANS AND RAG MODELS */}
+          {post.keyTakeaways && post.keyTakeaways.length > 0 && (
+            <div className="mb-12 rounded-xl border border-accent/20 bg-accent/5 p-6 md:p-8 shadow-sm">
+              <h3 className="font-serif text-xl font-bold text-foreground mb-4 flex items-center gap-2">
+                <CheckCircle2 className="h-5 w-5 text-accent" />
+                Key Takeaways
+              </h3>
+              <ul className="space-y-3">
+                {post.keyTakeaways.map((point: string, idx: number) => (
+                  <li key={idx} className="flex items-start gap-3 text-muted-foreground">
+                    <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-accent shrink-0" />
+                    <span className="text-lg leading-relaxed">{point}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* The Rich Text Body */}
           <div className="prose prose-lg dark:prose-invert max-w-none">
-            <PortableText value={post.content} components={ptComponents} />
+             {post.body ? (
+               <PortableText value={post.body} components={ptComponents} />
+             ) : (
+               <p className="text-muted-foreground italic">Content coming soon...</p>
+             )}
           </div>
+
+          {/* 4. AEO: VISIBLE FAQ SECTION */}
+          {post.faqs && post.faqs.length > 0 && (
+            <div className="mt-16 border-t border-border pt-12">
+              <h2 className="font-serif text-3xl font-bold text-foreground mb-8">Frequently Asked Questions</h2>
+              <div className="space-y-6">
+                {post.faqs.map((faq: any, idx: number) => (
+                  <div key={idx} className="rounded-xl border border-border bg-card p-6 shadow-sm">
+                    <h3 className="font-bold text-lg text-foreground flex items-start gap-3 mb-3">
+                      <HelpCircle className="h-5 w-5 text-accent shrink-0 mt-0.5" />
+                      {faq.question}
+                    </h3>
+                    <p className="text-muted-foreground leading-relaxed pl-8">
+                      {faq.answer}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           
         </article>
       </main>
