@@ -6,7 +6,8 @@ import { PortableText } from "next-sanity"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { Clock, User, CheckCircle2, HelpCircle } from "lucide-react"
-import { LeadForm } from "@/components/lead-form" // <-- 1. IMPORT YOUR CONVERSION ENGINE
+import { LeadForm } from "@/components/lead-form"
+
 
 export const revalidate = 60
 
@@ -103,9 +104,11 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
       <Navbar />
       <main className="bg-background pt-32">
-        <article className="mx-auto max-w-3xl px-6 pb-20">
+        {/* 2. INCREASED MAX-WIDTH TO ALLOW ROOM FOR SIDEBAR */}
+        <div className="mx-auto max-w-7xl px-6 pb-20">
           
-          <header className="mb-12 text-center">
+          {/* Header remains centered at the top */}
+          <header className="mb-12 mx-auto max-w-3xl text-center">
             <h1 className="font-serif text-4xl font-bold tracking-tight text-foreground md:text-5xl lg:text-6xl mb-6 text-balance">
               {post.title}
             </h1>
@@ -122,68 +125,85 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             </div>
           </header>
 
-          {post.mainImage && (
-            <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl mb-12 shadow-xl border border-border">
-              <Image
-                src={urlForImage(post.mainImage).width(1200).url()}
-                alt={post.title}
-                fill
-                className="object-cover"
-                priority
-              />
-            </div>
-          )}
+          {/* 3. THE GRID LAYOUT: 8 Columns for Content, 4 Columns for Sidebar */}
+          <div className="grid grid-cols-1 items-start gap-12 lg:grid-cols-12">
+            
+            {/* LEFT SIDE: Main Article Content */}
+            <article className="lg:col-span-8">
+              {post.mainImage && (
+                <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl mb-12 shadow-xl border border-border">
+                  <Image
+                    src={urlForImage(post.mainImage).width(1200).url()}
+                    alt={post.title}
+                    fill
+                    className="object-cover"
+                    priority
+                  />
+                </div>
+              )}
 
-          {post.keyTakeaways && post.keyTakeaways.length > 0 && (
-            <div className="mb-12 rounded-xl border border-accent/20 bg-accent/5 p-6 md:p-8 shadow-sm">
-              <h3 className="font-serif text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-                <CheckCircle2 className="h-5 w-5 text-accent" />
-                Key Takeaways
-              </h3>
-              <ul className="space-y-3">
-                {post.keyTakeaways.map((point: string, idx: number) => (
-                  <li key={idx} className="flex items-start gap-3 text-muted-foreground">
-                    <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-accent shrink-0" />
-                    <span className="text-lg leading-relaxed">{point}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+              {post.keyTakeaways && post.keyTakeaways.length > 0 && (
+                <div className="mb-12 rounded-xl border border-accent/20 bg-accent/5 p-6 md:p-8 shadow-sm">
+                  <h3 className="font-serif text-xl font-bold text-foreground mb-4 flex items-center gap-2">
+                    <CheckCircle2 className="h-5 w-5 text-accent" />
+                    Key Takeaways
+                  </h3>
+                  <ul className="space-y-3">
+                    {post.keyTakeaways.map((point: string, idx: number) => (
+                      <li key={idx} className="flex items-start gap-3 text-muted-foreground">
+                        <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-accent shrink-0" />
+                        <span className="text-lg leading-relaxed">{point}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
-          <div className="prose prose-lg dark:prose-invert max-w-none">
-             {post.body ? (
-               <PortableText value={post.body} components={ptComponents} />
-             ) : (
-               <p className="text-muted-foreground italic">Content coming soon...</p>
-             )}
-          </div>
-
-          {post.faqs && post.faqs.length > 0 && (
-            <div className="mt-16 border-t border-border pt-12">
-              <h2 className="font-serif text-3xl font-bold text-foreground mb-8">Frequently Asked Questions</h2>
-              <div className="space-y-6">
-                {post.faqs.map((faq: any, idx: number) => (
-                  <div key={idx} className="rounded-xl border border-border bg-card p-6 shadow-sm">
-                    <h3 className="font-bold text-lg text-foreground flex items-start gap-3 mb-3">
-                      <HelpCircle className="h-5 w-5 text-accent shrink-0 mt-0.5" />
-                      {faq.question}
-                    </h3>
-                    <p className="text-muted-foreground leading-relaxed pl-8">
-                      {faq.answer}
-                    </p>
-                  </div>
-                ))}
+              <div className="prose prose-lg dark:prose-invert max-w-none">
+                 {post.body ? (
+                   <PortableText value={post.body} components={ptComponents} />
+                 ) : (
+                   <p className="text-muted-foreground italic">Content coming soon...</p>
+                 )}
               </div>
-            </div>
-          )}
-          
-        </article>
 
-        {/* 2. THE CONVERSION TRAP */}
-        {/* We place this outside the <article> so it has the full-width background color of your normal contact section */}
-        <div className="border-t border-border">
-          <LeadForm projectName={`Blog: ${post.title}`} />
+              {post.faqs && post.faqs.length > 0 && (
+                <div className="mt-16 border-t border-border pt-12">
+                  <h2 className="font-serif text-3xl font-bold text-foreground mb-8">Frequently Asked Questions</h2>
+                  <div className="space-y-6">
+                    {post.faqs.map((faq: any, idx: number) => (
+                      <div key={idx} className="rounded-xl border border-border bg-card p-6 shadow-sm">
+                        <h3 className="font-bold text-lg text-foreground flex items-start gap-3 mb-3">
+                          <HelpCircle className="h-5 w-5 text-accent shrink-0 mt-0.5" />
+                          {faq.question}
+                        </h3>
+                        <p className="text-muted-foreground leading-relaxed pl-8">
+                          {faq.answer}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </article>
+
+       {/* RIGHT SIDE: The Sticky Sidebar (Hidden on Mobile) */}
+            <aside className="hidden lg:flex flex-col gap-6 lg:col-span-4 sticky top-32">
+              
+              {/* Tool 1: Quick Contact Box */}
+              <div className="rounded-xl border border-border bg-card p-6 shadow-xl border-t-4 border-t-accent">
+                <h3 className="font-serif text-xl font-bold text-foreground mb-2">Speak to an Advisor</h3>
+                <p className="text-sm text-muted-foreground mb-6">
+                  Discuss how these market trends impact your investment portfolio.
+                </p>
+                
+                {/* The Lead Form */}
+                <LeadForm minimal={true} projectName={`Blog Sidebar: ${post.title}`} />
+              </div>
+
+            </aside>
+
+          </div>
         </div>
 
       </main>

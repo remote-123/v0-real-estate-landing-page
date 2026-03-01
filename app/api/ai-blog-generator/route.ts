@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { client } from '@/sanity/lib/client';
+import { getGeminiPrompt } from '@/lib/ai-guidelines';
 
 // If you are on Vercel Pro, this allows the AI up to 60 seconds to read the PDF and write the blog.
 export const maxDuration = 60; 
@@ -30,12 +31,7 @@ export async function POST(req: Request) {
       generationConfig: { responseMimeType: "application/json" } // Force strict JSON
     });
 
-    const prompt = `
-      You are an elite Real Estate SEO & AEO copywriter for high-end Dubai property.
-      I am providing a PR email and a developer PDF brochure for a new property.
-      
-      Your task is to write a highly engaging, AEO-optimized blog post for investors.
-      Ignore marketing fluff; focus on ROI, location, amenities, and payment plans.
+    const jsonFormatRule = `
       
       You MUST output strictly as a JSON object matching this exact structure:
       {
@@ -61,6 +57,8 @@ export async function POST(req: Request) {
       
       Make the bodyBlocks at least 400 words. Include H2s and normal paragraphs.
     `;
+
+    const prompt = getGeminiPrompt(jsonFormatRule);
 
     // 4. GENERATE THE CONTENT
     console.log("🧠 Sending PDF to Gemini...");
