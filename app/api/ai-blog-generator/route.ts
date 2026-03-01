@@ -26,7 +26,7 @@ export async function POST(req: Request) {
     // 3. WAKE UP GEMINI
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
     const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-pro", // Pro model handles massive PDFs better
+      model: "gemini-3-flash-preview", // Pro model handles massive PDFs better
       generationConfig: { responseMimeType: "application/json" } // Force strict JSON
     });
 
