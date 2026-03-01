@@ -95,7 +95,7 @@ export async function POST(req: Request) {
         _type: 'slug', 
         current: aiData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') 
       },
-      author: 'NorthCapital AI',
+      author: 'North Capital Research Team',
       excerpt: aiData.excerpt,
       keyTakeaways: aiData.keyTakeaways,
       faqs: aiData.faqs,

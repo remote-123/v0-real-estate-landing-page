@@ -4,29 +4,37 @@ import Link from "next/link"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { Badge } from "@/components/ui/badge"
-import { ArrowUpRight, Clock } from "lucide-react"
-import { client } from "@/sanity/lib/client" // <-- Import Sanity client
+import { ArrowUpRight, Calendar } from "lucide-react"
+import { client } from "@/sanity/lib/client"
+import { urlForImage } from "@/sanity/lib/image" // <-- Added Sanity Image builder
 
-export const revalidate = 60 // Refresh data periodically
+export const revalidate = 60
 
 export const metadata: Metadata = {
   title: "Blog & Insights | NorthCapitalDXB",
   description: "Expert analysis on Dubai real estate trends, investment strategies, and UAE market insights.",
 }
 
-// GROQ QUERY: Fetch all posts, ordered by newest date
-const query = `*[_type == "post"] | order(date desc) {
+// 1. UPDATED GROQ QUERY: Fetching the exact fields from your new AEO schema
+const query = `*[_type == "post"] | order(publishedAt desc) {
   title,
   "slug": slug.current,
   excerpt,
-  category,
-  date,
-  readTime,
-  "image": image.asset->url
+  publishedAt,
+  mainImage
 }`
 
+// Helper to format Sanity's ISO date string into a readable format
+function formatDate(dateString: string) {
+  if (!dateString) return "Recently"
+  return new Date(dateString).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  })
+}
+
 export default async function BlogPage() {
-  // Fetch live from Sanity
   const posts = await client.fetch(query)
   
   if (posts.length === 0) {
@@ -38,14 +46,12 @@ export default async function BlogPage() {
     )
   }
 
-  // Split the first post as "Featured" and the rest below
   const [featured, ...rest] = posts
 
   return (
     <>
       <Navbar />
       <main>
-        {/* Hero */}
         <section className="bg-primary pt-32 pb-20 md:pt-40 md:pb-28">
           <div className="mx-auto max-w-7xl px-6">
             <p className="mb-3 text-sm font-semibold tracking-wide text-accent uppercase">
@@ -62,14 +68,15 @@ export default async function BlogPage() {
           </div>
         </section>
 
-        {/* Featured Post */}
         <section className="bg-background py-20 md:py-28">
           <div className="mx-auto max-w-7xl px-6">
+            
+            {/* FEATURED POST */}
             <Link href={`/blog/${featured.slug}`} className="group">
-              <article className="grid overflow-hidden rounded-xl border border-border bg-card md:grid-cols-2">
+              <article className="grid overflow-hidden rounded-xl border border-border bg-card md:grid-cols-2 shadow-sm transition-shadow hover:shadow-md">
                 <div className="relative aspect-[4/3] overflow-hidden md:aspect-auto">
                   <Image
-                    src={featured.image || "/placeholder.svg"}
+                    src={featured.mainImage ? urlForImage(featured.mainImage).width(800).url() : "/placeholder.svg"}
                     alt={featured.title}
                     fill
                     className="object-cover transition-transform duration-500 group-hover:scale-105"
@@ -78,65 +85,67 @@ export default async function BlogPage() {
                 <div className="flex flex-col justify-center gap-4 p-8 md:p-12">
                   <div className="flex items-center gap-3">
                     <Badge variant="secondary" className="bg-accent/10 text-accent">
-                      {featured.category}
+                      Market Insight
                     </Badge>
-                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <Clock className="h-3 w-3" />
-                      {featured.readTime}
-                    </span>
                   </div>
                   <h2 className="font-serif text-2xl font-bold text-card-foreground md:text-3xl">
                     <span className="text-balance">{featured.title}</span>
                   </h2>
-                  <p className="leading-relaxed text-muted-foreground">
+                  <p className="leading-relaxed text-muted-foreground line-clamp-3">
                     {featured.excerpt}
                   </p>
-                  <div className="flex items-center gap-2 text-sm font-medium text-accent">
-                    Read Article
-                    <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                  <div className="flex items-center gap-4 mt-2">
+                    <div className="flex items-center gap-2 text-sm font-medium text-accent">
+                      Read Article
+                      <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                    </div>
+                    <span className="flex items-center gap-1 text-xs text-muted-foreground ml-auto">
+                      <Calendar className="h-3 w-3" />
+                      {formatDate(featured.publishedAt)}
+                    </span>
                   </div>
-                  <p className="text-xs text-muted-foreground">{featured.date}</p>
                 </div>
               </article>
             </Link>
 
-            {/* Rest of Posts */}
+            {/* THE REST OF THE POSTS */}
             {rest.length > 0 && (
               <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
                 {rest.map((post: any) => (
                   <Link key={post.slug} href={`/blog/${post.slug}`} className="group flex flex-col h-full">
-                    <article className="flex flex-1 h-full flex-col overflow-hidden rounded-xl border border-border bg-card transition-shadow hover:shadow-lg">
-                      <div className="relative aspect-[16/9] overflow-hidden">
+                    <article className="flex flex-1 h-full flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-shadow hover:shadow-md">
+                      <div className="relative aspect-[16/9] overflow-hidden border-b border-border/50">
                         <Image
-                          src={post.image || "/placeholder.svg"}
+                          src={post.mainImage ? urlForImage(post.mainImage).width(600).url() : "/placeholder.svg"}
                           alt={post.title}
                           fill
                           className="object-cover transition-transform duration-500 group-hover:scale-105"
                         />
                       </div>
-                      <div className="flex flex-1 flex-col gap-3 p-6">
-                        <div className="flex items-center gap-3">
-                          <Badge variant="secondary" className="bg-accent/10 text-accent">
-                            {post.category}
-                          </Badge>
-                          <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <Clock className="h-3 w-3" />
-                            {post.readTime}
-                          </span>
-                        </div>
-                        <h3 className="font-serif text-lg font-bold text-card-foreground">
-                          <span className="text-balance">{post.title}</span>
+                      <div className="flex flex-1 flex-col gap-4 p-6">
+                        <Badge variant="secondary" className="w-fit bg-accent/10 text-accent text-xs">
+                          Market Insight
+                        </Badge>
+                        <h3 className="font-serif text-lg font-bold text-card-foreground line-clamp-2">
+                          {post.title}
                         </h3>
-                        <p className="flex-1 text-sm leading-relaxed text-muted-foreground">
+                        <p className="flex-1 text-sm leading-relaxed text-muted-foreground line-clamp-3">
                           {post.excerpt}
                         </p>
-                        <p className="text-xs text-muted-foreground">{post.date}</p>
+                        <div className="flex items-center justify-between mt-2 pt-4 border-t border-border/50">
+                          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <Calendar className="h-3 w-3" />
+                            {formatDate(post.publishedAt)}
+                          </span>
+                          <ArrowUpRight className="h-4 w-4 text-accent transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                        </div>
                       </div>
                     </article>
                   </Link>
                 ))}
               </div>
             )}
+
           </div>
         </section>
       </main>

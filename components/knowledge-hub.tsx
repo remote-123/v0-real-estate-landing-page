@@ -2,9 +2,32 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ArrowRight, Play, Clock } from "lucide-react"
-import { blogPosts } from "@/lib/blog"
+import { client } from "@/sanity/lib/client"
 
-export function KnowledgeHub() {
+// GROQ Query: Fetch the 3 newest blog posts
+const query = `*[_type == "post"] | order(publishedAt desc)[0...3] {
+  title,
+  "slug": slug.current,
+  excerpt,
+  publishedAt
+}`
+
+// Helper to format the Sanity date
+function formatDate(dateString: string) {
+  if (!dateString) return ""
+  return new Date(dateString).toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric'
+  })
+}
+
+export async function KnowledgeHub() {
+  // Fetch live posts from Sanity
+  const posts = await client.fetch(query)
+
+  if (!posts || posts.length === 0) return null
+
   return (
     <section className="bg-secondary py-20 md:py-28">
       <div className="mx-auto max-w-7xl px-6">
@@ -28,21 +51,18 @@ export function KnowledgeHub() {
         </div>
 
         <div className="grid gap-8 md:grid-cols-3">
-          {blogPosts.map((post) => (
+          {posts.map((post: any) => (
             <article
               key={post.slug}
               className="flex h-full flex-col gap-4 rounded-xl border border-border bg-card p-6 transition-shadow hover:shadow-lg"
             >
-              <div className="flex items-center gap-3">
-                <Badge
-                  variant="secondary"
-                  className="bg-accent/10 text-accent"
-                >
-                  {post.category}
+              <div className="flex items-center justify-between">
+                <Badge variant="secondary" className="bg-accent/10 text-accent">
+                  Market Insight
                 </Badge>
                 <span className="flex items-center gap-1 text-xs text-muted-foreground">
                   <Clock className="h-3 w-3" />
-                  {post.readTime}
+                  5 min read
                 </span>
               </div>
 
@@ -50,11 +70,11 @@ export function KnowledgeHub() {
                 <span className="text-balance">{post.title}</span>
               </h3>
 
-              <p className="flex-1 text-sm leading-relaxed text-muted-foreground">
+              <p className="flex-1 text-sm leading-relaxed text-muted-foreground line-clamp-3">
                 {post.excerpt}
               </p>
 
-              <p className="text-xs text-muted-foreground">{post.date}</p>
+              <p className="text-xs text-muted-foreground">{formatDate(post.publishedAt)}</p>
 
               <div className="flex items-center gap-3 border-t border-border pt-4">
                 <Button
