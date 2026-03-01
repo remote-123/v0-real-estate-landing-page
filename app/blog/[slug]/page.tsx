@@ -1,15 +1,15 @@
 import Image from "next/image"
 import { notFound } from "next/navigation"
 import { client } from "@/sanity/lib/client"
-import { urlForImage } from "@/sanity/lib/image" // Added your image optimizer
+import { urlForImage } from "@/sanity/lib/image"
 import { PortableText } from "next-sanity"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { Clock, User, CheckCircle2, HelpCircle } from "lucide-react"
+import { LeadForm } from "@/components/lead-form" // <-- 1. IMPORT YOUR CONVERSION ENGINE
 
 export const revalidate = 60
 
-// 1. UPDATED QUERY: Pulling your exact AEO schema fields
 const query = `*[_type == "post" && slug.current == $slug][0]{
   title,
   "slug": slug.current,
@@ -42,7 +42,6 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   }
 }
 
-// Custom styling for your rich text so it matches your brand
 const ptComponents = {
   types: {
     image: ({ value }: any) => {
@@ -76,7 +75,6 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
   if (!post) notFound()
 
-  // 2. AEO: GENERATE THE INVISIBLE FAQ JSON-LD FOR BOTS
   const faqSchema = post.faqs && post.faqs.length > 0 ? {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -90,14 +88,12 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     }))
   } : null;
 
-  // Format the date nicely
   const formattedDate = post.publishedAt 
     ? new Date(post.publishedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
     : 'Recently Published'
 
   return (
     <>
-      {/* INJECT THE AI SCHEMA INTO THE HTML HEAD */}
       {faqSchema && (
         <script
           type="application/ld+json"
@@ -106,10 +102,9 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       )}
 
       <Navbar />
-      <main className="bg-background pt-32 pb-20">
-        <article className="mx-auto max-w-3xl px-6">
+      <main className="bg-background pt-32">
+        <article className="mx-auto max-w-3xl px-6 pb-20">
           
-          {/* Article Header */}
           <header className="mb-12 text-center">
             <h1 className="font-serif text-4xl font-bold tracking-tight text-foreground md:text-5xl lg:text-6xl mb-6 text-balance">
               {post.title}
@@ -127,7 +122,6 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             </div>
           </header>
 
-          {/* Featured Image */}
           {post.mainImage && (
             <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl mb-12 shadow-xl border border-border">
               <Image
@@ -140,7 +134,6 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             </div>
           )}
 
-          {/* 3. AEO: THE "KEY TAKEAWAYS" BOX FOR HUMANS AND RAG MODELS */}
           {post.keyTakeaways && post.keyTakeaways.length > 0 && (
             <div className="mb-12 rounded-xl border border-accent/20 bg-accent/5 p-6 md:p-8 shadow-sm">
               <h3 className="font-serif text-xl font-bold text-foreground mb-4 flex items-center gap-2">
@@ -158,7 +151,6 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             </div>
           )}
 
-          {/* The Rich Text Body */}
           <div className="prose prose-lg dark:prose-invert max-w-none">
              {post.body ? (
                <PortableText value={post.body} components={ptComponents} />
@@ -167,7 +159,6 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
              )}
           </div>
 
-          {/* 4. AEO: VISIBLE FAQ SECTION */}
           {post.faqs && post.faqs.length > 0 && (
             <div className="mt-16 border-t border-border pt-12">
               <h2 className="font-serif text-3xl font-bold text-foreground mb-8">Frequently Asked Questions</h2>
@@ -188,6 +179,13 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           )}
           
         </article>
+
+        {/* 2. THE CONVERSION TRAP */}
+        {/* We place this outside the <article> so it has the full-width background color of your normal contact section */}
+        <div className="border-t border-border">
+          <LeadForm projectName={`Blog: ${post.title}`} />
+        </div>
+
       </main>
       <Footer />
     </>
