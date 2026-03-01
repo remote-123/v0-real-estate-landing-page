@@ -8,7 +8,7 @@ export function FounderNote() {
           {/* Photo */}
           <div className="relative aspect-[4/5] overflow-hidden rounded-xl">
             <Image
-              src="/images/founder.jpg"
+              src="/images/founder.png"
               alt="Founder of NorthCapitalDXB"
               fill
               className="object-cover"
@@ -47,7 +47,7 @@ export function FounderNote() {
                 Managing Director
               </p>
               <p className="text-sm text-muted-foreground">
-                NorthCapitalDXB Advisory
+                Hassan Aizen Latif
               </p>
             </div>
           </div>

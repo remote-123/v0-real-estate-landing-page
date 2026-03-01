@@ -75,4 +75,4 @@ Return the output STRICTLY as a JSON object with no markdown formatting or extra
 // Helper function to dynamically inject formatting rules
 export const getGeminiPrompt = (taskFormat: string) => {
   return `${NORTH_CAPITAL_SYSTEM_PROMPT}\n\nSTRICT OUTPUT FORMAT:\n${taskFormat}`;
-};
+};                  
