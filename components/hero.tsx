@@ -16,7 +16,6 @@ export function Hero() {
           fill
           className="object-cover"
           priority
-          quality={90}
         />
         {/* FIXED: Hardcoded black overlays so it never turns white in dark mode */}
         <div className="absolute inset-0 bg-black/50" />
