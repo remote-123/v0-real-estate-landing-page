@@ -78,6 +78,17 @@ export default function RootLayout({
             })(window, document, "clarity", "script", "vklt96ti3i"); 
           `}
         </Script>
+
+            {/* 1. The Internal Opt-Out Script */}
+        <Script id="ga-opt-out" strategy="beforeInteractive">
+          {`
+            if (typeof window !== 'undefined' && localStorage.getItem('block_ga') === 'true') {
+              window['ga-disable-G-1CYNHNZQV0'] = true;
+              console.log('🛑 Internal Traffic: Google Analytics disabled.');
+            }
+          `}
+        </Script>
+
         <GoogleAnalytics gaId="G-1CYNHNZQV0" />
         
         </ThemeProvider> 
