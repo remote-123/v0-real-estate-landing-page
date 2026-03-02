@@ -37,14 +37,12 @@ export function Hero() {
             
             {/* FIXED: Enforced text-white so it's always readable against the dark image */}
             <h1 className="font-serif text-5xl font-bold leading-tight text-white md:text-6xl lg:text-7xl">
-              Dubai Real Estate.<br />
-              <span className="text-accent">Zero Ambiguity.</span>
+              Institutional-Grade Real Estate Advisory for <br />
+              <span className="text-accent">Global Capital</span>
             </h1>
             
             <p className="max-w-xl text-lg text-white/80 leading-relaxed">
-              We bridge the gap between global capital and Dubai opportunity. 
-              Experience institutional-grade advisory, independent due diligence, 
-              and a seamless buying process—no matter where you reside.
+              We structure high-yield, tax-free property portfolios in Dubai for seasoned investors and global expats. Our analysis relies on supply-side metrics, currency hedging, and strict capital preservation—gatekeeping only the assets that pass our internal stress tests.
             </p>
 
             <div className="flex flex-col gap-4 sm:flex-row">
@@ -56,7 +54,7 @@ export function Hero() {
               {/* FIXED: Changed text-black to text-white for the secondary button */}
               <Button size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/10 hover:text-white bg-transparent" asChild>
                 <Link href="/contact">
-                  Book Strategy Call
+                  Request Strategy Session
                 </Link>
               </Button>
             </div>

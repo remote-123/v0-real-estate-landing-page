@@ -1,27 +1,23 @@
 import type { Metadata } from "next"
-import Link from "next/link"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
-import { Button } from "@/components/ui/button"
+import { LeadForm } from "@/components/lead-form"
 import {
-  ArrowRight,
-  Search,
+  TrendingUp,
   BarChart3,
-  FileText,
-  Building,
-  Key,
-  Headphones,
+  Globe,
+  Shield,
   CheckCircle2,
 } from "lucide-react"
 
 export const metadata: Metadata = {
-  title: "Our Services | NorthCapitalDXB Investment Process",
+  title: "Asset Structuring & Advisory | North Capital DXB",
   description:
-    "From initial consultation to property handover and beyond, NorthCapitalDXB guides you through every step of investing in Dubai real estate.",
+    "Institutional-grade real estate advisory, yield optimization, and portfolio structuring for global capital in Dubai.",
   openGraph: {
-    title: "Our Services | NorthCapitalDXB Investment Process",
+    title: "Asset Structuring & Advisory | North Capital DXB",
     description:
-      "From initial consultation to property handover and beyond, NorthCapitalDXB guides you through every step of investing in Dubai real estate.",
+      "Institutional-grade real estate advisory, yield optimization, and portfolio structuring for global capital in Dubai.",
     type: "website",
   },
 }
@@ -29,85 +25,61 @@ export const metadata: Metadata = {
 const steps = [
   {
     number: "01",
-    icon: Search,
-    title: "Free Consultation",
+    icon: TrendingUp,
+    title: "Strategic Pre-Launch Allocation",
     description:
-      "We begin with a one-on-one discovery session to understand your investment goals, budget, timeline, and risk appetite. This call is free and comes with no obligations.",
+      "Retail buyers purchase at market value. Institutional capital purchases before the market dictates the price. We leverage our developer relationships to secure off-market, pre-launch inventory in highly undersupplied sectors. This allows our clients to capture immediate equity upon the public launch.",
     deliverables: [
-      "Investment profile assessment",
-      "Market overview presentation",
-      "Preliminary strategy recommendation",
+      "Off-market developer briefings",
+      "Priority unit & floorplate selection",
+      "Pre-public pricing access",
     ],
   },
   {
     number: "02",
     icon: BarChart3,
-    title: "Market Analysis & Shortlist",
+    title: "Yield Optimization & Portfolio Structuring",
     description:
-      "Our research team curates a shortlist of properties matched to your criteria, including ROI projections, developer track records, and area growth forecasts.",
+      "High gross returns mean nothing if service charges and low tenant retention erode your net yield. We analyze price per square foot, historical rental data, and payment plan leverage to construct portfolios optimized for consistent, tax-free cash flow.",
     deliverables: [
-      "Customized property shortlist",
-      "ROI and yield projections",
-      "Developer credibility reports",
+      "Granular net ROI projections",
+      "Service charge & operational cost analysis",
+      "Tenant demographic & retention modeling",
     ],
   },
   {
     number: "03",
-    icon: FileText,
-    title: "Legal & Financial Setup",
+    icon: Globe,
+    title: "Liquidity & Exit Strategy Planning",
     description:
-      "We coordinate with trusted legal partners to handle all documentation, including sales agreements, power of attorney (if needed), and escrow account setup.",
+      "An asset is only as good as your ability to exit it. Before we recommend an acquisition, we define the optimal exit horizon. We track market cycles, infrastructure shifts, and secondary market demand to ensure you can liquidate your asset efficiently at peak valuation.",
     deliverables: [
-      "Sales Purchase Agreement (SPA)",
-      "Escrow account registration",
-      "Payment plan structuring",
+      "Market cycle & supply forecasting",
+      "Secondary market liquidity analysis",
+      "Capital gains optimization",
     ],
   },
   {
     number: "04",
-    icon: Building,
-    title: "Property Selection & Reservation",
+    icon: Shield,
+    title: "UAE Golden Visa & Capital Hedging",
     description:
-      "Once you have chosen your investment, we manage the reservation process, negotiate the best terms, and secure your unit with the developer.",
+      "Dubai real estate is a globally recognized vehicle for currency hedging due to the USD-pegged AED. We guide high-net-worth expats through the acquisition thresholds required to secure the 10-Year UAE Golden Visa, ensuring your capital is protected within a zero-tax jurisdiction.",
     deliverables: [
-      "Unit reservation and booking",
-      "Price negotiation support",
-      "Virtual or in-person property tours",
-    ],
-  },
-  {
-    number: "05",
-    icon: Key,
-    title: "Purchase & Handover",
-    description:
-      "We guide you through the DLD registration, title deed issuance, and final handover. Every milestone is tracked and communicated clearly.",
-    deliverables: [
-      "DLD registration and title deed",
-      "Snagging and inspection support",
-      "Key handover coordination",
-    ],
-  },
-  {
-    number: "06",
-    icon: Headphones,
-    title: "Ongoing Management",
-    description:
-      "After handover, our partnership continues. We offer property management, tenant sourcing, and portfolio advisory services to maximize your returns.",
-    deliverables: [
-      "Tenant sourcing and leasing",
-      "Property maintenance coordination",
-      "Annual portfolio performance review",
+      "AED/USD peg arbitrage advisory",
+      "Golden Visa processing & compliance",
+      "Zero-tax jurisdictional structuring",
     ],
   },
 ]
 
 const expectations = [
-  "Dedicated advisor assigned to your account",
-  "Regular progress updates at every stage",
-  "No hidden fees or surprise costs",
-  "Full transparency on pricing and commissions",
-  "Access to off-market and pre-launch deals",
-  "Post-purchase support and property management",
+  "Direct access to Senior Investment Strategists",
+  "Data-backed quantitative property analysis",
+  "Strictly confidential portfolio structuring",
+  "Objective, zero-fluff market appraisals",
+  "Priority access to heavily undersupplied sectors",
+  "End-to-end legal and banking facilitation",
 ]
 
 export default function ServicesPage() {
@@ -115,21 +87,19 @@ export default function ServicesPage() {
     <>
       <Navbar />
       <main>
-        {/* Hero */}
+        {/* Hero Section */}
         <section className="bg-primary pt-32 pb-20 md:pt-40 md:pb-28">
           <div className="mx-auto max-w-7xl px-6">
             <p className="mb-3 text-sm font-semibold tracking-wide text-accent uppercase">
-              Our Services
+              Institutional Advisory
             </p>
             <h1 className="max-w-3xl font-serif text-4xl font-bold tracking-tight text-primary-foreground md:text-5xl lg:text-6xl">
               <span className="text-balance">
-                Your A-Z investment journey, handled with care
+                Data-Driven Asset Structuring
               </span>
             </h1>
             <p className="mt-4 max-w-xl text-lg leading-relaxed text-primary-foreground/70">
-              We take care of everything so you can invest with confidence. Here
-              is exactly what to expect at each stage of your Dubai real estate
-              investment.
+              We do not participate in generic market speculation. Our advisory team operates strictly on quantitative data, identifying arbitrage opportunities in undervalued zones and securing pre-launch allocations for our clients. Whether your objective is immediate rental yield or long-term capital appreciation, our services are designed to protect and compound your wealth.
             </p>
           </div>
         </section>
@@ -161,15 +131,15 @@ export default function ServicesPage() {
                       {step.description}
                     </p>
                   </div>
-                  <div className="md:col-span-6">
-                    <p className="mb-3 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                      What you get
+                  <div className="md:col-span-6 lg:col-span-5 lg:col-start-8">
+                    <p className="mb-4 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                      Deliverables
                     </p>
-                    <ul className="flex flex-col gap-2.5">
+                    <ul className="flex flex-col gap-3 border-l-2 border-accent/20 pl-4">
                       {step.deliverables.map((d) => (
                         <li
                           key={d}
-                          className="flex items-center gap-2.5 text-foreground"
+                          className="flex items-center gap-2.5 text-foreground font-medium"
                         >
                           <CheckCircle2 className="h-4 w-4 shrink-0 text-accent" />
                           <span className="text-sm">{d}</span>
@@ -177,9 +147,6 @@ export default function ServicesPage() {
                       ))}
                     </ul>
                   </div>
-                  {i < steps.length - 1 && (
-                    <div className="hidden md:col-span-1 md:block" />
-                  )}
                 </div>
               ))}
             </div>
@@ -192,23 +159,22 @@ export default function ServicesPage() {
             <div className="grid items-center gap-12 lg:grid-cols-2">
               <div>
                 <p className="mb-3 text-sm font-semibold tracking-wide text-accent uppercase">
-                  Our Promise
+                  Our Mandate
                 </p>
                 <h2 className="font-serif text-3xl font-bold tracking-tight text-foreground md:text-4xl">
                   <span className="text-balance">
-                    What you can expect working with us
+                    What to expect from our advisory team
                   </span>
                 </h2>
                 <p className="mt-4 text-lg leading-relaxed text-muted-foreground">
-                  When you partner with NorthCapitalDXB, you get more than a
-                  transaction. You get a dedicated team invested in your success.
+                  When you allocate capital through North Capital DXB, you receive institutional-grade guidance built on quantitative metrics and macro-economic forecasting.
                 </p>
               </div>
               <ul className="grid gap-4 sm:grid-cols-2">
                 {expectations.map((item) => (
-                  <li key={item} className="flex items-start gap-3">
+                  <li key={item} className="flex items-start gap-3 rounded-lg bg-background p-4 shadow-sm">
                     <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-accent" />
-                    <span className="text-foreground">{item}</span>
+                    <span className="text-sm font-medium text-foreground">{item}</span>
                   </li>
                 ))}
               </ul>
@@ -216,29 +182,19 @@ export default function ServicesPage() {
           </div>
         </section>
 
-        {/* CTA */}
-        <section className="bg-accent py-20 md:py-28">
-          <div className="mx-auto max-w-7xl px-6 text-center">
-            <h2 className="font-serif text-3xl font-bold tracking-tight text-accent-foreground md:text-4xl">
-              <span className="text-balance">
-                Ready to start your investment journey?
-              </span>
+        {/* Conversion CTA Engine */}
+        <section className="bg-background pt-20 border-t border-border">
+          <div className="mx-auto max-w-3xl px-6 text-center mb-12">
+            <h2 className="font-serif text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+              Discuss Your Investment Thesis
             </h2>
-            <p className="mx-auto mt-4 max-w-xl text-accent-foreground/80">
-              Your first step is a free consultation. Let us understand your
-              goals and create a tailored investment plan.
+            <p className="mt-4 text-lg text-muted-foreground">
+              Connect with our advisory team to review current supply gaps and run ROI projections tailored to your capital deployment strategy.
             </p>
-            <Button
-              size="lg"
-              className="mt-8 bg-primary text-primary-foreground hover:bg-primary/90"
-              asChild
-            >
-              <Link href="/contact">
-                Get Started Today
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
           </div>
+          
+          {/* Replaced static button with your dynamic Lead Form */}
+          <LeadForm projectName="Services Page: Strategy Session" />
         </section>
       </main>
       <Footer />
