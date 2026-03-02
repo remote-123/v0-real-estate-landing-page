@@ -8,7 +8,7 @@ export const SITE_CONFIG = {
   address: "JVC, Dubai, UAE",
   workingHours: "Mon — Fri: 9AM - 6PM (GST)",
   googleSheetId: "1nNTV3jiOm_O4tCmgT26hqHrs6BCd6JRpPqPzRqEgyOQ",
-  calendarLink: "https://calendar.google.com/calendar/appointments/schedules/AcZssZ3Oba6IoSYm1-5yxUHZN9bx5zcFglpgSfVkN62KmQ2Ietc4Wi8dM_QPrsWFMkgEOHRyTz513PdU?gv=true",
+  calendarLink: "https://calendar.app.google/HAjKAVph8QJoRx457",
   socials: {
     linkedin: "https://linkedin.com/company/northcapital",
     instagram: "https://instagram.com/northcapitaldxb",
@@ -23,6 +23,7 @@ export const NAV_LINKS = [
   { label: "Projects", href: "/projects" },
   { label: "Blog", href: "/blog" },
   { label: "Contact", href: "/contact" },
+  { label: "Investor Terminal", href: "/investor-terminal" }
 
 ]
 export const NAV_LINKS_FOOTER = [
