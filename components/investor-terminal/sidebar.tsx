@@ -21,6 +21,7 @@ const sidebarLinks = [
     links: [
       { label: "Overview", href: "/investor-terminal", icon: LayoutDashboard },
       { label: "Market Lab", href: "/investor-terminal/market-lab", icon: TrendingUp },
+      { label: "Distress Deals", href: "/investor-terminal/distress-deals", icon: BarChart3 },
     ]
   },
   {
