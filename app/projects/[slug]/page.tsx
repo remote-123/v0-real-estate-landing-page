@@ -6,25 +6,24 @@ import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
 } from "@/components/ui/dialog"
 import { CheckCircle2, MapPin, Download, Phone, Car, FileText, Lock } from "lucide-react"
 import { LeadForm } from "@/components/lead-form"
 import { ROICalculator } from "@/components/roi-calculator"
 import { Breadcrumbs } from "@/components/breadcrumbs"
 import { urlForImage } from "@/sanity/lib/image" // <-- NEW: Import the image URL builder
+import { ProjectGallery } from "@/components/project-gallery"
+import { SITE_CONFIG } from "@/lib/constants"
 
 
 // --- THE GROQ QUERY ---
-// This asks Sanity for a project where the slug matches the URL
-// --- UPDATED GROQ QUERY ---
-// Notice we no longer ask for "asset->url", we just want the raw image objects!
 const query = `*[_type == "project" && slug.current == $slug][0]{
   title,
   "slug": slug.current,
@@ -48,7 +47,7 @@ const query = `*[_type == "project" && slug.current == $slug][0]{
   masterplanImage,
   paymentPlanImage,
   floorPlanImage,
-  Faqs
+  faqs
 }`
 
 // Generate SEO slugs dynamically from Sanity for incredibly fast loading
@@ -57,7 +56,6 @@ export async function generateStaticParams() {
   return slugs
 }
 
-// Fixed Metadata for Next.js 15
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
   const project = await client.fetch(query, { slug })
@@ -67,19 +65,18 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title: `${project.title} | NorthCapitalDXB`,
     description: project.description?.slice(0, 160) || "Explore premium Dubai real estate.",
-    openGraph: { images: [project.image] },
+    openGraph: { images: project.image ? [urlForImage(project.image).width(1200).url()] : [] },
   }
 }
 
 export default async function ProjectPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  
+
   // FETCH THE DATA FROM SANITY
   const project = await client.fetch(query, { slug })
-  
+
   if (!project) notFound()
 
-  // Clean the price string for JSON-LD (e.g., "AED 1,500,000" -> 1500000)
   const numericPrice = project.startingPrice
     ? parseInt(project.startingPrice.replace(/[^0-9]/g, ''))
     : 0
@@ -89,8 +86,8 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
     "@type": "RealEstateListing",
     "name": project.title,
     "image": [
-      project.image ? `https://www.northcapitaldxb.com${project.image}` : '',
-      ...(project.gallery ? project.gallery.map((img: string) => `https://www.northcapitaldxb.com${img}`) : [])
+      project.image ? urlForImage(project.image).width(1200).url() : '',
+      ...(project.gallery ? project.gallery.map((img: any) => urlForImage(img).width(1200).url()) : [])
     ].filter(Boolean),
     "description": project.description,
     "address": {
@@ -100,6 +97,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
       "addressCountry": "AE",
       "streetAddress": project.location
     },
+    // ... rest of JSON-LD
     "offers": {
       "@type": "Offer",
       "priceCurrency": "AED",
@@ -130,20 +128,20 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
 
   return (
     <>
-{/* Inject BOTH JSON-LD scripts for SEO/AEO */}
+      {/* Inject BOTH JSON-LD scripts for SEO/AEO */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       {faqSchema && (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       )}
-      
+
       <Navbar />
       <main className="bg-background pt-24 pb-20">
         {/* ADD THIS HERE */}
-               <Breadcrumbs 
+        <Breadcrumbs
           items={[
             { label: "All Projects", href: "/projects" },
             { label: project.title, href: `/projects/${project.slug}`, active: true }
-          ]} 
+          ]}
         />
         {/* HERO */}
         <section className="relative h-[60vh] w-full overflow-hidden md:h-[70vh]">
@@ -152,18 +150,18 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
               // 1. Pass the Sanity image object to the utility
               // 2. Tell Sanity exactly how wide you want the image (e.g., 1200px)
               // 3. Get the final URL
-              src={urlForImage(project.image).width(1200).url()} 
+              src={urlForImage(project.image).width(1200).url()}
               alt={project.title}
               fill
               className="object-cover"
             />
           )}
-            
+
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-       
+
           <div className="absolute bottom-0 left-0 right-0 p-6 md:p-12">
             <div className="mx-auto max-w-7xl">
-        
+
               <Badge className="mb-4 bg-accent text-accent-foreground">{project.status}</Badge>
               <h1 className="font-serif text-4xl font-bold text-white md:text-6xl">{project.title}</h1>
               <p className="mt-2 text-lg text-white/90 flex items-center gap-2">
@@ -175,10 +173,10 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
 
         <div className="mx-auto max-w-7xl px-6 py-12">
           <div className="grid gap-12 lg:grid-cols-3">
-            
+
             {/* LEFT COLUMN */}
             <div className="lg:col-span-2 space-y-16">
-              
+
               {/* Stats Bar */}
               <div className="grid grid-cols-3 gap-4 rounded-xl border border-border bg-card p-6 shadow-sm">
                 <div>
@@ -203,17 +201,22 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
                 <p className="mt-4 leading-relaxed text-muted-foreground">{project.description}</p>
               </section>
 
+              {/* Project Gallery - Navigatable Lightbox */}
+              {project.gallery && project.gallery.length > 0 && (
+                <ProjectGallery images={project.gallery} title={project.title} />
+              )}
+
               {/* Masterplan */}
               {project.masterplanImage && (
                 <section id="masterplan">
                   <h2 className="font-serif text-2xl font-bold text-foreground mb-6">Masterplan & Layout</h2>
                   <div className="overflow-hidden rounded-2xl border border-border shadow-lg">
-                    <Image 
-                      src={urlForImage(project.masterplanImage).width(1200).url()} 
-                      alt="Masterplan" 
-                      width={1200} 
-                      height={800} 
-                      className="w-full h-auto object-cover" 
+                    <Image
+                      src={urlForImage(project.masterplanImage).width(1200).url()}
+                      alt="Masterplan"
+                      width={1200}
+                      height={800}
+                      className="w-full h-auto object-cover"
                     />
                   </div>
                 </section>
@@ -259,26 +262,26 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
                     <h2 className="font-serif text-2xl font-bold text-foreground">Floor Plans</h2>
                     <Badge variant="outline" className="border-accent text-accent">Available Now</Badge>
                   </div>
-                  
+
                   <div className="relative overflow-hidden rounded-2xl border border-border bg-muted shadow-lg">
                     <div className="relative aspect-[16/9] w-full">
-                       <Image 
-                      src={urlForImage(project.floorPlanImage).width(1200).url()} 
-                      alt="Floor Plan" 
-                      width={1200} 
-                      height={800} 
-                      className="w-full h-auto object-cover" 
-                    />
+                      <Image
+                        src={urlForImage(project.floorPlanImage).width(1200).url()}
+                        alt="Floor Plan"
+                        width={1200}
+                        height={800}
+                        className="w-full h-auto object-cover"
+                      />
                       <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
                     </div>
 
                     <div className="absolute bottom-0 left-0 right-0 flex flex-col items-center justify-center bg-background/95 p-8 backdrop-blur-sm border-t border-border">
-                       <div className="mb-4 flex items-center gap-2 text-muted-foreground">
-                          <Lock className="h-4 w-4" />
-                          <span className="text-sm">Unlock full brochure with unit sizes & types</span>
-                       </div>
+                      <div className="mb-4 flex items-center gap-2 text-muted-foreground">
+                        <Lock className="h-4 w-4" />
+                        <span className="text-sm">Unlock full brochure with unit sizes & types</span>
+                      </div>
 
-                       <Dialog>
+                      <Dialog>
                         <DialogTrigger asChild>
                           <Button size="lg" className="bg-foreground text-background hover:bg-foreground/90 w-full sm:w-auto">
                             <FileText className="mr-2 h-4 w-4" />
@@ -286,17 +289,17 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
                           </Button>
                         </DialogTrigger>
                         <DialogContent className="sm:max-w-[425px] p-0 bg-transparent border-none shadow-none">
-                           <div className="bg-card border border-border rounded-xl shadow-2xl overflow-hidden">
-                              <DialogHeader className="p-6 pb-2">
-                                 <DialogTitle>Unlock Floor Plans</DialogTitle>
-                                 <DialogDescription>
-                                   Enter your details to instantly access the PDF layout guide for {project.title}.
-                                 </DialogDescription>
-                              </DialogHeader>
-                              <div className="p-6 pt-0">
-                                <LeadForm minimal={true} projectName={project.title}/>
-                              </div>
-                           </div>
+                          <div className="bg-card border border-border rounded-xl shadow-2xl overflow-hidden">
+                            <DialogHeader className="p-6 pb-2">
+                              <DialogTitle>Unlock Floor Plans</DialogTitle>
+                              <DialogDescription>
+                                Enter your details to instantly access the PDF layout guide for {project.title}.
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="p-6 pt-0">
+                              <LeadForm minimal={true} projectName={project.title} />
+                            </div>
+                          </div>
                         </DialogContent>
                       </Dialog>
                     </div>
@@ -309,14 +312,14 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
                 <section id="payment">
                   <h2 className="font-serif text-2xl font-bold text-foreground mb-6">Payment Schedule</h2>
                   <div className="overflow-hidden rounded-2xl border border-border shadow-lg">
-                    <Image 
-                      src={urlForImage(project.paymentPlanImage).width(1200).url()} 
-                      alt="Payment Plan" 
-                      width={1200} 
-                      height={800} 
-                      className="w-full h-auto object-cover" 
+                    <Image
+                      src={urlForImage(project.paymentPlanImage).width(1200).url()}
+                      alt="Payment Plan"
+                      width={1200}
+                      height={800}
+                      className="w-full h-auto object-cover"
                     />
-                  
+
                   </div>
                 </section>
               )}
@@ -325,7 +328,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
             {/* RIGHT COLUMN: STICKY SIDEBAR */}
             <div className="lg:col-span-1">
               <div className="sticky top-28 space-y-6">
-                
+
                 <div className="rounded-xl border border-border bg-card p-6 shadow-xl">
                   <div className="mb-6 text-center">
                     <p className="text-xs font-bold uppercase text-muted-foreground">Limited Availability</p>
@@ -333,8 +336,8 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
                     <p className="text-xs text-muted-foreground mt-2">Download brochure & floor plans.</p>
                   </div>
 
-                  <ROICalculator/>
-                  
+                  <ROICalculator />
+
                   <Dialog>
                     <DialogTrigger asChild>
                       <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
@@ -343,23 +346,23 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden bg-transparent border-none shadow-none">
-                       <div className="bg-card border border-border rounded-xl shadow-2xl overflow-hidden">
-                          <DialogHeader className="p-6 pb-2">
-                             <DialogTitle>Download Brochure</DialogTitle>
-                             <DialogDescription>
-                               Complete the form to receive the official PDF factsheet for {project.title}.
-                             </DialogDescription>
-                          </DialogHeader>
-                          <div className="p-6 pt-0">
-                            <LeadForm minimal={true} projectName={project.title}/>
-                          </div>
-                       </div>
+                      <div className="bg-card border border-border rounded-xl shadow-2xl overflow-hidden">
+                        <DialogHeader className="p-6 pb-2">
+                          <DialogTitle>Download Brochure</DialogTitle>
+                          <DialogDescription>
+                            Complete the form to receive the official PDF factsheet for {project.title}.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="p-6 pt-0">
+                          <LeadForm minimal={true} projectName={project.title} />
+                        </div>
+                      </div>
                     </DialogContent>
                   </Dialog>
-                  
+
                   <div className="mt-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
                     <Phone className="h-4 w-4" />
-                    <span>Or call us: +971 4 123 4567</span>
+                    <span>Or call us: {SITE_CONFIG.phone}</span>
                   </div>
                 </div>
 
