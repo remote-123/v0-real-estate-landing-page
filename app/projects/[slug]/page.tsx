@@ -62,10 +62,27 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   if (!project) return { title: "Project Not Found" }
 
+  const ogImage = project.image
+    ? urlForImage(project.image).width(1200).height(630).url()
+    : "/images/hero-dubai.jpg"
+
+  const description = project.description?.slice(0, 160) || "Explore premium Dubai real estate."
+
   return {
     title: `${project.title} | NorthCapitalDXB`,
-    description: project.description?.slice(0, 160) || "Explore premium Dubai real estate.",
-    openGraph: { images: project.image ? [urlForImage(project.image).width(1200).url()] : [] },
+    description,
+    openGraph: {
+      title: project.title,
+      description,
+      images: [{ url: ogImage, width: 1200, height: 630 }],
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: project.title,
+      description,
+      images: [ogImage],
+    },
   }
 }
 

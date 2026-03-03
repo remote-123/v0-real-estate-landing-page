@@ -31,15 +31,28 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
   const post = await client.fetch(query, { slug })
-  
+
   if (!post) return { title: "Post Not Found" }
-  
-  const ogImage = post.mainImage ? urlForImage(post.mainImage).width(1200).height(630).url() : ""
+
+  const ogImage = post.mainImage
+    ? urlForImage(post.mainImage).width(1200).height(630).url()
+    : "/images/hero-dubai.jpg"
 
   return {
     title: `${post.title} | NorthCapitalDXB Insights`,
     description: post.excerpt,
-    openGraph: { images: [ogImage] },
+    openGraph: {
+      title: post.title,
+      description: post.excerpt,
+      images: [{ url: ogImage, width: 1200, height: 630 }],
+      type: 'article',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: post.title,
+      description: post.excerpt,
+      images: [ogImage],
+    }
   }
 }
 
@@ -49,10 +62,10 @@ const ptComponents = {
       if (!value?.asset?._ref) return null
       return (
         <div className="relative w-full h-96 my-8 rounded-xl overflow-hidden shadow-lg border border-border">
-          <Image 
-            src={urlForImage(value).width(800).url()} 
-            alt="Blog inline image" 
-            fill 
+          <Image
+            src={urlForImage(value).width(800).url()}
+            alt="Blog inline image"
+            fill
             className="object-cover"
           />
         </div>
@@ -89,7 +102,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     }))
   } : null;
 
-  const formattedDate = post.publishedAt 
+  const formattedDate = post.publishedAt
     ? new Date(post.publishedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
     : 'Recently Published'
 
@@ -106,13 +119,13 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       <main className="bg-background pt-32">
         {/* 2. INCREASED MAX-WIDTH TO ALLOW ROOM FOR SIDEBAR */}
         <div className="mx-auto max-w-7xl px-6 pb-20">
-          
+
           {/* Header remains centered at the top */}
           <header className="mb-12 mx-auto max-w-3xl text-center">
             <h1 className="font-serif text-4xl font-bold tracking-tight text-foreground md:text-5xl lg:text-6xl mb-6 text-balance">
               {post.title}
             </h1>
-            
+
             <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
                 <User className="h-4 w-4 text-accent" />
@@ -127,7 +140,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
           {/* 3. THE GRID LAYOUT: 8 Columns for Content, 4 Columns for Sidebar */}
           <div className="grid grid-cols-1 items-start gap-12 lg:grid-cols-12">
-            
+
             {/* LEFT SIDE: Main Article Content */}
             <article className="lg:col-span-8">
               {post.mainImage && (
@@ -160,11 +173,11 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
               )}
 
               <div className="prose prose-lg dark:prose-invert max-w-none">
-                 {post.body ? (
-                   <PortableText value={post.body} components={ptComponents} />
-                 ) : (
-                   <p className="text-muted-foreground italic">Content coming soon...</p>
-                 )}
+                {post.body ? (
+                  <PortableText value={post.body} components={ptComponents} />
+                ) : (
+                  <p className="text-muted-foreground italic">Content coming soon...</p>
+                )}
               </div>
 
               {post.faqs && post.faqs.length > 0 && (
@@ -187,16 +200,16 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
               )}
             </article>
 
-       {/* RIGHT SIDE: The Sticky Sidebar (Hidden on Mobile) */}
+            {/* RIGHT SIDE: The Sticky Sidebar (Hidden on Mobile) */}
             <aside className="hidden lg:flex flex-col gap-6 lg:col-span-4 sticky top-32">
-              
+
               {/* Tool 1: Quick Contact Box */}
               <div className="rounded-xl border border-border bg-card p-6 shadow-xl border-t-4 border-t-accent">
                 <h3 className="font-serif text-xl font-bold text-foreground mb-2">Speak to an Advisor</h3>
                 <p className="text-sm text-muted-foreground mb-6">
                   Discuss how these market trends impact your investment portfolio.
                 </p>
-                
+
                 {/* The Lead Form */}
                 <LeadForm minimal={true} projectName={`Blog Sidebar: ${post.title}`} />
               </div>
