@@ -3,16 +3,16 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { createClient } from 'next-sanity';
 import { getGeminiPrompt } from '@/lib/ai-guidelines';
 
-export const maxDuration = 60; 
+export const maxDuration = 60;
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 const writeClient = createClient({
   projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
   dataset: process.env.NEXT_PUBLIC_SANITY_DATASET,
-  apiVersion: "2024-02-24", 
+  apiVersion: "2024-02-24",
   useCdn: false,
-  token: process.env.SANITY_API_TOKEN, 
+  token: process.env.SANITY_API_TOKEN,
 });
 
 const jsonFormatRule = `
@@ -64,7 +64,6 @@ export async function POST(req: Request) {
       }
     }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
     const prompt = getGeminiPrompt(jsonFormatRule);
 
     // Build the payload dynamically
@@ -80,14 +79,26 @@ export async function POST(req: Request) {
     }
 
     console.log("🧠 Sending data to Gemini...");
-    const result = await model.generateContent(promptParts);
+    let result;
+
+    try {
+      // 5A. TRY THE PRIMARY MODEL
+      const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
+      result = await model.generateContent(promptParts);
+    } catch (primaryError: any) {
+      console.warn(`⚠️ Gemini 3 failed (${primaryError.message}). Falling back to Gemini 2.5 Flash...`);
+
+      // 5B. FALLBACK MODEL
+      const fallbackModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+      result = await fallbackModel.generateContent(promptParts);
+    }
 
     const responseText = result.response.text();
     const jsonString = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
     const aiData = JSON.parse(jsonString);
 
     console.log("💾 Saving Draft to Sanity...");
-    
+
     // Safety check: ensure title is a string so .toLowerCase() doesn't crash
     const safeTitle = (aiData.title || "Untitled Market Insight").toString();
 
