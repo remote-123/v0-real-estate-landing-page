@@ -21,22 +21,21 @@ const sidebarLinks = [
     links: [
       { label: "Overview", href: "/investor-terminal", icon: LayoutDashboard },
       { label: "Distress Deals", href: "/investor-terminal/distress-deals", icon: BarChart3 },
-      // { label: "Market Lab", href: "/investor-terminal/market-lab", icon: TrendingUp },
     ]
   },
   {
     title: "Intelligence",
     links: [
       { label: "ROI Engine", href: "/investor-terminal/roi-engine", icon: Calculator },
-      { label: "Project Screener", href: "/investor-terminal/screener", icon: Compass },
-      { label: "Investment Theses", href: "/investor-terminal/theses", icon: FileText },
+      // { label: "Project Screener", href: "/investor-terminal/screener", icon: Compass },
+      // { label: "Investment Theses", href: "/investor-terminal/theses", icon: FileText },
     ]
   },
   {
     title: "Support",
     links: [
-      { label: "Golden Visa", href: "/investor-terminal/golden-visa", icon: ShieldCheck },
-      { label: "Settings", href: "/investor-terminal/settings", icon: Settings },
+      // { label: "Golden Visa", href: "/investor-terminal/golden-visa", icon: ShieldCheck },
+      // { label: "Settings", href: "/investor-terminal/settings", icon: Settings },
     ]
   }
 ]
@@ -55,7 +54,7 @@ export function InvestorSidebar() {
       </div>
 
       <div className="flex-1 overflow-y-auto py-6 px-4 space-y-8">
-        {sidebarLinks.map((group) => (
+        {sidebarLinks.filter(g => g.links.length > 0).map((group) => (
           <div key={group.title} className="space-y-4">
             <h3 className="px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
               {group.title}
