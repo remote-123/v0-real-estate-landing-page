@@ -45,7 +45,7 @@ export function Navbar() {
         <div className="hidden lg:flex items-center gap-4">
           <GoldenVisaWizard />
           <Button asChild className="bg-accent text-accent-foreground hover:bg-accent/90">
-            <Link href="/calculator">What can I buy?</Link>
+            <Link href="/investor-terminal">Investor Terminal</Link>
           </Button>
         </div>
 
@@ -83,18 +83,18 @@ export function Navbar() {
                 </Link>
               </li>
             ))}
-            
+
             {/* Added Theme Toggle to mobile menu for easy access */}
             <li className="px-3 py-3 border-t border-border/50 mt-2 flex items-center justify-between">
               <span className="text-sm font-medium text-muted-foreground">Theme</span>
               <ThemeToggle />
             </li>
-            
+
             {/* Added Mobile CTAs so they don't miss out on these features */}
             <li className="flex flex-col gap-3 mt-4">
               <GoldenVisaWizard />
               <Button asChild className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
-                <Link href="/calculator" onClick={() => setMobileOpen(false)}>What can I buy?</Link>
+                <Link href="/investor-terminal" onClick={() => setMobileOpen(false)}>Investor Terminal</Link>
               </Button>
             </li>
           </ul>
