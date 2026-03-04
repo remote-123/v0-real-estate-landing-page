@@ -1,4 +1,5 @@
 import React from "react"
+import type { Metadata } from "next"
 import Link from "next/link"
 import { Calendar, Menu } from "lucide-react"
 import { InvestorSidebar, SidebarContent } from "@/components/investor-terminal/sidebar"
@@ -12,6 +13,29 @@ import {
     SheetHeader,
     SheetTitle,
 } from "@/components/ui/sheet"
+
+export const metadata: Metadata = {
+    title: 'Investor Terminal | North Capital DXB',
+    description: 'Institutional-grade real estate metrics, market intelligence, and distress deal scanning for the Dubai market.',
+    openGraph: {
+        title: 'Investor Terminal | North Capital DXB',
+        description: 'Institutional-grade real estate metrics, market intelligence, and distress deal scanning for the Dubai market.',
+        images: [
+            {
+                url: '/images/terminal-social.png',
+                width: 1200,
+                height: 630,
+                alt: 'North Capital Investor Terminal',
+            },
+        ],
+    },
+    twitter: {
+        card: 'summary_large_image',
+        title: 'Investor Terminal | North Capital DXB',
+        description: 'Institutional-grade real estate metrics, market intelligence, and distress deal scanning for the Dubai market.',
+        images: ['/images/terminal-social.png'],
+    },
+}
 
 export default function InvestorTerminalLayout({
     children,
