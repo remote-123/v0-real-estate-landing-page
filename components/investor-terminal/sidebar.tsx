@@ -15,11 +15,11 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-const sidebarLinks = [
+export const sidebarLinks = [
   {
     title: "Terminal",
     links: [
-      { label: "Overview", href: "/investor-terminal", icon: LayoutDashboard },
+      { label: "Market Intelligence", href: "/investor-terminal", icon: LayoutDashboard },
       { label: "Distress Deals", href: "/investor-terminal/distress-deals", icon: BarChart3 },
     ]
   },
@@ -40,11 +40,11 @@ const sidebarLinks = [
   }
 ]
 
-export function InvestorSidebar() {
+export function SidebarContent() {
   const pathname = usePathname()
 
   return (
-    <aside className="fixed left-0 top-0 hidden h-screen w-64 flex-col border-r border-border bg-card lg:flex">
+    <div className="flex flex-col h-full">
       <div className="flex h-16 items-center px-6 border-b border-border/50">
         <Link href="/" className="flex items-center gap-2">
           <span className="font-serif text-lg font-bold tracking-tight text-foreground">
@@ -104,6 +104,14 @@ export function InvestorSidebar() {
           Exit Terminal
         </Link>
       </div>
+    </div>
+  )
+}
+
+export function InvestorSidebar() {
+  return (
+    <aside className="fixed left-0 top-0 hidden h-screen w-64 flex-col border-r border-border bg-card lg:flex">
+      <SidebarContent />
     </aside>
   )
 }

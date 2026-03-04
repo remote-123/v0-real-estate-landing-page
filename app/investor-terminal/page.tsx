@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic'
 
 async function getTerminalData(): Promise<SanityTerminalCategory[]> {
     return client.fetch(`
-        *[_type == "terminalCategory"] | order(order asc) {
+        *[_type == "terminalCategory" && slug.current != "system"] | order(order asc) {
             _id,
             title,
             slug,
