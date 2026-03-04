@@ -2,7 +2,7 @@ import { ROICalculator } from "@/components/roi-calculator"
 
 export default function ROIEnginePage() {
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 pb-24 lg:pb-10">
             <div className="flex flex-col gap-2">
                 <h2 className="font-serif text-3xl font-bold tracking-tight">ROI Engine</h2>
                 <p className="text-muted-foreground">Advanced yield modeling for Dubai real estate assets.</p>

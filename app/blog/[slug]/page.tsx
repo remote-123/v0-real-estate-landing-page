@@ -5,7 +5,7 @@ import { urlForImage } from "@/sanity/lib/image"
 import { PortableText } from "next-sanity"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
-import { Clock, User, CheckCircle2, HelpCircle } from "lucide-react"
+import { Clock, User, CheckCircle2, HelpCircle, Twitter } from "lucide-react"
 import { LeadForm } from "@/components/lead-form"
 
 
@@ -131,10 +131,19 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                 <User className="h-4 w-4 text-accent" />
                 <span className="font-medium">{post.author}</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 text-muted-foreground">
                 <Clock className="h-4 w-4 text-accent" />
                 <time>{formattedDate}</time>
               </div>
+              <a
+                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(post.title)}&url=${encodeURIComponent(`https://www.northcapitaldxb.com/blog/${post.slug}`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 bg-secondary/50 px-3 py-1 rounded-full transition-colors hover:bg-accent/10 hover:text-accent group"
+              >
+                <Twitter className="h-4 w-4 text-accent group-hover:scale-110 transition-transform" />
+                <span className="font-medium">Share on X</span>
+              </a>
             </div>
           </header>
 

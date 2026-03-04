@@ -33,7 +33,7 @@ export function TerminalCategoryView({ category }: TerminalCategoryViewProps) {
     const CategoryIcon = TERMINAL_ICONS[category.icon] || Globe
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500">
+        <div className="space-y-8 animate-in fade-in duration-500 pb-24 lg:pb-10">
             <header className="flex flex-col gap-4">
                 <Link href="/investor-terminal">
                     <Button variant="ghost" size="sm" className="gap-2 -ml-2 text-muted-foreground hover:text-foreground group">

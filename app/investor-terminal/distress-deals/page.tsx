@@ -160,7 +160,7 @@ export default async function DistressDealsPage(props: {
     // Formatting helper for macro
     const formatMillions = (num: number) => (num / 1000000).toFixed(1) + "M"
     return (
-        <div className="flex w-full flex-col p-6 sm:p-8 xl:p-12 space-y-10 max-w-7xl mx-auto">
+        <div className="flex w-full flex-col p-6 sm:p-8 xl:p-12 space-y-10 max-w-7xl mx-auto pb-24 lg:pb-12">
 
             {/* HEADER SECTION */}
             <section className="flex flex-col gap-6 lg:flex-row shadow-sm border border-border/50 rounded-2xl p-6 bg-card">

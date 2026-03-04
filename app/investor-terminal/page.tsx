@@ -25,7 +25,7 @@ export default async function InvestorTerminalPage() {
     const categories = await getTerminalData()
 
     return (
-        <div className="space-y-10 max-w-[1600px] mx-auto">
+        <div className="space-y-10 max-w-[1600px] mx-auto pb-24 lg:pb-10">
             <header className="flex flex-col gap-2">
                 <h2 className="font-serif text-3xl font-bold tracking-tight text-foreground">Market Intelligence Terminal</h2>
                 <p className="text-sm text-muted-foreground max-w-2xl">
