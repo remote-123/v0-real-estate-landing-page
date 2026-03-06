@@ -48,7 +48,7 @@ async function fetchTopDeals() {
       'x-rapidapi-host': 'propertyfinder-uae-data.p.rapidapi.com',
       'x-rapidapi-key': process.env.RAPIDAPI_KEY || '',
     },
-    next: { revalidate: 14400 },
+    cache: 'no-store',
   });
 
   if (!res.ok) throw new Error('Failed to fetch PropertyFinder data');
