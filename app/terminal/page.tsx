@@ -11,7 +11,26 @@ export const metadata = {
     description: "Aggregated macro-economic datasets for the Dubai real estate market. Institutional-grade analysis of yields, pricing, and occupancy.",
     alternates: {
         canonical: "https://www.northcapitaldxb.com/terminal"
-    }
+    },
+    openGraph: {
+        title: "Market Intelligence Terminal | North Capital DXB",
+        description: "Aggregated macro-economic datasets for the Dubai real estate market. Institutional-grade analysis of yields, pricing, and occupancy.",
+        url: "https://www.northcapitaldxb.com/terminal",
+        images: [
+            {
+                url: "https://www.northcapitaldxb.com/images/distress-social.png",
+                width: 1200,
+                height: 630,
+                alt: "North Capital DXB — Market Intelligence Terminal",
+            },
+        ],
+    },
+    twitter: {
+        card: "summary_large_image",
+        title: "Market Intelligence Terminal | North Capital DXB",
+        description: "Aggregated macro-economic datasets for the Dubai real estate market. Institutional-grade analysis of yields, pricing, and occupancy.",
+        images: ["https://www.northcapitaldxb.com/images/distress-social.png"],
+    },
 }
 
 async function getTerminalData(): Promise<SanityTerminalCategory[]> {
