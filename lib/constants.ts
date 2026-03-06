@@ -23,7 +23,7 @@ export const NAV_LINKS = [
   { label: "Projects", href: "/projects" },
   { label: "Blog", href: "/blog" },
   { label: "Contact", href: "/contact" },
-  // { label: "Investor Terminal", href: "/investor-terminal" }
+  // { label: "Investor Terminal", href: "/terminal" }
 
 ]
 export const NAV_LINKS_FOOTER = [

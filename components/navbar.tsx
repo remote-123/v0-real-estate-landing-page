@@ -45,7 +45,7 @@ export function Navbar() {
         <div className="hidden lg:flex items-center gap-4">
           <GoldenVisaWizard />
           <Button asChild className="bg-accent text-accent-foreground hover:bg-accent/90">
-            <Link href="/investor-terminal">Investor Terminal</Link>
+            <Link href="/terminal">Terminal</Link>
           </Button>
         </div>
 
@@ -94,7 +94,7 @@ export function Navbar() {
             <li className="flex flex-col gap-3 mt-4">
               <GoldenVisaWizard />
               <Button asChild className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
-                <Link href="/investor-terminal" onClick={() => setMobileOpen(false)}>Investor Terminal</Link>
+                <Link href="/terminal" onClick={() => setMobileOpen(false)}>Terminal</Link>
               </Button>
             </li>
           </ul>

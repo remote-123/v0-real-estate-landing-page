@@ -25,7 +25,41 @@ export const metadata: Metadata = {
       "Learn about NorthCapitalDXB, your trusted Dubai investment advisory partner.",
     type: "website",
   },
+  alternates: {
+    canonical: "https://www.northcapitaldxb.com/about",
+  },
 }
+
+const aboutSchema = {
+  "@context": "https://schema.org",
+  "@type": "AboutPage",
+  "name": "About North Capital DXB",
+  "description": "Information about North Capital DXB, a premier real estate investment advisory firm in Dubai.",
+  "breadcrumb": {
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://www.northcapitaldxb.com"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "About",
+        "item": "https://www.northcapitaldxb.com/about"
+      }
+    ]
+  },
+  "mainEntity": {
+    "@type": "Organization",
+    "name": "North Capital DXB",
+    "description": "Dubai-based real estate advisory firm focusing on high-net-worth investors.",
+    "areaServed": "Dubai, UAE",
+    "knowsAbout": ["Dubai Real Estate", "ROI Analysis", "Property Investment", "Tax Optimization"]
+  }
+};
 
 const whyDubaiReasons = [
   {
@@ -69,6 +103,10 @@ const whyDubaiReasons = [
 export default function AboutPage() {
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(aboutSchema) }}
+      />
       <Navbar />
       <main>
         {/* Hero */}

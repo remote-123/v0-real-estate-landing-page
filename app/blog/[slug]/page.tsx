@@ -5,7 +5,7 @@ import { urlForImage } from "@/sanity/lib/image"
 import { PortableText } from "next-sanity"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
-import { Clock, User, CheckCircle2, HelpCircle, Twitter } from "lucide-react"
+import { Clock, User, CheckCircle2, HelpCircle, Twitter, Linkedin, MessageCircle } from "lucide-react"
 import { LeadForm } from "@/components/lead-form"
 
 
@@ -20,7 +20,8 @@ const query = `*[_type == "post" && slug.current == $slug][0]{
   mainImage,
   keyTakeaways,
   faqs,
-  body
+  body,
+  _updatedAt
 }`
 
 export async function generateStaticParams() {
@@ -46,6 +47,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       description: post.excerpt,
       images: [{ url: ogImage, width: 1200, height: 630 }],
       type: 'article',
+    },
+    alternates: {
+      canonical: `https://www.northcapitaldxb.com/blog/${slug}`,
     },
     twitter: {
       card: 'summary_large_image',
@@ -102,6 +106,33 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     }))
   } : null;
 
+  const blogPostingSchema = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": post.title,
+    "description": post.excerpt,
+    "image": post.mainImage ? urlForImage(post.mainImage).width(1200).url() : "https://www.northcapitaldxb.com/images/hero-dubai.jpg",
+    "datePublished": post.publishedAt,
+    "dateModified": post._updatedAt || post.publishedAt,
+    "author": {
+      "@type": "Person",
+      "name": post.author || "Investment Strategist",
+      "jobTitle": "MD at North Capital DXB"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "North Capital DXB",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://www.northcapitaldxb.com/images/hero-dubai.jpg"
+      }
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": `https://www.northcapitaldxb.com/blog/${post.slug}`
+    }
+  };
+
   const formattedDate = post.publishedAt
     ? new Date(post.publishedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
     : 'Recently Published'
@@ -114,6 +145,10 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
         />
       )}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(blogPostingSchema) }}
+      />
 
       <Navbar />
       <main className="bg-background pt-32">
@@ -126,24 +161,50 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
               {post.title}
             </h1>
 
-            <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <User className="h-4 w-4 text-accent" />
-                <span className="font-medium">{post.author}</span>
+            <div className="flex flex-col items-center gap-6 text-sm text-muted-foreground">
+              <div className="flex flex-wrap items-center justify-center gap-6">
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-accent" />
+                  <span className="font-medium">{post.author}</span>
+                </div>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Clock className="h-4 w-4 text-accent" />
+                  <time>{formattedDate}</time>
+                </div>
               </div>
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Clock className="h-4 w-4 text-accent" />
-                <time>{formattedDate}</time>
+
+              <div className="flex flex-wrap items-center justify-center gap-3">
+                <a
+                  href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(post.title)}&url=${encodeURIComponent(`https://www.northcapitaldxb.com/blog/${post.slug}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Share on X"
+                  className="flex items-center gap-2 bg-secondary/50 px-3 py-1.5 rounded-full transition-all hover:bg-accent/10 hover:text-accent group border border-transparent hover:border-accent/20"
+                >
+                  <Twitter className="h-3.5 w-3.5 text-accent group-hover:scale-110 transition-transform" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider">X</span>
+                </a>
+                <a
+                  href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(`https://www.northcapitaldxb.com/blog/${post.slug}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Share on LinkedIn"
+                  className="flex items-center gap-2 bg-secondary/50 px-3 py-1.5 rounded-full transition-all hover:bg-accent/10 hover:text-accent group border border-transparent hover:border-accent/20"
+                >
+                  <Linkedin className="h-3.5 w-3.5 text-accent group-hover:scale-110 transition-transform" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider">LinkedIn</span>
+                </a>
+                <a
+                  href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`${post.title} https://www.northcapitaldxb.com/blog/${post.slug}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Share on WhatsApp"
+                  className="flex items-center gap-2 bg-secondary/50 px-3 py-1.5 rounded-full transition-all hover:bg-accent/10 hover:text-accent group border border-transparent hover:border-accent/20"
+                >
+                  <MessageCircle className="h-3.5 w-3.5 text-accent group-hover:scale-110 transition-transform" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider">WhatsApp</span>
+                </a>
               </div>
-              <a
-                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(post.title)}&url=${encodeURIComponent(`https://www.northcapitaldxb.com/blog/${post.slug}`)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 bg-secondary/50 px-3 py-1 rounded-full transition-colors hover:bg-accent/10 hover:text-accent group"
-              >
-                <Twitter className="h-4 w-4 text-accent group-hover:scale-110 transition-transform" />
-                <span className="font-medium">Share on X</span>
-              </a>
             </div>
           </header>
 

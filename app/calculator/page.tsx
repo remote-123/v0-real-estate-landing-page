@@ -13,7 +13,7 @@ import { ArrowRight, ArrowLeft, Calculator, CheckCircle2, Clock, CalendarDays } 
 
 // Approximate Exchange Rates
 const exchangeRates: Record<string, number> = {
-  AED: 1, USD: 3.67, GBP: 4.65, EUR: 3.95, CAD: 2.70, AUD: 2.40, 
+  AED: 1, USD: 3.67, GBP: 4.65, EUR: 3.95, CAD: 2.70, AUD: 2.40,
   CHF: 4.15, INR: 0.044, PKR: 0.013, RUB: 0.040, CNY: 0.51, SAR: 0.98, EGP: 0.075, TRY: 0.11,
 }
 
@@ -27,18 +27,49 @@ const propertyTiers = [
 ]
 
 export default function AffordabilityCalculator() {
+  const calculatorSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Dubai Real Estate Affordability Calculator",
+    "description": "Calculate purchasing power and downpayment requirements for Dubai residential properties.",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "All",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://www.northcapitaldxb.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Calculator",
+          "item": "https://www.northcapitaldxb.com/calculator"
+        }
+      ]
+    }
+  };
+
   const [currency, setCurrency] = useState("USD")
   const [goal, setGoal] = useState("rental")
-  
+
   // Slider states
   const [savingsInput, setSavingsInput] = useState(50000)
   const [incomeInput, setIncomeInput] = useState(2000)
-  
+
   // Form states
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")
-  
+
   const [hasCalculated, setHasCalculated] = useState(false)
   const [showContactForm, setShowContactForm] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -58,7 +89,7 @@ export default function AffordabilityCalculator() {
 
   const affordableTier = relevantTiers.find(tier => savingsAED >= tier.requiredCash)
   const lowestTier = relevantTiers[relevantTiers.length - 1]
-  
+
   const shortfallAED = lowestTier.requiredCash - savingsAED
   const monthsToSave = incomeAED > 0 ? Math.ceil(shortfallAED / incomeAED) : "Infinite"
 
@@ -67,13 +98,13 @@ export default function AffordabilityCalculator() {
     setSavingsInput(0)
     setIncomeInput(0)
     setHasCalculated(false)
-    setShowContactForm(false) 
+    setShowContactForm(false)
   }
 
-const submitLead = (e: React.FormEvent<HTMLFormElement>) => {
+  const submitLead = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsSubmitting(true) // Changes button text instantly
-    
+
     // 1. Fire the data to Google Sheets in the background (No 'await')
     fetch('/api/contact', {
       method: 'POST',
@@ -91,15 +122,19 @@ const submitLead = (e: React.FormEvent<HTMLFormElement>) => {
 
     // 2. Redirect IMMEDIATELY (0 second wait time)
     // REPLACE THIS WITH YOUR ACTUAL CALENDLY LINK
-    window.location.href = "https://calendar.app.google/3qv6x8vt8NHvio9U9" 
+    window.location.href = "https://calendar.app.google/3qv6x8vt8NHvio9U9"
   }
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(calculatorSchema) }}
+      />
       <Navbar />
       <main className="bg-secondary/30 pt-32 pb-20 min-h-screen">
         <div className="mx-auto max-w-4xl px-6">
-          
+
           <div className="text-center mb-10">
             <h1 className="font-serif text-4xl font-bold md:text-5xl">Can I Afford UAE Real Estate?</h1>
             <p className="mt-4 text-lg text-muted-foreground">
@@ -110,18 +145,18 @@ const submitLead = (e: React.FormEvent<HTMLFormElement>) => {
           <Card className="shadow-xl border-border overflow-hidden">
             <CardContent className="p-0">
               <div className="grid md:grid-cols-2">
-                
+
                 {/* LEFT COLUMN: THE INPUTS */}
                 <div className="p-8 bg-card border-r border-border relative z-10">
                   <form onSubmit={(e) => { e.preventDefault(); setHasCalculated(true); setShowContactForm(false); }} className="space-y-8">
-                    
+
                     <div className="space-y-3">
                       <Label>What is your primary goal?</Label>
                       <div className="grid grid-cols-2 gap-3">
-                        <button type="button" onClick={() => {setGoal("rental"); setHasCalculated(false)}} className={`p-3 border rounded-lg text-sm font-medium transition-colors ${goal === "rental" ? "border-accent bg-accent/10 text-accent" : "border-border hover:bg-secondary"}`}>
+                        <button type="button" onClick={() => { setGoal("rental"); setHasCalculated(false) }} className={`p-3 border rounded-lg text-sm font-medium transition-colors ${goal === "rental" ? "border-accent bg-accent/10 text-accent" : "border-border hover:bg-secondary"}`}>
                           Rental Income
                         </button>
-                        <button type="button" onClick={() => {setGoal("live"); setHasCalculated(false)}} className={`p-3 border rounded-lg text-sm font-medium transition-colors ${goal === "live" ? "border-accent bg-accent/10 text-accent" : "border-border hover:bg-secondary"}`}>
+                        <button type="button" onClick={() => { setGoal("live"); setHasCalculated(false) }} className={`p-3 border rounded-lg text-sm font-medium transition-colors ${goal === "live" ? "border-accent bg-accent/10 text-accent" : "border-border hover:bg-secondary"}`}>
                           Live In It
                         </button>
                       </div>
@@ -164,7 +199,7 @@ const submitLead = (e: React.FormEvent<HTMLFormElement>) => {
 
                 {/* RIGHT COLUMN: SLIDING VIEWPORT */}
                 <div className="relative bg-muted/30 overflow-hidden min-h-[500px]">
-                  
+
                   {/* LAYER 1: THE RESULTS */}
                   <div className={`absolute inset-0 p-8 flex flex-col justify-center transition-transform duration-500 ease-in-out ${showContactForm ? '-translate-x-full' : 'translate-x-0'}`}>
                     {!hasCalculated ? (
@@ -200,7 +235,7 @@ const submitLead = (e: React.FormEvent<HTMLFormElement>) => {
                           </p>
                         </div>
                         <Button onClick={() => setShowContactForm(true)} className="w-full bg-foreground text-background hover:bg-foreground/90 mt-4 shadow-md h-12 text-md">
-                           Continue to Roadmap <ArrowRight className="ml-2 h-4 w-4" />
+                          Continue to Roadmap <ArrowRight className="ml-2 h-4 w-4" />
                         </Button>
                       </div>
                     )}
@@ -215,7 +250,7 @@ const submitLead = (e: React.FormEvent<HTMLFormElement>) => {
                         </Button>
                         <h3 className="font-serif text-2xl font-bold mb-2">Let's lock in your plan.</h3>
                         <p className="text-sm text-muted-foreground mb-6">Enter your details to schedule a quick consultation and get your tailored market roadmap.</p>
-                        
+
                         <form onSubmit={submitLead} className="space-y-4">
                           <div className="space-y-2">
                             <Label htmlFor="name">Full Name</Label>

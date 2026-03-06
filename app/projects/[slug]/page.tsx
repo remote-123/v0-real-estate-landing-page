@@ -47,7 +47,8 @@ const query = `*[_type == "project" && slug.current == $slug][0]{
   masterplanImage,
   paymentPlanImage,
   floorPlanImage,
-  faqs
+  faqs,
+  _updatedAt
 }`
 
 // Generate SEO slugs dynamically from Sanity for incredibly fast loading
@@ -76,6 +77,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       description,
       images: [{ url: ogImage, width: 1200, height: 630 }],
       type: 'website',
+    },
+    alternates: {
+      canonical: `https://www.northcapitaldxb.com/projects/${slug}`,
     },
     twitter: {
       card: 'summary_large_image',
@@ -119,6 +123,12 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
       "@type": "Offer",
       "priceCurrency": "AED",
       "price": numericPrice,
+      "priceSpecification": {
+        "@type": "PriceSpecification",
+        "price": numericPrice,
+        "priceCurrency": "AED",
+        "name": "Starting Price"
+      },
       "availability": "https://schema.org/InStock",
       "url": `https://www.northcapitaldxb.com/projects/${project.slug}`,
       "category": "Real Estate > Residential"
@@ -126,6 +136,11 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
     "brand": {
       "@type": "Organization",
       "name": project.developer
+    },
+    "subjectOf": {
+      "@type": "WebPage",
+      "name": `${project.title} - ${project.developer}`,
+      "description": project.uniquenessDescription
     }
   }
 

@@ -6,8 +6,46 @@ import { Footer } from "@/components/footer"
 import { LeadForm } from "@/components/lead-form"
 
 export default function ContactPage() {
+  const contactSchema = {
+    "@context": "https://schema.org",
+    "@type": "ContactPage",
+    "name": "Contact North Capital DXB",
+    "description": "Speak to an institutional-grade investment strategy advisor in Dubai.",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://www.northcapitaldxb.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Contact",
+          "item": "https://www.northcapitaldxb.com/contact"
+        }
+      ]
+    },
+    "mainEntity": {
+      "@type": "Organization",
+      "name": "North Capital DXB",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "customer service",
+        "areaServed": "Global",
+        "availableLanguage": ["English", "Arabic"]
+      }
+    }
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(contactSchema) }}
+      />
       <Navbar />
       <main>
         {/* Simple Hero: Sets the stage without competing with the form's text */}

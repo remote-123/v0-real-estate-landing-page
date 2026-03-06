@@ -10,7 +10,15 @@ import { client } from "@/sanity/lib/client" // <-- NEW: Import the Sanity clien
 import { cn } from "@/lib/utils"
 import { urlForImage } from "@/sanity/lib/image" // <-- NEW: Import the image URL builder
 // Tell Next.js to re-fetch the data from Sanity periodically so it's never stale
-export const revalidate = 60 
+export const metadata = {
+  title: "Vetted Dubai Real Estate Projects | North Capital DXB",
+  description: "Browse our curated selection of high-yield, off-plan projects from Dubai's top developers.",
+  alternates: {
+    canonical: "https://www.northcapitaldxb.com/projects",
+  },
+}
+
+export const revalidate = 60
 
 const ALL_CATEGORY = "All Projects"
 
@@ -25,13 +33,14 @@ const query = `*[_type == "project"]{
   roi,
   status,
   completion,
-  image
+  image,
+  _updatedAt
 }`
 
-export default async function ProjectsPage({ 
-  searchParams 
-}: { 
-  searchParams: Promise<{ category?: string }> 
+export default async function ProjectsPage({
+  searchParams
+}: {
+  searchParams: Promise<{ category?: string }>
 }) {
   // Await search params in Next.js 15
   const params = await searchParams
@@ -42,7 +51,7 @@ export default async function ProjectsPage({
 
   // Extract unique categories dynamically from the live data
   const categories = [
-    ALL_CATEGORY, 
+    ALL_CATEGORY,
     ...Array.from(new Set(projects.map((p: any) => p.category).filter(Boolean)))
   ] as string[]
 
@@ -52,8 +61,35 @@ export default async function ProjectsPage({
     return project.category === activeCategory
   })
 
+  const itemListSchema = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": "North Capital DXB Curated Projects",
+    "description": "Premium real estate opportunities in Dubai, vetted for institutional-grade ROI.",
+    "itemListElement": filteredProjects.map((project: any, index: number) => ({
+      "@type": "ListItem",
+      "position": index + 1,
+      "item": {
+        "@type": "RealEstateListing",
+        "name": project.title,
+        "url": `https://www.northcapitaldxb.com/projects/${project.slug}`,
+        "image": project.image ? urlForImage(project.image).width(400).url() : "https://www.northcapitaldxb.com/images/hero-dubai.jpg",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Dubai",
+          "addressCountry": "AE",
+          "streetAddress": project.location
+        }
+      }
+    }))
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema) }}
+      />
       <Navbar />
       <main>
         {/* Hero */}
@@ -64,7 +100,7 @@ export default async function ProjectsPage({
             </p>
             <h1 className="max-w-3xl font-serif text-4xl font-bold tracking-tight text-primary-foreground md:text-5xl lg:text-6xl">
               <span className="text-balance">
-                Curated Off-Plan & <br/> Pre-Launch Opportunities
+                Curated Off-Plan & <br /> Pre-Launch Opportunities
               </span>
             </h1>
             <p className="mt-4 max-w-xl text-lg leading-relaxed text-primary-foreground/70">
@@ -76,7 +112,7 @@ export default async function ProjectsPage({
         {/* Filter Bar & Grid */}
         <section className="bg-background py-12 md:py-20">
           <div className="mx-auto max-w-7xl px-6">
-            
+
             {/* Category Filter using URL params */}
             <div className="mb-10 flex flex-wrap items-center gap-2 border-b border-border pb-6">
               <div className="mr-2 flex items-center gap-2 text-sm font-medium text-muted-foreground">
@@ -110,20 +146,20 @@ export default async function ProjectsPage({
                     className="group flex flex-col h-full"
                   >
                     <article className="flex flex-1 flex-col overflow-hidden rounded-xl border border-border bg-card transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-                      
+
                       {/* Image Container */}
                       <div className="relative aspect-[4/3] overflow-hidden bg-muted">
-                       <Image
+                        <Image
                           // Tell Sanity to compress this image and make it a max width of 800px!
                           src={project.image ? urlForImage(project.image).width(800).url() : "/placeholder.svg"}
                           alt={`${project.title} in ${project.location}`}
                           fill
                           className="object-cover transition-transform duration-700 group-hover:scale-110"
                         />
-                        
+
                         {/* Dynamic Status Badge */}
                         <div className="absolute left-4 top-4 flex gap-2">
-                           <Badge className={cn(
+                          <Badge className={cn(
                             "border-none shadow-sm uppercase tracking-wider text-[10px] font-bold px-3 py-1",
                             (project.status === "Upcoming" || project.status === "Pre-Launch")
                               ? "bg-accent text-accent-foreground"
@@ -178,8 +214,8 @@ export default async function ProjectsPage({
               // Empty State
               <div className="py-20 text-center">
                 <p className="text-lg text-muted-foreground">No projects found in this category.</p>
-                <Button 
-                  variant="link" 
+                <Button
+                  variant="link"
                   className="mt-2 text-accent"
                   asChild
                 >

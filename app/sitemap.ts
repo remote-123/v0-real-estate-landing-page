@@ -33,10 +33,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }))
 
   // 5. Define static routes
-  const staticRoutes = ['', '/projects', '/blog', '/about', '/contact', '/calculator'].map((route) => ({
+  const staticRoutes = ['', '/projects', '/blog', '/about', '/contact', '/calculator', '/terminal', '/terminal/distress-deals'].map((route) => ({
     url: `${baseUrl}${route}`,
     lastModified: new Date(),
-    changeFrequency: 'daily' as const,
+    changeFrequency: route.includes('terminal') ? ('hourly' as const) : ('daily' as const),
     priority: route === '' ? 1 : 0.9,
   }))
 

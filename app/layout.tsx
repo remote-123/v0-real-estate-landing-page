@@ -9,6 +9,7 @@ import { ExitIntentPopup } from "@/components/exit-intent-popup"
 import Script from "next/script"
 import { GoogleAnalytics } from '@next/third-parties/google'
 import { ThemeProvider } from "@/components/theme-provider"
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 const dmSans = DM_Sans({
   subsets: ['latin'],

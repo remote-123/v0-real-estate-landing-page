@@ -6,25 +6,27 @@ import { Footer } from "@/components/footer"
 import { Badge } from "@/components/ui/badge"
 import { ArrowUpRight, Calendar } from "lucide-react"
 import { client } from "@/sanity/lib/client"
-import { urlForImage } from "@/sanity/lib/image" // <-- Added Sanity Image builder
+import { urlForImage } from "@/sanity/lib/image"
 
 export const revalidate = 60
 
 export const metadata: Metadata = {
   title: "Blog & Insights | NorthCapitalDXB",
   description: "Expert analysis on Dubai real estate trends, investment strategies, and UAE market insights.",
+  alternates: {
+    canonical: 'https://www.northcapitaldxb.com/blog',
+  },
 }
 
-// 1. UPDATED GROQ QUERY: Fetching the exact fields from your new AEO schema
 const query = `*[_type == "post"] | order(publishedAt desc) {
   title,
   "slug": slug.current,
   excerpt,
   publishedAt,
-  mainImage
+  mainImage,
+  _updatedAt
 }`
 
-// Helper to format Sanity's ISO date string into a readable format
 function formatDate(dateString: string) {
   if (!dateString) return "Recently"
   return new Date(dateString).toLocaleDateString('en-US', {
@@ -36,7 +38,25 @@ function formatDate(dateString: string) {
 
 export default async function BlogPage() {
   const posts = await client.fetch(query)
-  
+
+  const itemListSchema = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": "North Capital DXB Blog & Insights",
+    "description": "Expert analysis on Dubai real estate trends, investment strategies, and UAE market insights.",
+    "itemListElement": posts.map((post: any, index: number) => ({
+      "@type": "ListItem",
+      "position": index + 1,
+      "item": {
+        "@type": "BlogPosting",
+        "headline": post.title,
+        "url": `https://www.northcapitaldxb.com/blog/${post.slug}`,
+        "datePublished": post.publishedAt,
+        "image": post.mainImage ? urlForImage(post.mainImage).width(800).url() : "https://www.northcapitaldxb.com/images/hero-dubai.jpg"
+      }
+    }))
+  };
+
   if (posts.length === 0) {
     return (
       <div className="pt-40 text-center pb-20 min-h-screen">
@@ -50,6 +70,10 @@ export default async function BlogPage() {
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema) }}
+      />
       <Navbar />
       <main>
         <section className="bg-primary pt-32 pb-20 md:pt-40 md:pb-28">
@@ -70,8 +94,7 @@ export default async function BlogPage() {
 
         <section className="bg-background py-20 md:py-28">
           <div className="mx-auto max-w-7xl px-6">
-            
-            {/* FEATURED POST */}
+
             <Link href={`/blog/${featured.slug}`} className="group">
               <article className="grid overflow-hidden rounded-xl border border-border bg-card md:grid-cols-2 shadow-sm transition-shadow hover:shadow-md">
                 <div className="relative aspect-[4/3] overflow-hidden md:aspect-auto">
@@ -108,7 +131,6 @@ export default async function BlogPage() {
               </article>
             </Link>
 
-            {/* THE REST OF THE POSTS */}
             {rest.length > 0 && (
               <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
                 {rest.map((post: any) => (
