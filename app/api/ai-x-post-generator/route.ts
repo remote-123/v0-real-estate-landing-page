@@ -161,19 +161,3 @@ export async function POST(req: Request) {
   }
 }
 
-// GET — Vercel cron trigger (runs every 4 hours)
-export async function GET(req: Request) {
-  const auth = req.headers.get('authorization');
-  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-  try {
-    console.log('⏰ X Post Generator: cron trigger');
-    const deals = await fetchTopDeals();
-    const drafts = await generateAndSavePosts(deals);
-    return NextResponse.json({ success: true, drafts });
-  } catch (error: any) {
-    console.error('❌ X Post Cron Error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-}

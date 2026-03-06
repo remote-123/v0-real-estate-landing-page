@@ -1,7 +1,7 @@
 {
   "crons": [
     {
-      "path": "/api/ai-x-post-generator",
+      "path": "/api/cron/generate-x-posts",
       "schedule": "0 */4 * * *"
     }
   ]
