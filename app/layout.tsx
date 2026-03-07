@@ -74,6 +74,7 @@ export default function RootLayout({
       <body
         className={`${dmSans.variable} ${playfair.variable} font-sans antialiased`}
       >
+        <SpeedInsights />
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
