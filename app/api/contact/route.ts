@@ -1,5 +1,6 @@
 import { google } from 'googleapis';
 import { NextResponse } from 'next/server';
+import { sendTelegram } from '@/lib/telegram';
 
 export async function POST(req: Request) {
   try {
@@ -39,6 +40,19 @@ export async function POST(req: Request) {
         values: [row], 
       },
     });
+
+    await sendTelegram(
+`🔔 <b>NEW LEAD</b>
+
+👤 ${body.firstName || ''} ${body.lastName || ''}
+📧 ${body.email}
+📱 ${body.countryCode || ''} ${body.phone || 'N/A'}
+💰 Budget: ${body.budget || 'N/A'}
+🎯 Goal: ${body.goal || 'N/A'}
+⏱ Timeline: ${body.timeline || 'N/A'}
+🏢 Project: ${body.interestedProject || 'General Inquiry'}
+📌 Source: ${body.source || 'Contact Form'}`
+    );
 
     return NextResponse.json({ success: true });
   } catch (error) {

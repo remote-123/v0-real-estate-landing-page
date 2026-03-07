@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { createClient } from 'next-sanity';
 import { NORTH_CAPITAL_SYSTEM_PROMPT } from '@/lib/ai-guidelines';
+import { sendTelegram } from '@/lib/telegram';
 
 export const maxDuration = 60;
 
@@ -104,6 +105,17 @@ Blog URL: ${blogUrl}
 
     const created = await writeClient.create(doc);
     console.log(`✅ X post draft saved for blog: ${created._id}`);
+
+    await sendTelegram(
+`📝 <b>BLOG X DRAFT READY</b>
+<b>${title}</b>
+
+<code>${post.postText}</code>
+
+${post.suggestedHashtags}
+
+👉 Review in Sanity → approve when ready to post`
+    );
 
     return NextResponse.json({ success: true, draftId: created._id });
 

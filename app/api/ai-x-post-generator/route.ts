@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { createClient } from 'next-sanity';
 import { NORTH_CAPITAL_SYSTEM_PROMPT } from '@/lib/ai-guidelines';
+import { sendTelegram } from '@/lib/telegram';
 
 export const maxDuration = 60;
 
@@ -168,6 +169,14 @@ Days on Market: ${d.daysOnMarket}`
     console.log(`✅ X post draft saved: ${created._id}`);
     savedIds.push(created._id);
   }
+
+  await sendTelegram(
+`🤖 <b>DISTRESS DEALS — ${savedIds.length} DRAFTS READY</b>
+
+${deals.map((d, i) => `📍 ${d.location} — -${d.discountPercent}% (${d.bedrooms} BD, AED ${d.currentPrice.toLocaleString()})`).join('\n')}
+
+👉 Review in Sanity → X Posts`
+  );
 
   return savedIds;
 }
