@@ -15,29 +15,52 @@ const writeClient = createClient({
   token: process.env.SANITY_API_TOKEN,
 });
 
-const X_POST_FORMAT = `
-TASK: Generate X (Twitter) post drafts for @northcapitaldxb based on the distress deal data provided.
+// Applies Unicode strikethrough to a string — renders natively on X/Twitter
+function strikethrough(text: string): string {
+  return text.split('').map(c => c + '\u0336').join('');
+}
 
-For each deal, generate ONE tight, data-first post. Rules:
-- Open with a hard data hook: the price drop amount or %, days on market, or beds/location combo
-- Analytical and direct — NOT salesy. You are flagging an anomaly, not pitching a property.
-- End with this exact CTA on its own line: northcapitaldxb.com/terminal/distress-deals
-- Stay under 250 characters EXCLUDING the CTA link (the link takes ~23 chars in X)
-- Use line breaks for rhythm. No bullet points.
-- NEVER use: stunning, masterpiece, luxury, unparalleled, nestled, game-changer, seamless
+function buildPostText(deal: any, usp: string): string {
+  const title = deal.title.length > 45
+    ? deal.title.substring(0, 42) + '...'
+    : deal.title;
 
-Also generate for each post:
-- imageBrief: A specific, actionable description of what screenshot or visual to attach. Examples: "Screenshot of the PropertyFinder listing page showing the original vs. current asking price in the price history section" or "Side-by-side map showing the property location relative to Downtown Dubai and DIFC"
-- suggestedHashtags: 3-4 hashtags relevant to the property and Dubai market (e.g., #DubaiRealEstate #DistressDeals #UAEProperty #DubaiInvesting)
+  const originalStruck = strikethrough(`AED ${deal.originalPrice.toLocaleString()}`);
+  const priceLines = `💰 ${originalStruck} → AED ${deal.currentPrice.toLocaleString()} (-${deal.discountPercent}%)`;
 
-Return STRICTLY as a JSON array — no markdown, no backticks, just the array:
-[
-  {
-    "postText": "...",
-    "imageBrief": "...",
-    "suggestedHashtags": "..."
-  }
-]
+  const sqftPart = deal.sizeSqft > 0 ? `📐 ${deal.sizeSqft.toLocaleString()} sqft` : '';
+  const bedBathPart = `🏡 ${deal.bedrooms} BD${deal.bathrooms ? ` / ${deal.bathrooms} BA` : ''}`;
+  const detailLine = [sqftPart, bedBathPart].filter(Boolean).join(' | ');
+
+  return [
+    '🚨 NEW DISTRESS DEAL 🚨',
+    title,
+    priceLines,
+    detailLine,
+    usp,
+    '',
+    'Find your next distress deal 👇',
+    'northcapitaldxb.com/terminal/distress-deals',
+  ].join('\n');
+}
+
+const USP_PROMPT = `
+TASK: For each Dubai real estate distress deal provided, write ONE punchy analytical USP sentence (max 85 characters).
+
+The USP should explain WHY this specific deal is worth flagging to a HNW investor. Focus on ONE of:
+- Location scarcity or demand strength (e.g. "JBR vacancy sits under 8% — absorption here is consistent")
+- Price-per-sqft anomaly vs. community average
+- Yield potential given the discount
+- Market timing or supply context
+
+Rules:
+- Specific and data-informed — no generic claims
+- Active voice, confident tone
+- NEVER use: stunning, luxury, masterpiece, unparalleled, nestled, game-changer, seamless, rapidly
+- No exclamation marks
+
+Return STRICTLY as a JSON array — no markdown, no backticks:
+[{"usp": "..."}]
 `;
 
 async function fetchTopDeals() {
@@ -73,6 +96,7 @@ async function fetchTopDeals() {
         location: item.address?.full_name || 'Dubai',
         type: item.property_type?.toUpperCase() || 'PROPERTY',
         bedrooms: item.bedrooms?.toString() || 'Studio',
+        bathrooms: item.bathrooms?.toString() || null,
         sizeSqft: Math.round(item.size?.value || 0),
         currentPrice,
         originalPrice,
@@ -87,18 +111,19 @@ async function fetchTopDeals() {
 }
 
 async function generateAndSavePosts(deals: any[]) {
+  // Gemini only generates the USP — everything else is built from data
   const dealsContext = deals.map((d, i) =>
     `Deal ${i + 1}:
 Title: ${d.title}
 Location: ${d.location}
-Type: ${d.type} | ${d.bedrooms}BR | ${d.sizeSqft > 0 ? `${d.sizeSqft.toLocaleString()} sqft` : 'Size N/A'}
+Type: ${d.type} | ${d.bedrooms} BD${d.bathrooms ? ` / ${d.bathrooms} BA` : ''} | ${d.sizeSqft > 0 ? `${d.sizeSqft.toLocaleString()} sqft` : 'Size N/A'}
 Original Price: AED ${d.originalPrice.toLocaleString()}
 Current Price: AED ${d.currentPrice.toLocaleString()}
 Discount: ${d.discountPercent}%
 Days on Market: ${d.daysOnMarket}`
   ).join('\n\n');
 
-  const prompt = `${NORTH_CAPITAL_SYSTEM_PROMPT}\n\n${X_POST_FORMAT}\n\nDeals to generate posts for:\n\n${dealsContext}`;
+  const prompt = `${NORTH_CAPITAL_SYSTEM_PROMPT}\n\n${USP_PROMPT}\n\nDeals:\n\n${dealsContext}`;
 
   let result;
   try {
@@ -111,18 +136,20 @@ Days on Market: ${d.daysOnMarket}`
   }
 
   const text = result.response.text().replace(/```json/g, '').replace(/```/g, '').trim();
-  const posts: any[] = JSON.parse(text);
+  const usps: { usp: string }[] = JSON.parse(text);
 
   const savedIds: string[] = [];
-  for (let i = 0; i < Math.min(posts.length, deals.length); i++) {
+  for (let i = 0; i < Math.min(usps.length, deals.length); i++) {
     const deal = deals[i];
-    const post = posts[i];
+    const usp = usps[i]?.usp || '';
+    const postText = buildPostText(deal, usp);
+
     const doc = {
       _type: 'xPost',
       _id: `drafts.ai-xpost-${Date.now()}-${i}`,
-      postText: post.postText,
-      imageBrief: post.imageBrief,
-      suggestedHashtags: post.suggestedHashtags,
+      postText,
+      imageBrief: `Screenshot of the ${deal.title} listing on PropertyFinder showing the asking price. Pair with a location map pinpointing ${deal.location}.`,
+      suggestedHashtags: '#DubaiRealEstate #DistressDeals #UAEProperty #DubaiInvesting',
       status: 'draft',
       dealTitle: deal.title,
       dealLocation: deal.location,
@@ -136,6 +163,7 @@ Days on Market: ${d.daysOnMarket}`
       dealExternalUrl: deal.externalUrl || null,
       generatedAt: new Date().toISOString(),
     };
+
     const created = await writeClient.create(doc);
     console.log(`✅ X post draft saved: ${created._id}`);
     savedIds.push(created._id);
@@ -144,7 +172,6 @@ Days on Market: ${d.daysOnMarket}`
   return savedIds;
 }
 
-// POST — manual trigger (same secret key pattern as blog generator)
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -160,4 +187,3 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
-
