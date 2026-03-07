@@ -8,7 +8,7 @@ import { usePathname } from "next/navigation"
 
 export function MobileStickyBar() {
 
-  export default function MobileNav() {
+  
     const pathname = usePathname() // 2. Get the current path
 
     // 3. Define the routes where this component should be hidden
