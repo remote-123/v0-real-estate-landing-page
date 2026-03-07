@@ -1,6 +1,10 @@
 "use client"
 
 import { useRouter, useSearchParams } from "next/navigation"
+import { SITE_CONFIG } from "@/lib/constants"
+import { Button } from "@/components/ui/button"
+import { Calendar } from "lucide-react"
+import Link from "next/link"
 
 export function DistressFilters() {
     const router = useRouter()
@@ -53,6 +57,12 @@ export function DistressFilters() {
                         </button>
                     ))}
                 </div>
+                <Button asChild variant="outline" size="sm" className="gap-2 border-accent/20 hover:bg-accent/10 hover:text-accent transition-colors">
+                                                <Link href={SITE_CONFIG.calendarLink} target="_blank">
+                                                    <Calendar className="h-3 w-3" />
+                                                    Schedule ROI Briefing
+                                                </Link>
+                                            </Button>
             </div>
 
             {/* Sorting Dropdown */}

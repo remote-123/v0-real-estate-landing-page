@@ -221,8 +221,8 @@ export default async function DistressDealsPage(props: {
             <section className="flex flex-col gap-6 lg:flex-row shadow-sm border-y sm:border border-border/50 rounded-none sm:rounded-2xl p-6 bg-card">
                 <div className="flex-1 space-y-2">
                     <div className="flex items-center gap-3">
-                        <div className="h-2.5 w-2.5 rounded-full bg-accent animate-ping" />
-                        <h1 className="font-mono text-xs tracking-widest text-accent uppercase font-bold">Scanning Live...</h1>
+                        <div className="h-2.5 w-2.5 rounded-full bg-green-500 animate-ping" />
+                        <h1 className="font-mono text-xs tracking-widest text-muted-foreground uppercase font-bold">Scanning Live...</h1>
                     </div>
                     <h2 className="font-serif text-3xl sm:text-4xl font-bold text-foreground">Distress Deals Dubai</h2>
                     <p className="text-muted-foreground text-sm max-w-xl leading-relaxed">
@@ -239,10 +239,6 @@ export default async function DistressDealsPage(props: {
                     <div className="flex-1 rounded-xl bg-background border border-border/50 p-4">
                         <p className="font-mono text-xs text-muted-foreground mb-1">Avg Discount</p>
                         <p className="font-mono text-xl md:text-2xl font-bold text-accent">{avgDiscount.toFixed(1)}%</p>
-                    </div>
-                    <div className="flex-1 rounded-xl bg-background border border-border/50 p-4">
-                        <p className="font-mono text-xs text-muted-foreground mb-1">Market Scan</p>
-                        <p className="font-mono text-xl md:text-2xl font-bold text-foreground">Live Active</p>
                     </div>
                 </div>
             </section>
