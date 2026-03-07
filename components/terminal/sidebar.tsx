@@ -27,7 +27,7 @@ export const sidebarLinks = [
   {
     title: "Intelligence",
     links: [
-      { label: "Community Screener", href: "/terminal/communities", icon: Map },
+      // { label: "Community Screener", href: "/terminal/communities", icon: Map },
       { label: "ROI Engine", href: "/terminal/roi-engine", icon: Calculator },
       // { label: "Project Screener", href: "/investor-terminal/screener", icon: Compass },
       // { label: "Investment Theses", href: "/investor-terminal/theses", icon: FileText },
