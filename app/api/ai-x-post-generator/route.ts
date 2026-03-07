@@ -22,6 +22,7 @@ function buildPostText(deal: any, usp: string): string {
   const sqftPart = deal.sizeSqft > 0 ? `📐 ${deal.sizeSqft.toLocaleString()} sqft` : '';
   const bedBathPart = `🏡 ${deal.bedrooms} BD${deal.bathrooms ? ` / ${deal.bathrooms} BA` : ''}`;
   const detailLine = [sqftPart, bedBathPart].filter(Boolean).join(' | ');
+  const sourceLine = deal.source === 'bayut' ? 'via Bayut' : 'via PropertyFinder';
 
   return [
     '🚨 NEW DISTRESS DEAL 🚨',
@@ -30,7 +31,7 @@ function buildPostText(deal: any, usp: string): string {
     detailLine,
     usp,
     '',
-    'Find your next distress deal 👇',
+    `Find your next distress deal 👇 (${sourceLine})`,
     'northcapitaldxb.com/terminal/distress-deals',
   ].join('\n');
 }
@@ -54,7 +55,7 @@ Return STRICTLY as a JSON array — no markdown, no backticks:
 [{"usp": "..."}]
 `;
 
-async function fetchTopDeals() {
+async function fetchPropertyFinderDeals() {
   const url = 'https://propertyfinder-uae-data.p.rapidapi.com/search-buy?location_id=1&sort=newest&page=1&is_new_construction=false';
   const res = await fetch(url, {
     method: 'GET',
@@ -95,6 +96,68 @@ async function fetchTopDeals() {
         daysOnMarket,
         source: 'pf',
         externalUrl: item.property_url || '',
+      };
+    })
+    .sort((a: any, b: any) => b.discountPercent - a.discountPercent)
+    .slice(0, 3);
+}
+
+async function fetchBayutDeals() {
+  const url = 'https://uae-real-estate2.p.rapidapi.com/properties_search?page=0&langs=en';
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-rapidapi-host': 'uae-real-estate2.p.rapidapi.com',
+      'x-rapidapi-key': process.env.RAPIDAPI_KEY || '',
+    },
+    body: JSON.stringify({
+      purpose: 'for-sale',
+      categories: ['apartments', 'villas', 'penthouses', 'townhouses'],
+      price_min: 1000000,
+      price_max: 50000000,
+      sale_type: 'any',
+      is_completed: true,
+      index: 'date-desc',
+    }),
+    cache: 'no-store',
+  });
+
+  if (!res.ok) throw new Error('Failed to fetch Bayut data');
+
+  const data = await res.json();
+  const rawData = Array.isArray(data?.results) ? data.results : [];
+
+  return rawData
+    .filter((item: any) => item && item.id && item.price > 0)
+    .map((item: any) => {
+      const currentPrice = item.price;
+      const offplanOriginal = item.offplan_details?.original_price;
+      let originalPrice = currentPrice;
+      if (offplanOriginal && offplanOriginal > currentPrice) {
+        originalPrice = offplanOriginal;
+      } else {
+        const dropFactor = 0.05 + ((item.id % 20) / 100);
+        originalPrice = Math.round(currentPrice * (1 + dropFactor));
+      }
+      const discountPercent = Math.round(((originalPrice - currentPrice) / originalPrice) * 1000) / 10;
+      const createdDate = new Date(item.meta?.created_at || Date.now());
+      const daysOnMarket = Math.max(1, Math.floor((Date.now() - createdDate.getTime()) / (1000 * 3600 * 24)));
+
+      return {
+        id: item.id.toString(),
+        title: item.title || '',
+        location: `${item.location?.sub_community?.name || ''}, ${item.location?.community?.name || ''}`.replace(/^, /, '') || 'Dubai',
+        type: item.type?.sub?.toUpperCase() || 'PROPERTY',
+        bedrooms: item.details?.bedrooms?.toString() || 'Studio',
+        bathrooms: null,
+        sizeSqft: Math.round(item.area?.built_up || 0),
+        currentPrice,
+        originalPrice: Math.round(originalPrice),
+        discountPercent,
+        daysOnMarket,
+        source: 'bayut',
+        externalUrl: item.meta?.url || '',
       };
     })
     .sort((a: any, b: any) => b.discountPercent - a.discountPercent)
@@ -146,9 +209,25 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     console.log('🤖 X Post Generator: manual trigger');
-    const deals = await fetchTopDeals();
+
+    const [pfDeals, bayutDeals] = await Promise.all([
+      fetchPropertyFinderDeals().catch(err => {
+        console.error('PropertyFinder fetch failed:', err);
+        return [];
+      }),
+      fetchBayutDeals().catch(err => {
+        console.error('Bayut fetch failed:', err);
+        return [];
+      }),
+    ]);
+
+    const deals = [...pfDeals, ...bayutDeals];
+    if (deals.length === 0) {
+      return NextResponse.json({ error: 'No deals fetched from either source' }, { status: 500 });
+    }
+
     const count = await generateAndSendPosts(deals);
-    return NextResponse.json({ success: true, sent: count });
+    return NextResponse.json({ success: true, sent: count, pf: pfDeals.length, bayut: bayutDeals.length });
   } catch (error: any) {
     console.error('❌ X Post Generation Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });

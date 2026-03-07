@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { createClient } from 'next-sanity';
 import { NORTH_CAPITAL_SYSTEM_PROMPT } from '@/lib/ai-guidelines';
 import { sendTelegram } from '@/lib/telegram';
 
@@ -8,32 +7,39 @@ export const maxDuration = 60;
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
-const writeClient = createClient({
-  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
-  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET,
-  apiVersion: '2024-02-24',
-  useCdn: false,
-  token: process.env.SANITY_API_TOKEN,
-});
+const BLOG_XPOST_PROMPT = `
+You are a senior investment strategist writing for X (Twitter). Your audience is high-net-worth global investors — they are analytical, data-literate, and deeply sceptical of generic real estate marketing.
 
-const BLOG_XPOST_FORMAT = `
-TASK: Generate ONE X (Twitter) post announcing a new thesis blog post from North Capital DXB.
+BRAND VOICE:
+- Tone: Institutional, contrarian, direct. Like a Bloomberg terminal analyst, not a broker.
+- Style: Active voice. Confident. Never desperate or promotional.
+- You treat real estate as a financial instrument first, a physical asset second.
 
-You will receive: a blog title, excerpt, key takeaways, and the blog URL.
+AUDIENCE PAIN POINTS (write to at least one):
+- Fear of making a bad investment in a Dubai "bubble"
+- Scepticism of every brokerage claiming everything is a "masterpiece"
+- Seeking hard-currency yield in a tax-free environment
+- Wanting the "institutional verdict" — someone who will tell them to PASS on a bad deal
 
-Rules:
-- Do NOT open with "New blog post" or "We just published" — that is weak
-- Open with the sharpest insight or data point from the content. Make it feel like an intelligence alert.
-- Tease the thesis without giving everything away — the goal is to make them click
-- The audience is HNW investors. Speak to their concerns: yield, capital preservation, macro risk, arbitrage
-- End with the blog URL on its own line
-- Stay under 260 characters EXCLUDING the URL
-- Use line breaks for rhythm. No bullet points.
-- NEVER use: stunning, masterpiece, luxury, unparalleled, nestled, game-changer, seamless, delve
+TASK: Write ONE X post announcing a new investment thesis blog post.
+
+FORMAT RULES:
+- Choose ONE of these three formats based on the blog content:
+  A) INTELLIGENCE ALERT — open with the sharpest data point or market signal. Make it feel like breaking news for investors.
+  B) CONTRARIAN TAKE — open with a bold claim that challenges conventional Dubai property wisdom. Use: "Everyone says [X]. The data says [Y]." or "Nobody flags [X]."
+  C) THESIS TEASE — open with a rhetorical question that hits the investor's core anxiety, then position the blog as the answer.
+
+- First line is the hook. It must stop the scroll. Do NOT open with "New blog post", "We just published", or "Check out".
+- Tease the thesis — don't give the full answer. Make them click to get the verdict.
+- Use line breaks for rhythm. No bullet points. No numbered lists.
+- End with the blog URL on its own line.
+- Post body (excluding URL) must stay under 260 characters.
+- Hashtags go on a separate line AFTER the URL — 3 to 4 only, relevant to the thesis.
+
+FORBIDDEN WORDS: stunning, masterpiece, luxury, unparalleled, nestled, game-changer, seamless, delve, rapidly, exciting, thrilled, proud to announce, we're excited
 
 Also generate:
-- imageBrief: A specific description of what visual to pair with this post. Could be a screenshot of the blog header, a chart from the article, or a relevant data visual.
-- suggestedHashtags: 3-4 relevant hashtags (e.g., #DubaiRealEstate #MacroThesis #UAEInvesting)
+- imageBrief: One specific visual that would amplify this post. Could be a chart from the blog, a map highlighting the relevant area, a price-per-sqft comparison graphic, or a screenshot of the blog header.
 
 Return STRICTLY as a JSON object — no markdown, no backticks:
 {
@@ -45,15 +51,12 @@ Return STRICTLY as a JSON object — no markdown, no backticks:
 
 export async function POST(req: Request) {
   try {
-    // Verify request is from our Sanity webhook
     const auth = req.headers.get('authorization');
     if (auth !== `Bearer ${process.env.SANITY_WEBHOOK_SECRET}`) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const payload = await req.json();
-
-    // Sanity webhook sends the document fields via our configured projection
     const { title, slug, excerpt, keyTakeaways } = payload;
 
     if (!title || !slug) {
@@ -73,7 +76,7 @@ ${takeawaysText}
 Blog URL: ${blogUrl}
     `.trim();
 
-    const prompt = `${NORTH_CAPITAL_SYSTEM_PROMPT}\n\n${BLOG_XPOST_FORMAT}\n\nBlog Content:\n${blogContext}`;
+    const prompt = `${NORTH_CAPITAL_SYSTEM_PROMPT}\n\n${BLOG_XPOST_PROMPT}\n\nBlog Content:\n${blogContext}`;
 
     console.log(`🤖 Generating X post for blog: ${title}`);
 
@@ -90,34 +93,19 @@ Blog URL: ${blogUrl}
     const text = result.response.text().replace(/```json/g, '').replace(/```/g, '').trim();
     const post = JSON.parse(text);
 
-    const doc = {
-      _type: 'xPost',
-      _id: `drafts.ai-xpost-blog-${Date.now()}`,
-      postText: post.postText,
-      imageBrief: post.imageBrief,
-      suggestedHashtags: post.suggestedHashtags,
-      status: 'draft',
-      dealTitle: title,
-      dealLocation: 'Blog Post',
-      dealExternalUrl: blogUrl,
-      generatedAt: new Date().toISOString(),
-    };
-
-    const created = await writeClient.create(doc);
-    console.log(`✅ X post draft saved for blog: ${created._id}`);
-
     await sendTelegram(
-`📝 <b>BLOG X DRAFT READY</b>
-<b>${title}</b>
+`📝 <b>BLOG X DRAFT — READY TO POST</b>
+<i>${title}</i>
 
 <code>${post.postText}</code>
 
 ${post.suggestedHashtags}
 
-👉 Review in Sanity → approve when ready to post`
+🖼 <b>Image brief:</b> ${post.imageBrief}`
     );
 
-    return NextResponse.json({ success: true, draftId: created._id });
+    console.log(`✅ Blog X post sent to Telegram for: ${title}`);
+    return NextResponse.json({ success: true });
 
   } catch (error: any) {
     console.error('❌ Blog X Post Generation Error:', error);
