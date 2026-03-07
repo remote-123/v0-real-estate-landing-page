@@ -44,7 +44,12 @@ export function DistressFeedCard({
     }
 
     return (
-        <div className="group relative w-full cursor-pointer rounded-none sm:rounded-xl border-y sm:border border-border/50 bg-card p-4 sm:p-6 transition-all hover:bg-muted/50 hover:border-border overflow-hidden">
+        <a
+            href={SITE_CONFIG.calendarLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group relative w-full cursor-pointer rounded-none sm:rounded-xl border-y sm:border border-border/50 bg-card p-4 sm:p-6 transition-all hover:bg-muted/50 hover:border-border overflow-hidden block"
+        >
             {/* Subtle left glow effect on hover */}
             <div className="absolute left-0 top-0 bottom-0 w-1 bg-accent opacity-0 transition-opacity group-hover:opacity-100" />
 
@@ -60,15 +65,7 @@ export function DistressFeedCard({
                     <div className="flex-1 space-y-1">
                         <div className="flex items-center gap-2">
                             <h3 className="font-semibold text-foreground line-clamp-1">{title}</h3>
-                            <a
-                                href={SITE_CONFIG.calendarLink}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-muted-foreground hover:text-accent transition-colors"
-                                title="Schedule ROI Call"
-                            >
-                                <CalendarCheck className="h-4 w-4" />
-                            </a>
+                            <CalendarCheck className="h-4 w-4 text-muted-foreground" />
                         </div>
                         <p className="text-xs text-muted-foreground">{location}</p>
 
@@ -121,6 +118,6 @@ export function DistressFeedCard({
                 </div>
 
             </div>
-        </div>
+        </a>
     )
 }

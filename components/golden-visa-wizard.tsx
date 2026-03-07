@@ -149,7 +149,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                 <p className="text-muted-foreground">Enter your email to view your official visa eligibility status and download the 2026 Residency Guide.</p>
             </div>
             
-            <form onSubmit={(e) => { e.preventDefault(); handleNext(); }} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
                 <Input 
                     type="email" 
                     placeholder="name@company.com" 
