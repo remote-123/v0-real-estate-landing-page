@@ -80,7 +80,7 @@ export function TrustSignals() {
               RERA Licensed
             </p>
             <p className="text-xs text-primary-foreground/50 uppercase">
-              Dubai Brokerage
+              Broker #95133
             </p>
           </div>
           <div className="h-8 w-px bg-primary-foreground/20" />

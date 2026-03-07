@@ -23,22 +23,27 @@ export function FounderNote() {
 
             <blockquote className="font-serif text-2xl leading-relaxed font-medium tracking-tight text-foreground md:text-3xl">
               <span className="text-balance">
-                &ldquo;I built this firm because I couldn&apos;t find a Dubai
-                broker who spoke my language&mdash;literally and
-                financially.&rdquo;
+                &ldquo;I came from fintech. I understood yield curves, capital
+                efficiency, and data. When I looked at real estate agencies,
+                I couldn&apos;t believe how few of them did.&rdquo;
               </span>
             </blockquote>
 
             <div className="flex flex-col gap-4 text-muted-foreground leading-relaxed">
               <p>
-                Coming from North America, I understand that you don&apos;t just
-                want a property; you want a secure asset, clear contracts, and
-                an exit strategy. That is exactly what we deliver.
+                Most agencies operate the same way: show properties, close
+                deals, move on. Coming from a fintech background, where every
+                decision is stress-tested against market data and economic
+                signals, that model never sat right with me. Dubai&apos;s real
+                estate market deserved better analysis&mdash;and its investors
+                deserved an advisor who thought like one.
               </p>
               <p>
-                Every recommendation we make is backed by data, due diligence,
-                and a fiduciary mindset. We treat your capital the way we treat
-                our own&mdash;because in many cases, it is our own.
+                NorthCapitalDXB was built on a different premise. We model the
+                yield, stress-test the exit, and stay with you long after the
+                handover keys are signed. As a boutique firm, our reputation
+                is the business. We measure success in long-term client
+                relationships, not transaction volume.
               </p>
             </div>
 

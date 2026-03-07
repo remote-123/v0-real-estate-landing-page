@@ -62,7 +62,7 @@ export function Hero() {
             <div className="flex items-center gap-6 pt-4 text-sm text-white/70">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="h-4 w-4 text-accent" />
-                <span>RERA Licensed</span>
+                <span>RERA Licensed · Broker #95133</span>
               </div>
               <div className="flex items-center gap-2">
                 <Globe2 className="h-4 w-4 text-accent" />

@@ -122,9 +122,9 @@ export default function AboutPage() {
               </span>
             </h1>
             <p className="max-w-xl text-lg leading-relaxed text-primary-foreground/70">
-              NorthCapitalDXB is a premier investment advisory firm partnered with
-              a fully licensed Dubai brokerage, bridging international investors
-              with the UAE&apos;s most promising property opportunities.
+              Founded by a fintech entrepreneur, NorthCapitalDXB is a boutique
+              real estate advisory built on data, economic rigour, and long-term
+              client relationships&mdash;not sales volume.
             </p>
           </div>
         </section>
@@ -144,24 +144,30 @@ export default function AboutPage() {
                 </h2>
                 <div className="mt-6 flex flex-col gap-4 text-muted-foreground leading-relaxed">
                   <p>
-                    NorthCapitalDXB was founded with a clear mission: to make UAE
-                    real estate investment accessible, transparent, and
-                    profitable for international investors. Based in Dubai and
-                    partnered with a RERA-licensed brokerage, we combine deep
-                    local market knowledge with a global investor mindset.
+                    NorthCapitalDXB was founded by a fintech entrepreneur who
+                    spent years building data-driven financial products before
+                    turning his attention to global real estate. The catalyst
+                    was simple: when exploring property investment abroad, he
+                    found an industry that was almost entirely sales-led&mdash;
+                    heavy on persuasion, light on analysis. No stress-testing.
+                    No yield modelling. No economic context. Just listings.
                   </p>
                   <p>
-                    Our team of seasoned advisors has collectively guided over
-                    $2.8 billion in property transactions, serving clients from
-                    30+ countries. We don&apos;t just sell properties -- we build
-                    long-term investment strategies tailored to each
-                    client&apos;s goals.
+                    That gap is what NorthCapitalDXB was built to fill. We
+                    operate as a boutique advisory&mdash;deliberately small,
+                    deliberately selective. Every client engagement begins with
+                    an investment thesis, not a property tour. We model
+                    net yields, assess supply pipelines, and pressure-test
+                    assumptions before a single recommendation is made.
                   </p>
                   <p>
-                    Whether you&apos;re a first-time buyer exploring off-plan
-                    opportunities or a seasoned investor diversifying your
-                    portfolio, NorthCapitalDXB provides the end-to-end guidance
-                    you need to succeed in the UAE.
+                    Our reputation is built on long-term relationships, not
+                    transaction volume. Clients return&mdash;and refer
+                    others&mdash;because we treat their capital with the same
+                    rigour we&apos;d apply to our own. Partnered with a
+                    RERA-licensed Dubai brokerage (Broker #95133), every
+                    transaction is legally compliant, fully transparent, and
+                    backed by deep local market knowledge.
                   </p>
                 </div>
               </div>
@@ -247,6 +253,9 @@ export default function AboutPage() {
                     </p>
                     <p className="text-xs text-muted-foreground">
                       Real Estate Regulatory Agency
+                    </p>
+                    <p className="text-xs font-mono text-accent">
+                      Broker #95133
                     </p>
                   </div>
                   <div className="flex flex-col items-center gap-2 rounded-xl border border-border p-6 text-center">

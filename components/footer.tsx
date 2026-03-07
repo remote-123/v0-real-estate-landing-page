@@ -134,8 +134,8 @@ export function Footer() {
                 Professional Disclaimer & Regulatory Status
               </p>
               <p className="mt-2 text-xs leading-relaxed text-primary-foreground/40 max-w-2xl">
-                &copy; {new Date().getFullYear()} {SITE_CONFIG.name}. North Capital DXB is an independent advisory brand. 
-                All real estate transactions are executed through our brokerage & development partners.
+                &copy; {new Date().getFullYear()} {SITE_CONFIG.name}. North Capital DXB is a RERA-certified real estate advisory (Broker Registration #95133).
+                All real estate transactions are executed through our licensed brokerage & development partners.
               </p>
             </div>
             

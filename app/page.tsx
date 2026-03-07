@@ -87,13 +87,13 @@ export default function Home() {
       <main>
         <Hero />
         <StrategicAlliances />
-        <MarketIntelligenceTeaser />
-        <FeaturedProjects />
-        <InvestmentStrategy />
-        <TrackRecord />
-        <KnowledgeHub />
         <FounderNote />
+        <MarketIntelligenceTeaser />
+        <InvestmentStrategy />
+        <FeaturedProjects />
+        <TrackRecord />
         <TrustSignals />
+        <KnowledgeHub />
         <FaqSection />
         <LeadForm />
       </main>

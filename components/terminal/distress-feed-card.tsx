@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge"
-import { ArrowDownRight, ExternalLink } from "lucide-react"
+import { ArrowDownRight, CalendarCheck } from "lucide-react"
+import { SITE_CONFIG } from "@/lib/constants"
 
 interface DistressFeedCardProps {
     rank: number
@@ -59,17 +60,15 @@ export function DistressFeedCard({
                     <div className="flex-1 space-y-1">
                         <div className="flex items-center gap-2">
                             <h3 className="font-semibold text-foreground line-clamp-1">{title}</h3>
-                            {externalUrl && (
-                                <a
-                                    href={externalUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-muted-foreground hover:text-foreground transition-colors"
-                                    title="View Original Listing"
-                                >
-                                    <ExternalLink className="h-4 w-4" />
-                                </a>
-                            )}
+                            <a
+                                href={SITE_CONFIG.calendarLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-muted-foreground hover:text-accent transition-colors"
+                                title="Schedule ROI Call"
+                            >
+                                <CalendarCheck className="h-4 w-4" />
+                            </a>
                         </div>
                         <p className="text-xs text-muted-foreground">{location}</p>
 
