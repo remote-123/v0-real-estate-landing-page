@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { createClient } from 'next-sanity';
 import { NORTH_CAPITAL_SYSTEM_PROMPT } from '@/lib/ai-guidelines';
 import { sendTelegram } from '@/lib/telegram';
 
@@ -8,15 +7,7 @@ export const maxDuration = 60;
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
-const writeClient = createClient({
-  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
-  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET,
-  apiVersion: "2024-02-24",
-  useCdn: false,
-  token: process.env.SANITY_API_TOKEN,
-});
-
-// Applies Unicode strikethrough to a string — renders natively on X/Twitter
+// Applies Unicode strikethrough — renders natively on X/Twitter
 function strikethrough(text: string): string {
   return text.split('').map(c => c + '\u0336').join('');
 }
@@ -27,8 +18,7 @@ function buildPostText(deal: any, usp: string): string {
     : deal.title;
 
   const originalStruck = strikethrough(`AED ${deal.originalPrice.toLocaleString()}`);
-  const priceLines = `💰 ${originalStruck} → AED ${deal.currentPrice.toLocaleString()} (-${deal.discountPercent}%)`;
-
+  const priceLine = `💰 ${originalStruck} → AED ${deal.currentPrice.toLocaleString()} (-${deal.discountPercent}%)`;
   const sqftPart = deal.sizeSqft > 0 ? `📐 ${deal.sizeSqft.toLocaleString()} sqft` : '';
   const bedBathPart = `🏡 ${deal.bedrooms} BD${deal.bathrooms ? ` / ${deal.bathrooms} BA` : ''}`;
   const detailLine = [sqftPart, bedBathPart].filter(Boolean).join(' | ');
@@ -36,7 +26,7 @@ function buildPostText(deal: any, usp: string): string {
   return [
     '🚨 NEW DISTRESS DEAL 🚨',
     title,
-    priceLines,
+    priceLine,
     detailLine,
     usp,
     '',
@@ -111,8 +101,7 @@ async function fetchTopDeals() {
     .slice(0, 3);
 }
 
-async function generateAndSavePosts(deals: any[]) {
-  // Gemini only generates the USP — everything else is built from data
+async function generateAndSendPosts(deals: any[]) {
   const dealsContext = deals.map((d, i) =>
     `Deal ${i + 1}:
 Title: ${d.title}
@@ -139,46 +128,15 @@ Days on Market: ${d.daysOnMarket}`
   const text = result.response.text().replace(/```json/g, '').replace(/```/g, '').trim();
   const usps: { usp: string }[] = JSON.parse(text);
 
-  const savedIds: string[] = [];
+  // Send each post as a separate Telegram message — easy to copy-paste individually
   for (let i = 0; i < Math.min(usps.length, deals.length); i++) {
     const deal = deals[i];
     const usp = usps[i]?.usp || '';
     const postText = buildPostText(deal, usp);
-
-    const doc = {
-      _type: 'xPost',
-      _id: `drafts.ai-xpost-${Date.now()}-${i}`,
-      postText,
-      imageBrief: `Screenshot of the ${deal.title} listing on PropertyFinder showing the asking price. Pair with a location map pinpointing ${deal.location}.`,
-      suggestedHashtags: '#DubaiRealEstate #DistressDeals #UAEProperty #DubaiInvesting',
-      status: 'draft',
-      dealTitle: deal.title,
-      dealLocation: deal.location,
-      dealType: deal.type,
-      dealBedrooms: deal.bedrooms,
-      dealCurrentPrice: deal.currentPrice,
-      dealOriginalPrice: deal.originalPrice,
-      dealDiscountPercent: deal.discountPercent,
-      dealDaysOnMarket: deal.daysOnMarket,
-      dealSource: deal.source,
-      dealExternalUrl: deal.externalUrl || null,
-      generatedAt: new Date().toISOString(),
-    };
-
-    const created = await writeClient.create(doc);
-    console.log(`✅ X post draft saved: ${created._id}`);
-    savedIds.push(created._id);
+    await sendTelegram(`<code>${postText}</code>`);
   }
 
-  await sendTelegram(
-`🤖 <b>DISTRESS DEALS — ${savedIds.length} DRAFTS READY</b>
-
-${deals.map((d, i) => `📍 ${d.location} — -${d.discountPercent}% (${d.bedrooms} BD, AED ${d.currentPrice.toLocaleString()})`).join('\n')}
-
-👉 Review in Sanity → X Posts`
-  );
-
-  return savedIds;
+  return deals.length;
 }
 
 export async function POST(req: Request) {
@@ -189,8 +147,8 @@ export async function POST(req: Request) {
     }
     console.log('🤖 X Post Generator: manual trigger');
     const deals = await fetchTopDeals();
-    const drafts = await generateAndSavePosts(deals);
-    return NextResponse.json({ success: true, drafts });
+    const count = await generateAndSendPosts(deals);
+    return NextResponse.json({ success: true, sent: count });
   } catch (error: any) {
     console.error('❌ X Post Generation Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
