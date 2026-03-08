@@ -71,6 +71,10 @@ async function fetchPropertyFinderDeals() {
   const data = await res.json();
   const rawData = Array.isArray(data?.data) ? data.data : [];
 
+  if (rawData.length > 0) {
+    console.log('🔍 PF raw item sample:', JSON.stringify(rawData[0], null, 2));
+  }
+
   return rawData
     .filter((item: any) => item && item.property_id && (item.price?.value || 0) > 0)
     .map((item: any) => {
@@ -128,6 +132,10 @@ async function fetchBayutDeals() {
   const data = await res.json();
   const rawData = Array.isArray(data?.results) ? data.results : [];
 
+  if (rawData.length > 0) {
+    console.log('🔍 Bayut raw item sample:', JSON.stringify(rawData[0], null, 2));
+  }
+
   return rawData
     .filter((item: any) => item && item.id && item.price > 0)
     .map((item: any) => {
@@ -180,11 +188,11 @@ Days on Market: ${d.daysOnMarket}`
 
   let result;
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
     result = await model.generateContent(prompt);
   } catch {
-    console.warn('⚠️ Gemini 3 failed, falling back to Gemini 2.5 Flash...');
-    const fallback = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    console.warn('⚠️ Gemini 2.5 Flash failed, falling back to gemini-1.5-flash...');
+    const fallback = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
     result = await fallback.generateContent(prompt);
   }
 
@@ -196,7 +204,9 @@ Days on Market: ${d.daysOnMarket}`
     const deal = deals[i];
     const usp = usps[i]?.usp || '';
     const postText = buildPostText(deal, usp);
-    await sendTelegram(`<code>${postText}</code>`);
+    const sourceLabel = deal.source === 'bayut' ? '🔗 Bayut listing' : '🔗 PropertyFinder listing';
+    const sourceLine = deal.externalUrl ? `\n\n${sourceLabel}:\n${deal.externalUrl}` : '';
+    await sendTelegram(`<code>${postText}</code>${sourceLine}`);
   }
 
   return deals.length;

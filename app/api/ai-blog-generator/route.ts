@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server';
+import Anthropic from '@anthropic-ai/sdk';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { createClient } from 'next-sanity';
 import { getGeminiPrompt } from '@/lib/ai-guidelines';
 
 export const maxDuration = 60;
 
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 const writeClient = createClient({
@@ -87,22 +89,24 @@ export async function POST(req: Request) {
       });
     }
 
-    console.log("🧠 Sending data to Gemini...");
-    let result;
+    console.log("🧠 Sending data to Claude Sonnet...");
+    let responseText: string;
 
     try {
-      // 5A. TRY THE PRIMARY MODEL
-      const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
-      result = await model.generateContent(promptParts);
-    } catch (primaryError: any) {
-      console.warn(`⚠️ Gemini 3 failed (${primaryError.message}). Falling back to Gemini 2.5 Flash...`);
-
-      // 5B. FALLBACK MODEL
-      const fallbackModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-      result = await fallbackModel.generateContent(promptParts);
+      // PRIMARY: Claude Sonnet — best long-form writing quality
+      const claudeMsg = await anthropic.messages.create({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 8096,
+        messages: [{ role: 'user', content: promptParts.filter(p => typeof p === 'string').join('\n\n') }],
+      });
+      responseText = claudeMsg.content[0].type === 'text' ? claudeMsg.content[0].text : '';
+    } catch (claudeError: any) {
+      // FALLBACK: Gemini 2.5 Flash — if Claude hits rate limit or is unavailable
+      console.warn(`⚠️ Claude failed (${claudeError.message}). Falling back to Gemini 2.5 Flash...`);
+      const geminiModel = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+      const geminiResult = await geminiModel.generateContent(promptParts);
+      responseText = geminiResult.response.text();
     }
-
-    const responseText = result.response.text();
     const jsonString = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
     const aiData = JSON.parse(jsonString);
 

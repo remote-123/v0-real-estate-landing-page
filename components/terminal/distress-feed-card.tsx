@@ -1,5 +1,7 @@
+"use client"
+
 import { Badge } from "@/components/ui/badge"
-import { ArrowDownRight, CalendarCheck } from "lucide-react"
+import { ArrowDownRight, CalendarCheck, ExternalLink } from "lucide-react"
 import { SITE_CONFIG } from "@/lib/constants"
 
 interface DistressFeedCardProps {
@@ -44,10 +46,8 @@ export function DistressFeedCard({
     }
 
     return (
-        <a
-            href={SITE_CONFIG.calendarLink}
-            target="_blank"
-            rel="noopener noreferrer"
+        <div
+            onClick={() => window.open(SITE_CONFIG.calendarLink, '_blank', 'noopener,noreferrer')}
             className="group relative w-full cursor-pointer rounded-none sm:rounded-xl border-y sm:border border-border/50 bg-card p-4 sm:p-6 transition-all hover:bg-muted/50 hover:border-border overflow-hidden block"
         >
             {/* Subtle left glow effect on hover */}
@@ -65,7 +65,19 @@ export function DistressFeedCard({
                     <div className="flex-1 space-y-1">
                         <div className="flex items-center gap-2">
                             <h3 className="font-semibold text-foreground line-clamp-1">{title}</h3>
-                            <CalendarCheck className="h-4 w-4 text-muted-foreground" />
+                            <CalendarCheck className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                            {externalUrl && (
+                                <a
+                                    href={externalUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                    title="View original listing"
+                                    className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+                                >
+                                    <ExternalLink className="h-4 w-4" />
+                                </a>
+                            )}
                         </div>
                         <p className="text-xs text-muted-foreground">{location}</p>
 
@@ -118,6 +130,6 @@ export function DistressFeedCard({
                 </div>
 
             </div>
-        </a>
+        </div>
     )
 }
