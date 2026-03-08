@@ -2,6 +2,8 @@ import type { Metadata } from "next"
 import { RentalTable, type RentalListing } from "@/components/terminal/rental-table"
 import { CACHE_TTL } from "@/lib/api-budget"
 
+export const dynamic = 'force-dynamic' // temp: remove after confirming API fields in logs
+
 export const metadata: Metadata = {
     title: "Rental Drops Dubai | North Capital DXB",
     description: "Aggregated rental listings from Bayut and PropertyFinder. Monthly pricing computed. Newest listings first — no tab-switching required.",
