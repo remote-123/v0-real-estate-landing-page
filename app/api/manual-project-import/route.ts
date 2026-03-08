@@ -50,15 +50,11 @@ export async function POST(req: Request) {
     ];
 
     try {
-      // 5A. TRY THE PRIMARY MODEL
-      const primaryModel = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" }) 
-      result = await primaryModel.generateContent(promptParts)
-      
-    } catch (primaryError: any) {
-      console.warn(`⚠️ Gemini 3 failed (${primaryError.message}). Falling back to Gemini 2.5 Flash...`)
-      
-      // 5B. FALLBACK MODEL
-      const fallbackModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }) 
+      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" })
+      result = await model.generateContent(promptParts)
+    } catch (modelError: any) {
+      console.warn(`⚠️ gemini-2.5-flash failed (${modelError.message}). Falling back to gemini-1.5-flash...`)
+      const fallbackModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
       result = await fallbackModel.generateContent(promptParts)
     }
 

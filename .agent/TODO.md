@@ -26,7 +26,7 @@ Quick capture for anything that needs to get done. Add items freely — nothing 
 
 ## Tech & Pipelines
 
-- [ ]
+- [ ] LinkedIn cron-job.org — configure Mon/Wed/Fri 5AM UTC trigger
 - [ ]
 
 ---
@@ -49,4 +49,10 @@ Quick capture for anything that needs to get done. Add items freely — nothing 
 - [x] Mobile sticky bar hidden on /studio page
 - [x] Telegram X post pipeline — 3 PF + 3 Bayut deals per run
 - [x] Blog-to-XPost pipeline — bypasses Sanity, sends directly to Telegram
-- [x] cron-job.org configured for automatic 4-hourly posting
+- [x] cron-job.org configured for automatic 4-hourly X posting
+- [x] LinkedIn post generator pipeline — 3 rotating formats, sends draft to Telegram
+- [x] LinkedIn company page description written
+- [x] Blog sidebar form — instant checkmark, no calendar, "within 24 hours" message
+- [x] Blog sidebar form — "How did you hear about us?" field added
+- [x] Blog index — compact list cards for all posts below the feature
+- [x] Blog generator prompt — anti-AI-slop rules, banned phrases, forced specificity

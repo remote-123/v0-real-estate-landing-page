@@ -18,11 +18,11 @@ const writeClient = createClient({
 const jsonFormatRule = `
 You MUST output strictly as a JSON object matching this exact structure:
 {
-  "title": "Catchy, SEO-optimized title without marketing hyperbole",
-  "excerpt": "A compelling 150-character meta description.",
-  "keyTakeaways": ["Fact 1", "Fact 2", "Fact 3", "Fact 4"],
+  "title": "Specific, data-led title — include a number or location where possible. No vague superlatives.",
+  "excerpt": "A sharp 150-character summary that states the investment implication directly.",
+  "keyTakeaways": ["Specific fact with a number", "Specific fact with a number", "Specific fact with a number", "Specific fact with a number"],
   "faqs": [
-    {"question": "...", "answer": "..."}
+    {"question": "Phrase exactly as an investor would type into Google", "answer": "2-3 sentence direct answer with specific data."}
   ],
   "bodyBlocks": [
     {
@@ -37,10 +37,19 @@ You MUST output strictly as a JSON object matching this exact structure:
     }
   ]
 }
-Make the bodyBlocks at least 400 words. Include H2s and normal paragraphs.
 
-CRITICAL DATA RULE: 
-If the source material contains tables or heavy numerical data, DO NOT attempt to create a table. Instead, synthesize that data into highly readable, analytical bullet points within normal paragraphs.
+WRITING RULES — READ CAREFULLY:
+- Minimum 600 words in bodyBlocks. Use H2s to break sections.
+- Every claim must be specific. "Yields are high" is banned. "Net yields in JVC averaged 7.8% in Q1 2025" is correct.
+- Vary sentence length deliberately. Mix one-word punches with longer analytical sentences. Never 3 sentences in a row of the same length.
+- BANNED AI PHRASES (using any of these will make the post useless): "In today's fast-paced world", "It's worth noting", "Furthermore", "Moreover", "It goes without saying", "In the realm of", "In conclusion", "Navigating", "Landscape", "Underpins", "Poised to", "Testament to", "Leveraging", "At the end of the day", "Deep dive", "Robust", "Paradigm shift", "Synergy", "Holistic".
+- Write with a clear point of view. Not neutral. Not "on one hand / on the other hand". Take a position backed by data.
+- Use short paragraphs. 3-4 sentences max per paragraph block. White space is your friend.
+- The first sentence of the post must hook the reader with a specific number, a counterintuitive claim, or a market observation — not a generic context-setter.
+- Include at least one "Bear Case" section: who should NOT make this investment and why. This is what makes the content trustworthy.
+
+CRITICAL DATA RULE:
+If the source material contains tables or heavy numerical data, DO NOT attempt to create a table. Synthesize into analytical prose with specific numbers embedded naturally.
 `;
 
 export async function POST(req: Request) {

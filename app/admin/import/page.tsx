@@ -15,25 +15,37 @@ export default function AdminImportPage() {
 
   const handleUpload = async () => {
     if (!file || !passcode) return
+
+    // Guard against Vercel's 4.5MB request body limit
+    const MAX_MB = 4.5
+    if (file.size > MAX_MB * 1024 * 1024) {
+      setError(`File is too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Maximum is ${MAX_MB} MB. Compress the PDF first using smallpdf.com or ilovepdf.com.`)
+      return
+    }
+
     setLoading(true)
     setError("")
     setSuccess(false)
 
     const formData = new FormData()
     formData.append("file", file)
-    formData.append("passcode", passcode) // Send the secret key
+    formData.append("passcode", passcode)
 
     try {
-      // Hit our new dedicated manual upload endpoint
       const res = await fetch("/api/manual-project-import", {
         method: "POST",
         body: formData,
       })
 
-      const data = await res.json()
+      // Handle non-JSON responses (e.g. Vercel 413 HTML page)
+      const contentType = res.headers.get("content-type") || ""
+      if (!contentType.includes("application/json")) {
+        throw new Error(`Server error ${res.status} — file may be too large or the request timed out.`)
+      }
 
-      if (!res.ok) throw new Error(data.error)
-      
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || `Error ${res.status}`)
+
       setSuccess(true)
       setFile(null)
     } catch (err: any) {
@@ -80,6 +92,12 @@ export default function AdminImportPage() {
                 <span className="text-sm font-medium text-foreground">
                   {file ? file.name : "Click to select a file"}
                 </span>
+                {file && (
+                  <span className={`mt-1 text-xs ${file.size > 4.5 * 1024 * 1024 ? "text-red-500" : "text-muted-foreground"}`}>
+                    {(file.size / 1024 / 1024).toFixed(1)} MB {file.size > 4.5 * 1024 * 1024 ? "— too large, compress first" : ""}
+                  </span>
+                )}
+                {!file && <span className="mt-1 text-xs text-muted-foreground">PDF, PNG or JPG · max 4.5 MB</span>}
               </label>
             </div>
           </div>

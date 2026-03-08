@@ -132,36 +132,23 @@ export default async function BlogPage() {
             </Link>
 
             {rest.length > 0 && (
-              <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+              <div className="mt-10 flex flex-col divide-y divide-border border border-border rounded-xl overflow-hidden">
                 {rest.map((post: any) => (
-                  <Link key={post.slug} href={`/blog/${post.slug}`} className="group flex flex-col h-full">
-                    <article className="flex flex-1 h-full flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-shadow hover:shadow-md">
-                      <div className="relative aspect-[16/9] overflow-hidden border-b border-border/50">
-                        <Image
-                          src={post.mainImage ? urlForImage(post.mainImage).width(600).url() : "/placeholder.svg"}
-                          alt={post.title}
-                          fill
-                          className="object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                      </div>
-                      <div className="flex flex-1 flex-col gap-4 p-6">
-                        <Badge variant="secondary" className="w-fit bg-accent/10 text-accent text-xs">
-                          Market Insight
-                        </Badge>
-                        <h3 className="font-serif text-lg font-bold text-card-foreground line-clamp-2">
+                  <Link key={post.slug} href={`/blog/${post.slug}`} className="group">
+                    <article className="flex items-center gap-4 bg-card px-5 py-4 transition-colors hover:bg-muted/50">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-serif text-sm font-bold text-card-foreground line-clamp-1 group-hover:text-accent transition-colors">
                           {post.title}
                         </h3>
-                        <p className="flex-1 text-sm leading-relaxed text-muted-foreground line-clamp-3">
+                        <p className="mt-0.5 text-xs text-muted-foreground line-clamp-1">
                           {post.excerpt}
                         </p>
-                        <div className="flex items-center justify-between mt-2 pt-4 border-t border-border/50">
-                          <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <Calendar className="h-3 w-3" />
-                            {formatDate(post.publishedAt)}
-                          </span>
-                          <ArrowUpRight className="h-4 w-4 text-accent transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                        </div>
                       </div>
+                      <span className="flex-shrink-0 flex items-center gap-2 text-xs text-muted-foreground whitespace-nowrap">
+                        <Calendar className="h-3 w-3" />
+                        {formatDate(post.publishedAt)}
+                      </span>
+                      <ArrowUpRight className="flex-shrink-0 h-4 w-4 text-accent opacity-0 group-hover:opacity-100 transition-opacity" />
                     </article>
                   </Link>
                 ))}

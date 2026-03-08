@@ -6,7 +6,7 @@ import { PortableText } from "next-sanity"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { Clock, User, CheckCircle2, HelpCircle, Twitter, Linkedin, MessageCircle } from "lucide-react"
-import { LeadForm } from "@/components/lead-form"
+import { BlogAdvisorForm } from "@/components/blog-advisor-form"
 
 
 export const revalidate = 60
@@ -276,12 +276,10 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
               {/* Tool 1: Quick Contact Box */}
               <div className="rounded-xl border border-border bg-card p-6 shadow-xl border-t-4 border-t-accent">
                 <h3 className="font-serif text-xl font-bold text-foreground mb-2">Speak to an Advisor</h3>
-                <p className="text-sm text-muted-foreground mb-6">
+                <p className="text-sm text-muted-foreground mb-4">
                   Discuss how these market trends impact your investment portfolio.
                 </p>
-
-                {/* The Lead Form */}
-                <LeadForm minimal={true} projectName={`Blog Sidebar: ${post.title}`} />
+                <BlogAdvisorForm postTitle={post.title} />
               </div>
 
             </aside>
