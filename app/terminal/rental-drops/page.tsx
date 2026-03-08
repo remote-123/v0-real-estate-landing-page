@@ -40,7 +40,8 @@ async function fetchBayutRentals(): Promise<RentalListing[]> {
                 return {
                     id: `bayut-${item.id}`,
                     title: item.title || "",
-                    location: `${item.location?.sub_community?.name || ""}, ${item.location?.community?.name || ""}`.replace(/^, /, "") || "Dubai",
+                    cluster: item.location?.cluster?.name || item.location?.sub_community?.name || "",
+                    area: item.location?.community?.name || "Dubai",
                     type: item.type?.sub?.toUpperCase() || "PROPERTY",
                     bedrooms: item.details?.bedrooms?.toString() || "Studio",
                     sizeSqft,
@@ -80,7 +81,10 @@ async function fetchPFRentals(): Promise<RentalListing[]> {
                 return {
                     id: `pf-${item.property_id}`,
                     title: item.title || "",
-                    location: item.address?.full_name || "Dubai",
+                    cluster: item.location_tree?.find((l: any) => l.level === '3')?.name
+                          || item.location_tree?.find((l: any) => l.level === '2')?.name
+                          || "",
+                    area: item.location_tree?.find((l: any) => l.level === '1')?.name || "",
                     type: item.property_type?.toUpperCase() || "PROPERTY",
                     bedrooms: item.bedrooms?.toString() || "Studio",
                     sizeSqft,

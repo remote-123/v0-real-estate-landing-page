@@ -7,7 +7,8 @@ import { cn } from "@/lib/utils"
 export interface RentalListing {
   id: string
   title: string
-  location: string
+  cluster: string  // building / sub-community (most specific)
+  area: string     // community / district (broader)
   type: string
   bedrooms: string
   sizeSqft: number
@@ -21,7 +22,7 @@ export interface RentalListing {
 
 type SortKey = keyof Pick<
   RentalListing,
-  "location" | "type" | "bedrooms" | "sizeSqft" | "monthlyPrice" | "annualPrice" | "pricePerSqft" | "listedAt"
+  "cluster" | "area" | "type" | "bedrooms" | "sizeSqft" | "monthlyPrice" | "annualPrice" | "pricePerSqft" | "listedAt"
 >
 type SortDir = "asc" | "desc"
 
@@ -117,7 +118,8 @@ export function RentalTable({ listings }: { listings: RentalListing[] }) {
 
               {/* Sortable live columns */}
               <Th {...thProps}>Property</Th>
-              <Th col="location" {...thProps}>Area</Th>
+              <Th col="cluster" {...thProps}>Cluster</Th>
+              <Th col="area" {...thProps}>Area</Th>
               <Th col="type" {...thProps}>Type</Th>
               <Th col="bedrooms" {...thProps}>Beds</Th>
               <Th col="sizeSqft" right {...thProps}>sqft</Th>
@@ -154,10 +156,17 @@ export function RentalTable({ listings }: { listings: RentalListing[] }) {
                   </span>
                 </td>
 
-                {/* Area */}
+                {/* Cluster */}
                 <td className="px-3 py-2 max-w-[140px]">
-                  <span className="text-xs text-muted-foreground line-clamp-1" title={l.location}>
-                    {l.location || "—"}
+                  <span className="text-xs text-foreground line-clamp-1" title={l.cluster}>
+                    {l.cluster || "—"}
+                  </span>
+                </td>
+
+                {/* Area */}
+                <td className="px-3 py-2 max-w-[120px]">
+                  <span className="text-xs text-muted-foreground line-clamp-1" title={l.area}>
+                    {l.area || "—"}
                   </span>
                 </td>
 
