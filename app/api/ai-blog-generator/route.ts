@@ -62,12 +62,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    console.log(`🤖 Processing AI Blog for: ${body.subject}`);
-
     // OPTIONAL PDF DOWNLOAD
     let base64Pdf = null;
     if (body.pdfUrl) {
-      console.log("📥 Downloading attached PDF...");
       const pdfResponse = await fetch(body.pdfUrl);
       if (pdfResponse.ok) {
         const pdfBuffer = await pdfResponse.arrayBuffer();
@@ -89,7 +86,6 @@ export async function POST(req: Request) {
       });
     }
 
-    console.log("🧠 Sending data to Claude Sonnet...");
     let responseText: string;
 
     try {
@@ -110,8 +106,6 @@ export async function POST(req: Request) {
     const jsonString = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
     const aiData = JSON.parse(jsonString);
 
-    console.log("💾 Saving Draft to Sanity...");
-
     // Safety check: ensure title is a string so .toLowerCase() doesn't crash
     const safeTitle = (aiData.title || "Untitled Market Insight").toString();
 
@@ -130,8 +124,6 @@ export async function POST(req: Request) {
 
 
     const createdDoc = await writeClient.create(doc);
-    console.log(`✅ Success! Draft created: ${createdDoc._id}`);
-
     return NextResponse.json({ success: true, draftId: createdDoc._id });
 
   } catch (error: any) {

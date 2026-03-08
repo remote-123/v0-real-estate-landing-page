@@ -78,8 +78,6 @@ Blog URL: ${blogUrl}
 
     const prompt = `${NORTH_CAPITAL_SYSTEM_PROMPT}\n\n${BLOG_XPOST_PROMPT}\n\nBlog Content:\n${blogContext}`;
 
-    console.log(`🤖 Generating X post for blog: ${title}`);
-
     let result;
     try {
       const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
@@ -104,7 +102,6 @@ ${post.suggestedHashtags}
 🖼 <b>Image brief:</b> ${post.imageBrief}`
     );
 
-    console.log(`✅ Blog X post sent to Telegram for: ${title}`);
     return NextResponse.json({ success: true });
 
   } catch (error: any) {

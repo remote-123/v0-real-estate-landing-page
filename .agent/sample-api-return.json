@@ -1,0 +1,274 @@
+2026-03-08 20:21:35.237 [info] 🔍 PF rental raw sample: {
+  "property_id": "61307218",
+  "property_type": "Apartment",
+  "price": {
+    "value": 120000,
+    "currency": "AED",
+    "period": "yearly",
+    "is_hidden": false
+  },
+  "address": {
+    "full_name": "Bahar 6, Bahar, Jumeirah Beach Residence, Dubai",
+    "coordinates": {
+      "lat": 25.078510284423828,
+      "lon": 55.13628387451172
+    }
+  },
+  "images": [
+    "https://static.shared.propertyfinder.ae/media/images/listing/WMGAEFSN50N67D7A12DYTEHPYW/f3f4ce41-4ea6-4b35-8e93-5107351ff2af/416x272.jpg",
+    "https://static.shared.propertyfinder.ae/media/images/listing/WMGAEFSN50N67D7A12DYTEHPYW/1df20d7f-5bc6-4d20-b809-e5848ebf363e/416x272.jpg",
+    "https://static.shared.propertyfinder.ae/media/images/listing/WMGAEFSN50N67D7A12DYTEHPYW/42cf3377-2b0a-48f7-9936-191ada74d926/416x272.jpg",
+    "https://static.shared.propertyfinder.ae/media/images/listing/WMGAEFSN50N67D7A12DYTEHPYW/5dc97156-87cf-4958-b50a-bfceab6476d0/416x272.jpg"
+  ],
+  "agent_details": {
+    "id": "167294",
+    "image": "https://www.propertyfinder.ae/images/pf_agent/picture/e58551e62c4d6890a2d62f0dd5023be32653af2a/desktop",
+    "is_super_agent": true,
+    "name": "Joseph Rei",
+    "languages": [
+      "English"
+    ]
+  },
+  "broker_id": "2166",
+  "bedrooms": "1",
+  "bathrooms": "1",
+  "size": {
+    "value": 761,
+    "unit": "sqft"
+  },
+  "floor_plan_area": 761,
+  "is_verified": false,
+  "is_direct_from_developer": false,
+  "is_new_construction": false,
+  "is_available": true,
+  "listed_date": "2026-03-08T20:05:31Z",
+  "reference_number": "DXB-763",
+  "title": "Bahar 6 Apartment II",
+  "location_tree": [
+    {
+      "id": "1",
+      "name": "Dubai",
+      "level": "0"
+    },
+    {
+      "id": "67",
+      "name": "Jumeirah Beach Residence",
+      "level": "1"
+    },
+    {
+      "id": "925",
+      "name": "Bahar",
+      "level": "2"
+    },
+    {
+      "id": "3672",
+      "name": "Bahar 6",
+      "level": "3"
+    }
+  ],
+  "property_url": "https://www.propertyfinder.ae/en/plp/rent/apartment-for-rent-dubai-jumeirah-beach-residence-bahar-bahar-6-2Q0nOPuKFto.html"
+}
+2026-03-08 20:21:35.424 [info] 🔍 Bayut rental raw sample: {
+  "id": 14449480,
+  "title": "HUGE SIZE | BIG SHAPE KITCHEN | STUDIO APARTMENT WITH KITCHEN APPLIANCES IN JUST 57K",
+  "reference_number": "11215-dPcNS0",
+  "purpose": "for-rent",
+  "type": {
+    "main": "Residential",
+    "sub": "Apartments"
+  },
+  "price": 57000,
+  "area": {
+    "built_up": 371,
+    "plot": null,
+    "unit": "sqft"
+  },
+  "details": {
+    "bedrooms": 0,
+    "bathrooms": 1,
+    "is_furnished": false,
+    "completion_status": "completed",
+    "completion_details": {
+      "percentage": null,
+      "start_date": "",
+      "completion_date": ""
+    }
+  },
+  "keywords": [
+    "mall",
+    "new",
+    "parking",
+    "gym",
+    "mosque",
+    "chiller free",
+    "kitchen appliances",
+    "wardrobe",
+    "kitchen",
+    "brand new",
+    "balcony",
+    "pool",
+    "chiller",
+    "spacious"
+  ],
+  "location": {
+    "country": {
+      "id": 1,
+      "name": "UAE"
+    },
+    "city": {
+      "id": 2,
+      "name": "Dubai"
+    },
+    "community": {
+      "id": 43,
+      "name": "Meydan"
+    },
+    "sub_community": {
+      "id": 2331,
+      "name": "Meydan One"
+    },
+    "cluster": {
+      "id": 5081,
+      "name": "Azizi Riviera"
+    },
+    "coordinates": {
+      "lat": 25.17202,
+      "lng": 55.304586
+    }
+  },
+  "agency": {
+    "id": 11215,
+    "name": "Sky Homes Real Estate",
+    "logo_url": "https://bayut-production.s3.eu-central-1.amazonaws.com/image/180530638/ddbb062665634851819c8b90787d0b18",
+    "licenses": [
+      {
+        "number": "28932",
+        "authority": "RERA"
+      },
+      {
+        "number": "28932",
+        "authority": "ORN"
+      }
+    ],
+    "product": "premium",
+    "product_score": 2,
+    "performance": null
+  },
+  "agent": {
+    "id": 2669420,
+    "name": "Jamsheer Narikkoottil",
+    "profile_image": "https://bayut-production.s3.eu-central-1.amazonaws.com/image/816209303/02e3e92d1983411eaeb4a92a27c58a8b",
+    "is_tru_broker": true,
+    "contact": {
+      "mobile": "+971521948755",
+      "phone": "+97145706443",
+      "whatsapp": "971545695868",
+      "proxy_phone": ""
+    }
+  },
+  "amenities": [
+    "Electricity Backup",
+    "Waste Disposal",
+    "First Aid Medical Center",
+    "Service Elevators",
+    "Gym or Health Club",
+    "Laundry Room",
+    "Swimming Pool",
+    "Maintenance Staff",
+    "Security Staff",
+    "CCTV Security",
+    "Cafeteria or Canteen",
+    "Freehold",
+    "Furnished",
+    "Intercom",
+    "Kids Play Area",
+    "Lawn or Garden",
+    "Reception/Waiting Room",
+    "Laundry Facility",
+    "Shared Kitchen",
+    "Facilities for Disabled",
+    "Balcony or Terrace",
+    "Barbeque Area",
+    "Lobby in Building",
+    "Double Glazed Windows",
+    "Centrally Air-Conditioned",
+    "Cleaning Services",
+    "Completion Year",
+    "View",
+    "Floor",
+    "Elevators in Building",
+    "Other Main Features",
+    "Nearby Shopping Malls",
+    "Number of Bathrooms",
+    "Parking Spaces",
+    "Total Floors",
+    "Broadband Internet",
+    "Satellite/Cable TV",
+    "Business Center",
+    "Jacuzzi"
+  ],
+  "media": {
+    "cover_photo": "https://bayut-production.s3.eu-central-1.amazonaws.com/image/824667052/480bc37df1ff4d74995f9788a9322e00",
+    "photo_count": 11,
+    "photos": [
+      "https://images.bayut.com/thumbnails/824667052-800x600.jpeg",
+      "https://images.bayut.com/thumbnails/824667051-800x600.jpeg",
+      "https://images.bayut.com/thumbnails/824667053-800x600.jpeg",
+      "https://images.bayut.com/thumbnails/824667054-800x600.jpeg",
+      "https://images.bayut.com/thumbnails/824667055-800x600.jpeg",
+      "https://images.bayut.com/thumbnails/824667056-800x600.jpeg",
+      "https://images.bayut.com/thumbnails/824667057-800x600.jpeg",
+      "https://images.bayut.com/thumbnails/824667058-800x600.jpeg",
+      "https://images.bayut.com/thumbnails/824667059-800x600.jpeg",
+      "https://images.bayut.com/thumbnails/824667060-800x600.jpeg",
+      "https://images.bayut.com/thumbnails/824667061-800x600.jpeg"
+    ],
+    "video_count": 0,
+    "panorama_count": 0,
+    "cover_video": ""
+  },
+  "verification": {
+    "is_verified": true,
+    "verified_at": "2026-03-05 08:22:35",
+    "truchecked_at": "2026-03-05 08:22:35"
+  },
+  "legal": {
+    "permit_number": "71169061108",
+    "dld_property_sk": "14449480",
+    "dld_building_nk": "tabu-169052490"
+  },
+  "project": {
+    "id": null,
+    "completion_status": "",
+    "developer": {
+      "name": "",
+      "id": null
+    }
+  },
+  "payment_plans": [],
+  "contact_methods": [
+    "whatsapp",
+    "sms",
+    "email",
+    "call"
+  ],
+  "indy_score": 736,
+  "score": 75,
+  "city_level_score": 1,
+  "location_purpose_tier": 2,
+  "meta": {
+    "created_at": "2026-03-04 19:26:12",
+    "updated_at": "2026-03-07 19:56:42",
+    "reactivated_at": "2026-03-04 19:26:12",
+    "product": "superhot",
+    "url": "https://www.bayut.com/property/details-14449480.html",
+    "product_label": "default",
+    "source_id": 1
+  },
+  "offplan_details": {
+    "sale_type": "",
+    "original_price": null,
+    "paid_price": null,
+    "dld_waiver": null
+  }
+}

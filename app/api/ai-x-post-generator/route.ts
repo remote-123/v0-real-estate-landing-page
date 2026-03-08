@@ -143,7 +143,7 @@ async function fetchBayutDeals() {
         daysOnMarket,
         source: 'bayut',
         externalUrl: item.meta?.url || '',
-        images: Array.isArray(item.photos) ? item.photos.slice(0, 3).map((p: any) => p.url || p) : [],
+        images: Array.isArray(item.media?.photos) ? item.media.photos.slice(0, 3) : [],
       };
     })
     .sort((a: any, b: any) => b.daysOnMarket - a.daysOnMarket)
@@ -197,8 +197,6 @@ export async function POST(req: Request) {
     if (body.secret !== 'NORTHCAPITAL_SUPER_SECRET_KEY_2026') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    console.log('🤖 X Post Generator: manual trigger');
-
     const [pfDeals, bayutDeals] = await Promise.all([
       fetchPropertyFinderDeals().catch(err => {
         console.error('PropertyFinder fetch failed:', err);

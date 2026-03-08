@@ -24,8 +24,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    console.log(`🤖 Processing AI Project for: ${body.subject}`);
-
     // 2. DOWNLOAD THE PDF FROM GOOGLE DRIVE
     const pdfResponse = await fetch(body.pdfUrl);
     if (!pdfResponse.ok) throw new Error("Failed to download PDF from Drive");
@@ -34,10 +32,9 @@ export async function POST(req: Request) {
     const base64Pdf = Buffer.from(pdfBuffer).toString('base64');
 
     // 3. WAKE UP GEMINI
-    const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" }); 
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     const prompt = getGeminiPrompt(PROJECT_JSON_FORMAT);
 
-    console.log("🧠 Sending PDF to Gemini...");
     const result = await model.generateContent([
       prompt,
       {
@@ -64,15 +61,12 @@ export async function POST(req: Request) {
     }
 
     // 5. SAVE TO SANITY AS A DRAFT
-    console.log("💾 Saving Project Draft to Sanity...");
     const newProject = await writeClient.create({
       _type: "project",
       _id: `drafts.ai-project-${Date.now()}`, 
       ...extractedData,
       slug: { current: extractedData.title.toLowerCase().replace(/[^a-z0-9]+/g, "-") },
     });
-
-    console.log(`✅ Success! Project Draft created: ${newProject._id}`);
 
     return NextResponse.json({ success: true, draftId: newProject._id });
 

@@ -2,7 +2,6 @@ import type { Metadata } from "next"
 import { RentalTable, type RentalListing } from "@/components/terminal/rental-table"
 import { CACHE_TTL } from "@/lib/api-budget"
 
-export const dynamic = 'force-dynamic' // temp: remove after confirming API fields in logs
 
 export const metadata: Metadata = {
     title: "Rental Drops Dubai | North Capital DXB",
@@ -31,10 +30,6 @@ async function fetchBayutRentals(): Promise<RentalListing[]> {
         if (!res.ok) return []
         const data = await res.json()
         const rawData = Array.isArray(data?.results) ? data.results : []
-
-        if (rawData.length > 0) {
-            console.log('🔍 Bayut rental raw sample:', JSON.stringify(rawData[0], null, 2))
-        }
 
         return rawData
             .filter((item: any) => item && item.id && item.price > 0)
@@ -75,10 +70,6 @@ async function fetchPFRentals(): Promise<RentalListing[]> {
         if (!res.ok) return []
         const data = await res.json()
         const rawData = Array.isArray(data?.data) ? data.data : []
-
-        if (rawData.length > 0) {
-            console.log('🔍 PF rental raw sample:', JSON.stringify(rawData[0], null, 2))
-        }
 
         return rawData
             .filter((item: any) => item && item.property_id && (item.price?.value || 0) > 0 && !item.is_direct_from_developer)

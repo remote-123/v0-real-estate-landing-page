@@ -28,8 +28,6 @@ export async function POST(req: Request) {
 
     if (!file) return NextResponse.json({ error: "No file provided" }, { status: 400 })
 
-    console.log(`🤖 Processing Manual Project Upload: ${file.name}`)
-
     // 2. CONVERT PDF TO BASE64
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
@@ -38,7 +36,6 @@ export async function POST(req: Request) {
     // 3. DEFINE THE PROMPT (This was the missing line!)
     const prompt = getGeminiPrompt(PROJECT_JSON_FORMAT)
 
-    console.log("🧠 Sending payload to Gemini...")
     let result;
     
     // 4. PACKAGE THE PAYLOAD
@@ -76,15 +73,12 @@ export async function POST(req: Request) {
     }
 
     // 8. SAVE TO SANITY AS A DRAFT
-    console.log("💾 Saving Manual Project Draft to Sanity...")
     const newProject = await writeClient.create({
       _type: "project",
       _id: `drafts.ai-project-manual-${Date.now()}`, 
       ...extractedData,
       slug: { current: extractedData.title.toLowerCase().replace(/[^a-z0-9]+/g, "-") },
     })
-
-    console.log(`✅ Success! Manual Project Draft created: ${newProject._id}`)
 
     return NextResponse.json({ success: true, id: newProject._id })
 
