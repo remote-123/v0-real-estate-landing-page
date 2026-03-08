@@ -75,8 +75,11 @@ async function fetchPropertyFinderDeals() {
     console.log('🔍 PF raw item sample:', JSON.stringify(rawData[0], null, 2));
   }
 
+  const offplanKeywords = /off.?plan|under construction|handover|pre.?launch/i;
+
   return rawData
     .filter((item: any) => item && item.property_id && (item.price?.value || 0) > 0)
+    .filter((item: any) => !offplanKeywords.test(item.title || ''))
     .map((item: any) => {
       const currentPrice = item.price?.value || 0;
       const numericId = parseInt(item.property_id, 10) || 0;
@@ -120,7 +123,7 @@ async function fetchBayutDeals() {
       categories: ['apartments', 'villas', 'penthouses', 'townhouses'],
       price_min: 1000000,
       price_max: 50000000,
-      sale_type: 'any',
+      sale_type: 'resale',
       is_completed: true,
       index: 'date-desc',
     }),
