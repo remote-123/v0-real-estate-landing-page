@@ -1,7 +1,7 @@
 # North Capital DXB — To-Do Capture List
 
 Quick capture for anything that needs to get done. Add items freely — nothing is too small.
-
+DFM Real Estate Index integration in terminal page - goal is for the user to see liquid market as a leading indicator for what's to come for real estate market in dubai
 ---
 
 ## In Progress

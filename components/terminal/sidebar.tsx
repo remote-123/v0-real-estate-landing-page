@@ -8,6 +8,7 @@ import {
   Calculator,
   Compass,
   FileText,
+  Home,
   LayoutDashboard,
   Map,
   Settings,
@@ -22,6 +23,7 @@ export const sidebarLinks = [
     links: [
       { label: "Market Intelligence", href: "/terminal", icon: LayoutDashboard },
       { label: "Distress Deals", href: "/terminal/distress-deals", icon: BarChart3 },
+      // { label: "Rental Drops", href: "/terminal/rental-drops", icon: Home },
     ]
   },
   {

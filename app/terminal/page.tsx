@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { ChevronRight, Globe, Zap } from "lucide-react"
+import { ChevronRight, Globe, MapPin, Zap } from "lucide-react"
 import { StatCard } from "@/components/terminal/stat-card"
 import { client } from "@/sanity/lib/client"
 import { TERMINAL_ICONS, SanityTerminalCategory } from "@/lib/terminal"
@@ -53,11 +53,41 @@ export default async function InvestorTerminalPage() {
 
     return (
         <div className="space-y-10 max-w-[1600px] mx-auto pb-24 lg:pb-10 px-4 sm:px-0">
-            <header className="flex flex-col gap-2">
-                <h2 className="font-serif text-3xl font-bold tracking-tight text-foreground">Market Intelligence Terminal</h2>
-                <p className="text-sm text-muted-foreground max-w-2xl">
-                    Aggregated macro-economic datasets from data.dubai and DLD. Interpreted for institutional-grade decision making.
-                </p>
+            <header className="flex flex-col gap-4">
+                <div className="flex flex-col gap-2">
+                    <h2 className="font-serif text-3xl font-bold tracking-tight text-foreground">Market Intelligence Terminal</h2>
+                    <p className="text-sm text-muted-foreground max-w-2xl">
+                        Aggregated macro-economic datasets from data.dubai and DLD. Interpreted for institutional-grade decision making.
+                    </p>
+                </div>
+
+                {/* City selector */}
+                <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[10px] uppercase tracking-widest text-muted-foreground/50 font-medium mr-1">Market</span>
+
+                    {/* Active: Dubai */}
+                    <div className="flex items-center gap-1.5 rounded-md bg-accent/10 border border-accent/30 px-3 py-1.5 text-accent">
+                        <MapPin className="h-3 w-3" />
+                        <span className="text-xs font-semibold tracking-wide">Dubai</span>
+                    </div>
+
+                    {/* Coming soon cities */}
+                    {[
+                        { city: "Toronto", flag: "🇨🇦" },
+                        { city: "London", flag: "🇬🇧" },
+                        { city: "Singapore", flag: "🇸🇬" },
+                        { city: "New York", flag: "🇺🇸" },
+                    ].map(({ city, flag }) => (
+                        <div
+                            key={city}
+                            className="flex items-center gap-1.5 rounded-md border border-border/40 px-3 py-1.5 text-muted-foreground/40 cursor-not-allowed select-none"
+                        >
+                            <span className="text-xs">{flag}</span>
+                            <span className="text-xs font-medium">{city}</span>
+                            <span className="text-[9px] uppercase tracking-wider font-semibold text-muted-foreground/30 border border-muted-foreground/20 rounded px-1 py-px ml-0.5">Soon</span>
+                        </div>
+                    ))}
+                </div>
             </header>
 
             {/* Grid Layout - Category Groups */}
