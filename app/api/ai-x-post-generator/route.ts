@@ -17,11 +17,11 @@ function buildPostText(deal: any, usp: string): string {
     ? deal.title.substring(0, 42) + '...'
     : deal.title;
 
-  const originalStruck = strikethrough(`AED ${deal.originalPrice.toLocaleString()}`);
-  const priceLine = `💰 ${originalStruck} → AED ${deal.currentPrice.toLocaleString()} (-${deal.discountPercent}%)`;
+  const priceLine = `💰 AED ${deal.currentPrice.toLocaleString()}`;
   const sqftPart = deal.sizeSqft > 0 ? `📐 ${deal.sizeSqft.toLocaleString()} sqft` : '';
   const bedBathPart = `🏡 ${deal.bedrooms} BD${deal.bathrooms ? ` / ${deal.bathrooms} BA` : ''}`;
-  const detailLine = [sqftPart, bedBathPart].filter(Boolean).join(' | ');
+  const domPart = `⏳ ${deal.daysOnMarket}d on market`;
+  const detailLine = [sqftPart, bedBathPart, domPart].filter(Boolean).join(' | ');
   const sourceLine = deal.source === 'bayut' ? 'via Bayut' : 'via PropertyFinder';
 
   return [
@@ -71,21 +71,11 @@ async function fetchPropertyFinderDeals() {
   const data = await res.json();
   const rawData = Array.isArray(data?.data) ? data.data : [];
 
-  if (rawData.length > 0) {
-    console.log('🔍 PF raw item sample:', JSON.stringify(rawData[0], null, 2));
-  }
-
-  const offplanKeywords = /off.?plan|under construction|handover|pre.?launch/i;
-
   return rawData
     .filter((item: any) => item && item.property_id && (item.price?.value || 0) > 0)
-    .filter((item: any) => !offplanKeywords.test(item.title || ''))
+    .filter((item: any) => !item.is_direct_from_developer)
     .map((item: any) => {
       const currentPrice = item.price?.value || 0;
-      const numericId = parseInt(item.property_id, 10) || 0;
-      const dropFactor = 0.05 + ((numericId % 20) / 100);
-      const originalPrice = Math.round(currentPrice * (1 + dropFactor));
-      const discountPercent = Math.round(((originalPrice - currentPrice) / originalPrice) * 1000) / 10;
       const createdDate = new Date(item.listed_date || Date.now());
       const daysOnMarket = Math.max(1, Math.floor((Date.now() - createdDate.getTime()) / (1000 * 3600 * 24)));
 
@@ -98,14 +88,13 @@ async function fetchPropertyFinderDeals() {
         bathrooms: item.bathrooms?.toString() || null,
         sizeSqft: Math.round(item.size?.value || 0),
         currentPrice,
-        originalPrice,
-        discountPercent,
         daysOnMarket,
         source: 'pf',
         externalUrl: item.property_url || '',
+        images: Array.isArray(item.images) ? item.images.slice(0, 3) : [],
       };
     })
-    .sort((a: any, b: any) => b.discountPercent - a.discountPercent)
+    .sort((a: any, b: any) => b.daysOnMarket - a.daysOnMarket)
     .slice(0, 3);
 }
 
@@ -135,23 +124,10 @@ async function fetchBayutDeals() {
   const data = await res.json();
   const rawData = Array.isArray(data?.results) ? data.results : [];
 
-  if (rawData.length > 0) {
-    console.log('🔍 Bayut raw item sample:', JSON.stringify(rawData[0], null, 2));
-  }
-
   return rawData
     .filter((item: any) => item && item.id && item.price > 0)
     .map((item: any) => {
       const currentPrice = item.price;
-      const offplanOriginal = item.offplan_details?.original_price;
-      let originalPrice = currentPrice;
-      if (offplanOriginal && offplanOriginal > currentPrice) {
-        originalPrice = offplanOriginal;
-      } else {
-        const dropFactor = 0.05 + ((item.id % 20) / 100);
-        originalPrice = Math.round(currentPrice * (1 + dropFactor));
-      }
-      const discountPercent = Math.round(((originalPrice - currentPrice) / originalPrice) * 1000) / 10;
       const createdDate = new Date(item.meta?.created_at || Date.now());
       const daysOnMarket = Math.max(1, Math.floor((Date.now() - createdDate.getTime()) / (1000 * 3600 * 24)));
 
@@ -164,14 +140,13 @@ async function fetchBayutDeals() {
         bathrooms: null,
         sizeSqft: Math.round(item.area?.built_up || 0),
         currentPrice,
-        originalPrice: Math.round(originalPrice),
-        discountPercent,
         daysOnMarket,
         source: 'bayut',
         externalUrl: item.meta?.url || '',
+        images: Array.isArray(item.photos) ? item.photos.slice(0, 3).map((p: any) => p.url || p) : [],
       };
     })
-    .sort((a: any, b: any) => b.discountPercent - a.discountPercent)
+    .sort((a: any, b: any) => b.daysOnMarket - a.daysOnMarket)
     .slice(0, 3);
 }
 
@@ -181,9 +156,7 @@ async function generateAndSendPosts(deals: any[]) {
 Title: ${d.title}
 Location: ${d.location}
 Type: ${d.type} | ${d.bedrooms} BD${d.bathrooms ? ` / ${d.bathrooms} BA` : ''} | ${d.sizeSqft > 0 ? `${d.sizeSqft.toLocaleString()} sqft` : 'Size N/A'}
-Original Price: AED ${d.originalPrice.toLocaleString()}
-Current Price: AED ${d.currentPrice.toLocaleString()}
-Discount: ${d.discountPercent}%
+Price: AED ${d.currentPrice.toLocaleString()}
 Days on Market: ${d.daysOnMarket}`
   ).join('\n\n');
 
@@ -209,7 +182,10 @@ Days on Market: ${d.daysOnMarket}`
     const postText = buildPostText(deal, usp);
     const sourceLabel = deal.source === 'bayut' ? '🔗 Bayut listing' : '🔗 PropertyFinder listing';
     const sourceLine = deal.externalUrl ? `\n\n${sourceLabel}:\n${deal.externalUrl}` : '';
-    await sendTelegram(`<code>${postText}</code>${sourceLine}`);
+    const imagesLine = deal.images?.length > 0
+      ? `\n\n📸 Photos:\n${deal.images.join('\n')}`
+      : '';
+    await sendTelegram(`<code>${postText}</code>${sourceLine}${imagesLine}`);
   }
 
   return deals.length;
