@@ -18,11 +18,12 @@ export interface RentalListing {
   listedAt: number
   source: "pf" | "bayut"
   externalUrl: string
+  buildingAge?: number | null  // construction year from DM buildings table
 }
 
 type SortKey = keyof Pick<
   RentalListing,
-  "cluster" | "area" | "type" | "bedrooms" | "sizeSqft" | "monthlyPrice" | "annualPrice" | "pricePerSqft" | "listedAt"
+  "cluster" | "area" | "type" | "bedrooms" | "sizeSqft" | "monthlyPrice" | "annualPrice" | "pricePerSqft" | "listedAt" | "buildingAge"
 >
 type SortDir = "asc" | "desc"
 
@@ -126,6 +127,7 @@ export function RentalTable({ listings }: { listings: RentalListing[] }) {
               <Th col="monthlyPrice" right {...thProps}>Monthly</Th>
               <Th col="annualPrice" right {...thProps}>Annual</Th>
               <Th col="pricePerSqft" right {...thProps}>/sqft yr</Th>
+              <Th col="buildingAge" right {...thProps}>Built</Th>
               <Th col="listedAt" right {...thProps}>Listed</Th>
               <Th {...thProps}>Src</Th>
 
@@ -208,6 +210,17 @@ export function RentalTable({ listings }: { listings: RentalListing[] }) {
                   <span className="font-mono text-xs text-muted-foreground">
                     {l.sizeSqft > 0 ? Math.round(l.pricePerSqft).toLocaleString() : "—"}
                   </span>
+                </td>
+
+                {/* Built (building age) */}
+                <td className="px-3 py-2 text-right">
+                  {l.buildingAge ? (
+                    <span className="font-mono text-xs text-muted-foreground" title={`Built ${l.buildingAge}`}>
+                      {2026 - l.buildingAge}yr
+                    </span>
+                  ) : (
+                    <span className="font-mono text-xs text-muted-foreground/20">—</span>
+                  )}
                 </td>
 
                 {/* Listed */}
