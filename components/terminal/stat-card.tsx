@@ -64,10 +64,10 @@ export function StatCard({
 
             {description && (
                 <div className={cn(
-                    "mt-2 text-[9px] leading-tight transition-opacity italic",
-                    isActive ? "text-muted-foreground opacity-100" : "text-muted-foreground/60 opacity-0 group-hover:opacity-100"
+                    "mt-2 text-[9px] leading-tight transition-opacity",
+                    isActive ? "text-muted-foreground opacity-100" : "text-muted-foreground/50 opacity-100 group-hover:text-muted-foreground"
                 )}>
-                    Verdict: {description}
+                    {description}
                 </div>
             )}
         </div>

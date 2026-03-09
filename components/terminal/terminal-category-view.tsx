@@ -43,14 +43,18 @@ export function TerminalCategoryView({ category }: TerminalCategoryViewProps) {
                         Back to Overview
                     </Button>
                 </Link>
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-3">
                     <div className="flex items-center gap-3">
                         <div className="rounded-lg bg-accent/10 p-2">
                             <CategoryIcon className="h-6 w-6 text-accent" />
                         </div>
                         <h2 className="font-serif text-3xl font-bold tracking-tight text-foreground">{category.title}</h2>
                     </div>
-                    <p className="text-muted-foreground max-w-2xl">{category.description}</p>
+                    {/* Editorial context block — answers "why does this data matter?" */}
+                    <div className="rounded-lg border-l-2 border-accent/50 bg-accent/5 pl-4 pr-3 py-3 max-w-2xl">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-accent mb-1.5">What This Data Tells You</p>
+                        <p className="text-sm text-muted-foreground leading-relaxed">{category.description}</p>
+                    </div>
                 </div>
             </header>
 
@@ -102,21 +106,29 @@ export function TerminalCategoryView({ category }: TerminalCategoryViewProps) {
 
                 {/* Sidebar: Curation & Recommendations */}
                 <div className="lg:col-span-4 space-y-6">
-                    <div className="rounded-xl border border-border/40 bg-accent/5 p-6 space-y-4">
+                    <div className="rounded-xl border border-accent/20 bg-accent/5 p-6 space-y-4">
                         <h3 className="text-sm font-bold uppercase tracking-widest text-accent flex items-center gap-2">
                             <ShieldCheck className="h-4 w-4" />
-                            Strategic Verdict
+                            Investment Verdict
                         </h3>
                         <div className="space-y-3">
-                            <h4 className="font-semibold text-lg text-foreground">{category.strategicVerdict.title}</h4>
+                            <h4 className="font-semibold text-lg text-foreground leading-snug">{category.strategicVerdict.title}</h4>
+                            {/* Why it matters for capital allocation */}
+                            <p className="text-xs font-semibold uppercase tracking-widest text-accent/70 border-t border-accent/10 pt-3">
+                                What this means for your capital
+                            </p>
                             <p className="text-sm leading-relaxed text-muted-foreground">
                                 {category.strategicVerdict.content}
                             </p>
                         </div>
-                        <div className="pt-4 border-t border-border/30">
-                            <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-2 font-medium">Next Tactical Move</p>
+                        <div className="pt-4 border-t border-border/30 space-y-3">
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-medium">Next Tactical Move</p>
                             <Link href="/terminal/roi-engine" className="text-xs font-bold text-foreground hover:text-accent transition-colors flex items-center gap-2 group">
                                 Model ROI for this category
+                                <ChevronRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
+                            </Link>
+                            <Link href="/contact" className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2 group">
+                                Speak to an advisor about this data
                                 <ChevronRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
                             </Link>
                         </div>
