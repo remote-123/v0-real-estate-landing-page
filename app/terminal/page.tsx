@@ -1,6 +1,8 @@
 import Link from "next/link"
-import { ChevronRight, Globe, MapPin, Zap } from "lucide-react"
+import { ChevronRight, Globe, MapPin, Zap, Twitter, Lightbulb } from "lucide-react"
 import { StatCard } from "@/components/terminal/stat-card"
+import { TerminalTickerCards } from "@/components/terminal/ticker-cards"
+import { FeatureRequestForm } from "@/components/terminal/feature-request-form"
 import { client } from "@/sanity/lib/client"
 import { TERMINAL_ICONS, SanityTerminalCategory } from "@/lib/terminal"
 
@@ -61,7 +63,10 @@ export default async function InvestorTerminalPage() {
                     </p>
                 </div>
 
-                {/* City selector */}
+                {/* Live market ticker */}
+                <TerminalTickerCards />
+
+            {/* City selector */}
                 <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-[10px] uppercase tracking-widest text-muted-foreground/50 font-medium mr-1">Market</span>
 
@@ -127,6 +132,42 @@ export default async function InvestorTerminalPage() {
                         </section>
                     )
                 })}
+            </div>
+
+            {/* Bottom rail: X follow CTA + Feature Request */}
+            <div className="grid gap-6 md:grid-cols-2 border-t border-border/30 pt-10">
+                {/* X (Twitter) Follow CTA */}
+                <div className="rounded-xl border border-border/40 bg-card/40 p-6 flex flex-col gap-4">
+                    <div className="flex items-center gap-2">
+                        <Twitter className="h-4 w-4 text-foreground" />
+                        <h3 className="text-sm font-bold uppercase tracking-widest text-foreground">Follow for Updates</h3>
+                    </div>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                        New datasets, feature releases, and market signals — announced first on X.
+                        No noise. When we post, it&apos;s because something moved.
+                    </p>
+                    <Link
+                        href="https://x.com/northcapitaldxb"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 rounded-md bg-foreground text-background text-xs font-bold px-4 py-2.5 w-fit hover:bg-foreground/80 transition-colors"
+                    >
+                        <Twitter className="h-3.5 w-3.5" />
+                        Follow @northcapitaldxb
+                    </Link>
+                </div>
+
+                {/* Feature Request */}
+                <div className="rounded-xl border border-border/40 bg-card/40 p-6 flex flex-col gap-4">
+                    <div className="flex items-center gap-2">
+                        <Lightbulb className="h-4 w-4 text-accent" />
+                        <h3 className="text-sm font-bold uppercase tracking-widest text-foreground">Request a Feature</h3>
+                    </div>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                        Missing a dataset or drill-down? Tell us. The terminal is built around what serious investors actually need.
+                    </p>
+                    <FeatureRequestForm />
+                </div>
             </div>
         </div>
     )

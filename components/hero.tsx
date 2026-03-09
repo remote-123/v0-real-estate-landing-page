@@ -3,7 +3,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, ShieldCheck, Globe2 } from "lucide-react"
+import { ArrowRight, ShieldCheck, Globe2, Terminal } from "lucide-react"
 
 export function Hero() {
   return (
@@ -45,7 +45,7 @@ export function Hero() {
               We structure high-yield, tax-free property portfolios in Dubai for seasoned investors and global expats. Our analysis relies on supply-side metrics, currency hedging, and strict capital preservation—gatekeeping only the assets that pass our internal stress tests.
             </p>
 
-            <div className="flex flex-col gap-4 sm:flex-row">
+            <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap">
               <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 border-0" asChild>
                 <Link href="/projects">
                   Explore Opportunities <ArrowRight className="ml-2 h-4 w-4" />
@@ -55,6 +55,21 @@ export function Hero() {
               <Button size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/10 hover:text-white bg-transparent" asChild>
                 <Link href="/contact">
                   Request Strategy Session
+                </Link>
+              </Button>
+              {/* Terminal CTA — premium, data-forward */}
+              <Button
+                size="lg"
+                variant="outline"
+                className="relative border-emerald-500/40 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 bg-black/40 backdrop-blur-sm font-mono tracking-tight group overflow-hidden"
+                asChild
+              >
+                <Link href="/terminal">
+                  <span className="absolute inset-0 rounded-[inherit] ring-1 ring-emerald-500/20 group-hover:ring-emerald-400/40 transition-all duration-300" />
+                  <span className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-emerald-500/5 to-emerald-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <Terminal className="mr-2 h-4 w-4 shrink-0" />
+                  <span className="relative">Market Intelligence</span>
+                  <span className="ml-1.5 inline-block w-px h-3.5 bg-emerald-400 animate-[blink_1.1s_step-end_infinite] self-center" aria-hidden="true" />
                 </Link>
               </Button>
             </div>
