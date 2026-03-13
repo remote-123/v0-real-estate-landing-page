@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NORTH_CAPITAL_SYSTEM_PROMPT } from '@/lib/ai-guidelines';
-import { sendTelegram } from '@/lib/telegram';
+import { sendTelegram, sendTelegramError } from '@/lib/telegram';
 
 export const maxDuration = 60;
 
@@ -253,6 +253,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true, format, chars: parsed.post.length });
   } catch (error: any) {
     console.error('LinkedIn Post Generator Error:', error);
+    await sendTelegramError('ai-linkedin-post-generator', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

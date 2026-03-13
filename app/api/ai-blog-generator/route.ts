@@ -3,6 +3,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { createClient } from 'next-sanity';
 import { getGeminiPrompt } from '@/lib/ai-guidelines';
+import { sendTelegramError } from '@/lib/telegram';
 
 export const maxDuration = 60;
 
@@ -128,6 +129,7 @@ export async function POST(req: Request) {
 
   } catch (error: any) {
     console.error('❌ Blog Generation Error:', error);
+    await sendTelegramError('ai-blog-generator', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

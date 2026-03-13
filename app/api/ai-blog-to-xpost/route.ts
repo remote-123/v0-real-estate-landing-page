@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NORTH_CAPITAL_SYSTEM_PROMPT } from '@/lib/ai-guidelines';
-import { sendTelegram } from '@/lib/telegram';
+import { sendTelegram, sendTelegramError } from '@/lib/telegram';
 
 export const maxDuration = 60;
 
@@ -106,6 +106,7 @@ ${post.suggestedHashtags}
 
   } catch (error: any) {
     console.error('❌ Blog X Post Generation Error:', error);
+    await sendTelegramError('ai-blog-to-xpost', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

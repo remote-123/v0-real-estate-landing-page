@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NORTH_CAPITAL_SYSTEM_PROMPT } from '@/lib/ai-guidelines';
-import { sendTelegram } from '@/lib/telegram';
+import { sendTelegram, sendTelegramError } from '@/lib/telegram';
 
 export const maxDuration = 60;
 
@@ -217,6 +217,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true, sent: count, pf: pfDeals.length, bayut: bayutDeals.length });
   } catch (error: any) {
     console.error('❌ X Post Generation Error:', error);
+    await sendTelegramError('ai-x-post-generator', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
