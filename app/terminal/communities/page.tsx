@@ -1,7 +1,7 @@
 import React from 'react'
 import type { Metadata } from 'next'
 import { CommunitiesTable } from '@/components/terminal/communities-table'
-import { type Community } from '@/lib/mock-communities'
+import { type Community } from '@/lib/types/community'
 import { sql } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
@@ -36,6 +36,7 @@ type CommunityRow = {
   mom_change: number | null
   total_units: number
   pipeline_units: number
+  price_history: number[] | string | null
 }
 
 function toSlug(name: string): string {
@@ -61,6 +62,7 @@ function mapToCommunity(r: CommunityRow): Community {
     upcomingSupply: r.pipeline_units,
     momChange: r.mom_change ?? 0,
     avgDaysOnMarket: 0,
+    priceHistory: r.price_history ? (typeof r.price_history === 'string' ? JSON.parse(r.price_history) : r.price_history) : undefined,
   }
 }
 
@@ -104,6 +106,25 @@ async function fetchCommunities(): Promise<Community[]> {
         FROM dld_projects
         WHERE area_name_en IS NOT NULL
         GROUP BY area_name_en
+      ),
+      history AS (
+        SELECT
+          area_name_en,
+          json_agg(ROUND((avg_psm / 10.764)::numeric, 0)::integer ORDER BY txn_month ASC) as price_history
+        FROM (
+          SELECT
+            m.area_name_en,
+            m.txn_month,
+            SUM(m.txn_count * m.avg_psf) / NULLIF(SUM(m.txn_count), 0) AS avg_psm
+          FROM mv_txn_monthly m
+          CROSS JOIN latest_month lm
+          WHERE m.txn_month >= lm.max_month - INTERVAL '11 months'
+            AND m.trans_group_en = 'Sales'
+            AND m.property_type_en = 'Unit'
+            AND m.area_name_en IS NOT NULL
+          GROUP BY m.area_name_en, m.txn_month
+        ) sub
+        GROUP BY area_name_en
       )
       SELECT
         c.area_name_en,
@@ -112,10 +133,12 @@ async function fetchCommunities(): Promise<Community[]> {
         ROUND(c.avg_val::numeric, 0)::integer                                        AS avg_value,
         ROUND(((c.avg_psm - p.avg_psm) / NULLIF(p.avg_psm, 0) * 100)::numeric, 1)  AS mom_change,
         COALESCE(s.total_units, 0)::integer                                          AS total_units,
-        COALESCE(s.pipeline_units, 0)::integer                                       AS pipeline_units
+        COALESCE(s.pipeline_units, 0)::integer                                       AS pipeline_units,
+        h.price_history
       FROM curr c
       LEFT JOIN prev p ON c.area_name_en = p.area_name_en
       LEFT JOIN supply s ON c.area_name_en = s.area_name_en
+      LEFT JOIN history h ON c.area_name_en = h.area_name_en
       WHERE c.txn_count >= 5
         AND c.avg_psm > 0
       ORDER BY c.txn_count DESC

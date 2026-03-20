@@ -12,7 +12,7 @@ import {
   type SortingState,
 } from '@tanstack/react-table'
 import { ArrowUpDown, ArrowUp, ArrowDown, Search, TrendingUp, TrendingDown, Info } from 'lucide-react'
-import { Community } from '@/lib/mock-communities'
+import { Community } from '@/lib/types/community'
 import { cn } from '@/lib/utils'
 
 const formatPrice = (n: number) => {
@@ -24,16 +24,35 @@ const formatPrice = (n: number) => {
 const formatNumber = (n: number) =>
   new Intl.NumberFormat('en-US').format(n)
 
-function YieldBadge({ value }: { value: number }) {
-  if (value === 0) return <span className="font-mono text-xs text-muted-foreground/30">—</span>
-  const color =
-    value >= 7 ? 'text-emerald-400 bg-emerald-400/10 ring-emerald-400/20' :
-    value >= 5.5 ? 'text-yellow-400 bg-yellow-400/10 ring-yellow-400/20' :
-    'text-red-400 bg-red-400/10 ring-red-400/20'
+function MiniSparkline({ data }: { data?: number[] }) {
+  if (!data || data.length < 2) return <span className="font-mono text-xs text-muted-foreground/30 flex justify-end">—</span>
+  
+  const min = Math.min(...data)
+  const max = Math.max(...data)
+  const range = max - min || 1
+  const width = 60
+  const height = 24
+  
+  const points = data.map((val, i) => {
+    const x = (i / (data.length - 1)) * width
+    const y = height - ((val - min) / range) * height
+    return `${x},${y}`
+  }).join(' ')
+
+  const isUp = data[data.length - 1] >= data[0]
+  const color = isUp ? 'stroke-emerald-400' : 'stroke-red-400'
+
   return (
-    <span className={cn('font-mono text-xs font-bold px-1.5 py-0.5 rounded ring-1', color)}>
-      {value.toFixed(1)}%
-    </span>
+    <svg width={width} height={height} className="overflow-visible" viewBox={`0 -2 ${width} ${height + 4}`}>
+      <polyline
+        points={points}
+        fill="none"
+        className={color}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   )
 }
 
@@ -164,18 +183,26 @@ export function CommunitiesTable({ data }: Props) {
       size: 120,
     },
     {
-      accessorKey: 'grossYield',
+      id: 'priceHistory',
+      accessorFn: (row) => {
+        if (!row.priceHistory || row.priceHistory.length < 2) return 0
+        const first = row.priceHistory[0]
+        const last = row.priceHistory[row.priceHistory.length - 1]
+        return ((last - first) / first) * 100 // Sorts by 1Y performance %
+      },
       header: ({ column }) => (
         <button className="flex items-center justify-end w-full" onClick={() => column.toggleSorting()}>
-          Yield <SortIcon sorted={column.getIsSorted()} />
+          Trend (1Y)
+          <InfoTip text="Trailing 12-month price-per-sqft trend based on DLD transactions. Click line to deep dive." />
+          <SortIcon sorted={column.getIsSorted()} />
         </button>
       ),
-      cell: ({ getValue }) => (
-        <div className="flex justify-end">
-          <YieldBadge value={getValue<number>()} />
+      cell: ({ row }) => (
+        <div className="flex justify-end items-center h-full pt-1 px-2">
+          <MiniSparkline data={row.original.priceHistory} />
         </div>
       ),
-      size: 90,
+      size: 110,
     },
     {
       accessorKey: 'transactions30d',

@@ -6,6 +6,12 @@
 > 2. Limit to 1-2 concise bullet points per specific topic.
 > 3. **Mandatory Signature:** Every entry must explicitly state the tool name at the start (e.g., *"Built by Antigravity"*, *"Built by Claude Code"*, or *"Built by Cursor"*).
 
+
+## 21 March 2026
+*Built by Antigravity*
+- **Communities Table Innovation**: Removed the static 'Yield' column and replaced it with an engaging, interactive 'Trend (1Y)' SVG sparkline. Sorts flawlessly and provides a 12-month mathematical price-per-sqft history to fuel High-Net-Worth investor clicks.
+- **Codebase Data Cleanup**: Finalized the deletion of `lib/mock-communities.ts` and fake data, migrating the strict `Community` TypeScript interface into `lib/types/community.ts` to confirm 100% of the platform's intel is pulled strictly from live DB requests.
+- **Specialized Architect Agents**: Analyzed the popular `agency-agents` open-source repository and cherry-picked 6 advanced agents (Xiaohongshu Specialist, Carousel Growth, A11y Auditor, Meta CAPI Tracking, UX Researcher, WeChat Private Domain). Extensively re-engineered their baseline prompts to remove all "fluff" and adhere specifically to the North Capital DXB institutional-grade persona.
 ## 16 March 2026
 *Built by Claude Code*
 - **Communities Table — Runtime Fixes**: Fixed `value.toFixed is not a function` crash in `MomBadge` — postgres.js returns SQL `numeric` as strings, fixed by coercing with `Number(value)`. Added `suppressHydrationWarning` to `<body>` in `app/layout.tsx` to silence Grammarly extension hydration mismatch.

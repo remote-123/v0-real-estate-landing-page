@@ -1,5 +1,30 @@
 # Daily Log
 
+## 2026-03-21 — Communities Screener: Sparkline Graph, Data Cleanup & Agent Expansion
+
+### Task
+Replaced the 'Yield' column with an interactive 'Trend (1Y)' SVG sparkline. Abstracted the Community interface and removed `mock-communities.ts` fake data. Ported 6 specialized marketing & UX agents into the system and refactored them for the North Capital DXB persona.
+
+### Files Changed
+
+**`lib/mock-communities.ts`**
+- Deleted the file and fake data array.
+- Moved the `Community` TypeScript interface to `lib/types/community.ts` and added `priceHistory`. 
+
+**`app/terminal/communities/page.tsx`**
+- Replaced the import path to `lib/types/community.ts`.
+- Updated the main `fetchCommunities` SQL query with a CTE to aggregate 11 prior months of `avg_psm` into a JSON array, yielding a trailing 12-month price history.
+
+**`components/terminal/communities-table.tsx`**
+- Replaced the import path to `lib/types/community.ts`.
+- Deleted `YieldBadge` and built a new `MiniSparkline` functional component inside the file using a responsive SVG `<polyline>` spanning 60x24px with red/emerald stroke depending on 1Y performance.
+- Swapped the `grossYield` column for `priceHistory`, calculating exact percentage sorting using the first and last element of the payload array.
+
+**`.agent/skills/*`**
+- Ported 6 new specialized agents (`marketing-xiaohongshu-specialist`, `marketing-carousel-growth-engine`, `testing-accessibility-auditor`, `paid-media-tracking-specialist`, `ux-researcher`, `marketing-wechat-official-account`) from `agency-agents`.
+- Modified internal prompts extensively to restrict their tone strictly to the North Capital DXB institutional-grade persona without whimsy or fluff.
+
+---
 ## 2026-03-20 — Deploy Announce: Automated Telegram SMM on feature rollout
 
 ### Task
