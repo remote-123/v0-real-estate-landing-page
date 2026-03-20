@@ -10,6 +10,9 @@
 - [x] Supabase MCP Database authenticated and configured locally with custom STDIO runner
 - [ ] Fine-tune Reddit to be useful for operations (Context awareness, Thread scraping, Lead classification)
 
+- [ ] Need a system to demo a page or new feature as a short video for social media using AI agents (Claude Code) - this will be a pipeline for content generation
+
+
 
 
 

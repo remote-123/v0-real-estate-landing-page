@@ -59,11 +59,11 @@ export function DistressFilters({ communities = [] }: { communities?: string[] }
                     ))}
                 </div>
                 <Button asChild variant="outline" size="sm" className="gap-2 border-accent/20 hover:bg-accent/10 hover:text-accent transition-colors">
-                                                <Link href={SITE_CONFIG.calendarLink} target="_blank">
-                                                    <Calendar className="h-3 w-3" />
-                                                    Schedule ROI Briefing
-                                                </Link>
-                                            </Button>
+                    <Link href={SITE_CONFIG.calendarLink} target="_blank">
+                        <Calendar className="h-3 w-3" />
+                        Book an Appointment
+                    </Link>
+                </Button>
             </div>
 
             {/* Sorting Dropdown */}

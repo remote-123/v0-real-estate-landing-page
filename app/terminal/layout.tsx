@@ -97,7 +97,7 @@ export default function InvestorTerminalLayout({
                             <Button asChild variant="outline" size="sm" className="hidden sm:flex gap-2 border-accent/20 hover:bg-accent/10 hover:text-accent transition-colors">
                                 <Link href={SITE_CONFIG.calendarLink} target="_blank">
                                     <Calendar className="h-3 w-3" />
-                                    Schedule ROI Briefing
+                                    Book an Appointment
                                 </Link>
                             </Button>
                             <ThemeToggle />
