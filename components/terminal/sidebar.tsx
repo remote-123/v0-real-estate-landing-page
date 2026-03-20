@@ -29,8 +29,11 @@ export const sidebarLinks = [
   {
     title: "Intelligence",
     links: [
-      // { label: "Community Screener", href: "/terminal/communities", icon: Map },
+      { label: "Community Screener", href: "/terminal/communities", icon: Map },
       { label: "ROI Engine", href: "/terminal/roi-engine", icon: Calculator },
+      { label: "Price Index", href: "/terminal/price-index", icon: TrendingUp },
+      { label: "Supply Pipeline", href: "/terminal/supply-pipeline", icon: BarChart3 },
+      { label: "Service Charges", href: "/terminal/service-charges", icon: FileText },
       // { label: "Project Screener", href: "/investor-terminal/screener", icon: Compass },
       // { label: "Investment Theses", href: "/investor-terminal/theses", icon: FileText },
     ]

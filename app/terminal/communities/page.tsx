@@ -1,6 +1,10 @@
+import React from 'react'
 import type { Metadata } from 'next'
 import { CommunitiesTable } from '@/components/terminal/communities-table'
-import { MOCK_COMMUNITIES } from '@/lib/mock-communities'
+import { type Community } from '@/lib/mock-communities'
+import { sql } from '@/lib/db'
+
+export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: 'Community Screener | North Capital DXB',
@@ -10,10 +14,112 @@ export const metadata: Metadata = {
   },
 }
 
-export default function CommunitiesPage() {
-  const avgYield = (MOCK_COMMUNITIES.reduce((s, c) => s + c.grossYield, 0) / MOCK_COMMUNITIES.length).toFixed(1)
-  const topYield = Math.max(...MOCK_COMMUNITIES.map(c => c.grossYield)).toFixed(1)
-  const totalTxns = MOCK_COMMUNITIES.reduce((s, c) => s + c.transactions30d, 0)
+type CommunityRow = {
+  area_name_en: string
+  txn_count: number
+  avg_psf: number
+  avg_value: number
+  mom_change: number | null
+  total_units: number
+  pipeline_units: number
+}
+
+function toSlug(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+}
+
+function mapToCommunity(r: CommunityRow): Community {
+  const totalUnits = r.total_units
+  const apartments = Math.round(totalUnits * 0.78)
+  return {
+    slug: toSlug(r.area_name_en),
+    name: r.area_name_en,
+    area: '',
+    type: 'mixed',
+    isFreehold: true,
+    avgPricePerSqft: r.avg_psf,
+    medianPrice: r.avg_value,
+    totalUnits,
+    apartments,
+    villas: totalUnits - apartments,
+    grossYield: 0,
+    transactions30d: r.txn_count,
+    upcomingSupply: r.pipeline_units,
+    momChange: r.mom_change ?? 0,
+    avgDaysOnMarket: 0,
+  }
+}
+
+async function fetchCommunities(): Promise<Community[]> {
+  try {
+    const rows = await sql<CommunityRow[]>`
+      WITH latest_month AS (
+        SELECT MAX(txn_month) AS max_month FROM mv_txn_monthly
+      ),
+      curr AS (
+        SELECT
+          area_name_en,
+          SUM(txn_count)                                                             AS txn_count,
+          SUM(txn_count * avg_psf)  / NULLIF(SUM(txn_count), 0)                    AS avg_psm,
+          SUM(txn_count * avg_value) / NULLIF(SUM(txn_count), 0)                   AS avg_val
+        FROM mv_txn_monthly m
+        CROSS JOIN latest_month lm
+        WHERE m.txn_month = lm.max_month
+          AND m.trans_group_en = 'Sales'
+          AND m.property_type_en = 'Unit'
+          AND m.area_name_en IS NOT NULL
+        GROUP BY area_name_en
+      ),
+      prev AS (
+        SELECT
+          area_name_en,
+          SUM(txn_count * avg_psf) / NULLIF(SUM(txn_count), 0)  AS avg_psm
+        FROM mv_txn_monthly m
+        CROSS JOIN latest_month lm
+        WHERE m.txn_month = lm.max_month - INTERVAL '1 month'
+          AND m.trans_group_en = 'Sales'
+          AND m.property_type_en = 'Unit'
+          AND m.area_name_en IS NOT NULL
+        GROUP BY area_name_en
+      ),
+      supply AS (
+        SELECT
+          area_name_en,
+          SUM(COALESCE(no_of_units, 0))                                                                       AS total_units,
+          SUM(CASE WHEN project_status IN ('ACTIVE','NOT_STARTED','PENDING') THEN COALESCE(no_of_units,0) ELSE 0 END) AS pipeline_units
+        FROM dld_projects
+        WHERE area_name_en IS NOT NULL
+        GROUP BY area_name_en
+      )
+      SELECT
+        c.area_name_en,
+        c.txn_count::integer                                                         AS txn_count,
+        ROUND((c.avg_psm / 10.764)::numeric, 0)::integer                            AS avg_psf,
+        ROUND(c.avg_val::numeric, 0)::integer                                        AS avg_value,
+        ROUND(((c.avg_psm - p.avg_psm) / NULLIF(p.avg_psm, 0) * 100)::numeric, 1)  AS mom_change,
+        COALESCE(s.total_units, 0)::integer                                          AS total_units,
+        COALESCE(s.pipeline_units, 0)::integer                                       AS pipeline_units
+      FROM curr c
+      LEFT JOIN prev p ON c.area_name_en = p.area_name_en
+      LEFT JOIN supply s ON c.area_name_en = s.area_name_en
+      WHERE c.txn_count >= 5
+        AND c.avg_psm > 0
+      ORDER BY c.txn_count DESC
+      LIMIT 80
+    `
+    return rows.map(mapToCommunity)
+  } catch {
+    return []
+  }
+}
+
+export default async function CommunitiesPage() {
+  const data = await fetchCommunities()
+
+  const totalTxns = data.reduce((s, c) => s + (c.transactions30d || 0), 0)
+  const avgPsf = data.length > 0
+    ? Math.round(data.reduce((s, c) => s + c.avgPricePerSqft, 0) / data.length)
+    : 0
 
   return (
     <div className="flex w-full flex-col px-0 sm:px-8 xl:px-12 py-0 sm:py-6 space-y-6 max-w-7xl mx-auto pb-24 lg:pb-12">
@@ -24,7 +130,7 @@ export default function CommunitiesPage() {
           <div className="flex items-center gap-3">
             <div className="h-2.5 w-2.5 rounded-full bg-green-500 animate-ping" />
             <h1 className="font-mono text-xs tracking-widest text-muted-foreground uppercase font-bold">
-              Community Screener — {MOCK_COMMUNITIES.length} Markets
+              Community Screener — {data.length} Markets
             </h1>
           </div>
           <h2 className="font-serif text-3xl sm:text-4xl font-bold text-foreground">
@@ -38,12 +144,14 @@ export default function CommunitiesPage() {
         {/* Macro stats */}
         <div className="flex flex-wrap lg:flex-nowrap gap-4 lg:min-w-[440px]">
           <div className="flex-1 rounded-xl bg-background border border-border/50 p-4">
-            <p className="font-mono text-xs text-muted-foreground mb-1">Avg Gross Yield</p>
-            <p className="font-mono text-xl md:text-2xl font-bold text-accent">{avgYield}%</p>
+            <p className="font-mono text-xs text-muted-foreground mb-1">Areas Tracked</p>
+            <p className="font-mono text-xl md:text-2xl font-bold text-accent">{data.length}</p>
           </div>
           <div className="flex-1 rounded-xl bg-background border border-border/50 p-4">
-            <p className="font-mono text-xs text-muted-foreground mb-1">Top Yield</p>
-            <p className="font-mono text-xl md:text-2xl font-bold text-emerald-400">{topYield}%</p>
+            <p className="font-mono text-xs text-muted-foreground mb-1">Avg AED/sqft</p>
+            <p className="font-mono text-xl md:text-2xl font-bold text-emerald-400">
+              {avgPsf.toLocaleString()}
+            </p>
           </div>
           <div className="flex-1 rounded-xl bg-background border border-border/50 p-4">
             <p className="font-mono text-xs text-muted-foreground mb-1">Txns (30d)</p>
@@ -56,12 +164,12 @@ export default function CommunitiesPage() {
 
       {/* Data disclaimer */}
       <p className="text-[11px] font-mono text-muted-foreground/50 px-1">
-        Data sourced from DLD transactions and listing APIs. Yield calculations based on 12-month rolling averages. Updated periodically.
+        Source: Dubai Land Department — Feb 2026 transactions
       </p>
 
       {/* Table */}
       <section>
-        <CommunitiesTable data={MOCK_COMMUNITIES} />
+        <CommunitiesTable data={data} />
       </section>
 
     </div>

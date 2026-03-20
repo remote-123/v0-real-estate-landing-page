@@ -28,3 +28,7 @@ next-env.d.ts
 
 # DLD data files
 /dld_data/
+.env*.local
+
+# Local MCP config (contains access tokens)
+.mcp.json

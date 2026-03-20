@@ -16,6 +16,12 @@ interface DistressFeedCardProps {
     currentPrice: number
     currency?: string
     externalUrl?: string
+    psf: number
+    distressScore: number
+    distressTags: string[]
+    areaBenchmarkPsf: number | null
+    domTier: 'fresh' | 'aging' | 'stale' | 'overdue'
+    isOffplanDrop: boolean
 }
 
 export function DistressFeedCard({
@@ -30,6 +36,12 @@ export function DistressFeedCard({
     currentPrice,
     currency = "AED",
     externalUrl,
+    psf,
+    distressScore,
+    distressTags,
+    areaBenchmarkPsf,
+    domTier,
+    isOffplanDrop: _isOffplanDrop,
 }: DistressFeedCardProps) {
     const priceDropValue = originalPrice - currentPrice
     const priceDropPercentage = ((priceDropValue / originalPrice) * 100).toFixed(1)
@@ -92,9 +104,19 @@ export function DistressFeedCard({
                             <Badge variant="secondary" className="text-[10px] uppercase font-mono tracking-wider bg-secondary rounded-sm">
                                 [{formatFull(sizeSqft)} SQFT]
                             </Badge>
-                            <Badge variant="outline" className="text-[10px] uppercase font-mono tracking-wider text-muted-foreground border-border/50 rounded-sm">
+                            <Badge variant="outline" className={`text-[10px] uppercase font-mono tracking-wider border-border/50 rounded-sm ${
+                                domTier === 'overdue' ? 'text-red-500/80 border-red-500/30' :
+                                domTier === 'stale' ? 'text-orange-500/80 border-orange-500/30' :
+                                domTier === 'aging' ? 'text-yellow-500/80 border-yellow-500/30' :
+                                'text-muted-foreground'
+                            }`}>
                                 [{daysOnMarket}D ON MARKET]
                             </Badge>
+                            {distressTags.map(tag => (
+                                <Badge key={tag} variant="outline" className="text-[10px] uppercase font-mono tracking-wider text-accent border-accent/30 rounded-sm">
+                                    {tag.replace(/_/g, ' ')}
+                                </Badge>
+                            ))}
                         </div>
                     </div>
                 </div>
@@ -112,6 +134,17 @@ export function DistressFeedCard({
                             </span>
                         </div>
 
+                        {psf > 0 && (
+                            <p className="font-mono text-[10px] text-muted-foreground">
+                                AED {psf.toLocaleString()}/sqft
+                                {areaBenchmarkPsf && (
+                                    <span className={psf < areaBenchmarkPsf * 0.95 ? " text-accent" : ""}>
+                                        {" "}(area avg: {areaBenchmarkPsf.toLocaleString()})
+                                    </span>
+                                )}
+                            </p>
+                        )}
+
                         <div className="flex items-center gap-1 sm:justify-end text-accent">
                             <span className="text-xs font-medium">DROP</span>
                             <span className="font-mono text-lg font-bold tracking-tight">
@@ -120,11 +153,20 @@ export function DistressFeedCard({
                         </div>
                     </div>
 
-                    <div className="flex-shrink-0 text-accent">
+                    <div className="flex-shrink-0 flex flex-col items-end gap-2">
                         <div className="flex items-center gap-1 rounded bg-accent/10 px-2.5 py-1 text-accent ring-1 ring-accent/20">
                             <ArrowDownRight className="h-3.5 w-3.5" />
                             <span className="font-mono text-sm font-bold">{priceDropPercentage}%</span>
                         </div>
+                        {distressScore > 0 && (
+                            <div className={`flex items-center gap-1 rounded px-2 py-1 text-[10px] font-mono font-bold ring-1 ${
+                                distressScore >= 60 ? 'bg-red-500/10 text-red-400 ring-red-500/20' :
+                                distressScore >= 35 ? 'bg-orange-500/10 text-orange-400 ring-orange-500/20' :
+                                'bg-yellow-500/10 text-yellow-400 ring-yellow-500/20'
+                            }`}>
+                                SCORE {distressScore}
+                            </div>
+                        )}
                     </div>
 
                 </div>

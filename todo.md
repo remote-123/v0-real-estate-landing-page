@@ -1,21 +1,70 @@
-- put on marketing skills hat and create a "marketing-to-do-list" readme file that focuses on new pipelines and strategies to get more leads. Keep a list of existing live pipelines already completed and what's next to build.
+# North Capital DXB — To-Do Capture List
 
-- put on a sales hat and create a "sales-to-do-list" readme file that focuses on new pipelines and strategies to get more leads. Keep a list of existing live pipelines already completed and what's next to build.
+## Backlog -- add any items to review (big or small), each item is just a prompt that will need SKILLS refinement
 
-- put on a operations hat that reads the marketing and sales hat to build a operational roadmap of what needs to be built. Keep a list of existing live pipelines already completed and what's next to build.
 
-- put on a techhnical hat that reads the marketing and sales hat to build a technical roadmap of what needs to be built. Keep a list of existing live pipelines already completed and what's next to build.
 
-- Distress deals Telegram alert: Build an automated daily digest that scrapes/aggregates distress property deals from Property Finder and Bayut, then pushes a formatted summary to a Telegram channel/bot once per day. Include price, location, discount %, and direct listing link.
+- [x] Create Strategic READMEs for every C-Suite: [CEO-GROWTH.md](file:///Users/hl/Documents/GitHub/v0-real-estate-landing-page/CEO-GROWTH.md), [CMO-MARKETING.md](file:///Users/hl/Documents/GitHub/v0-real-estate-landing-page/CMO-MARKETING.md), [CTO-TECHNICAL.md](file:///Users/hl/Documents/GitHub/v0-real-estate-landing-page/CTO-TECHNICAL.md), [COO-OPERATIONS.md](file:///Users/hl/Documents/GitHub/v0-real-estate-landing-page/COO-OPERATIONS.md), [CRO-SALES.md](file:///Users/hl/Documents/GitHub/v0-real-estate-landing-page/CRO-SALES.md). focus on new strategies to get more visits.
 
-- Landing page hero section terminal button: Add a visually compelling CTA button to the hero section that links to the Terminal market intelligence page. Make it feel premium and interactive — think glowing border, subtle animation, or a terminal-style cursor effect that draws the eye without being gimmicky.
+- [x] DFM Real Estate Index integration in terminal page - goal is for the user to see liquid market as a leading indicator for what's to come for real estate market in dubai
+- [x] Supabase MCP Database authenticated and configured locally with custom STDIO runner
+- [ ] Fine-tune Reddit to be useful for operations (Context awareness, Thread scraping, Lead classification)
 
-- Terminal market intelligence copywriting overhaul: Rewrite all drill-down data sections (economic indicators, Golden Visa issuance, interest rates, transaction volumes, etc.) with purposeful, trust-building copy that connects raw data to real investment implications for Dubai real estate. Each data point should answer "so what?" for a buyer or investor — e.g. Golden Visa issuance trends → more permanent residents → lower churn, reduced supply pressure, price floor stability. No AI-generic filler. Every sub-page and data rotation should be written with SEO, AEO (Answer Engine Optimization), and GEO (Generative Engine Optimization) in mind — structured for both human readers and AI citation.
 
-- Terminal live market ticker cards: Add two persistent cards to the Terminal landing page — (1) DUBAIRESI token showing current price and 24h change % with directional indicator, and (2) Dubai central bank base interest rate with last-updated timestamp. Cards should be compact, data-dense, and visually consistent with the terminal aesthetic.
 
-- Terminal X (Twitter) follow CTA: Integrate a contextual prompt or persistent element on the Terminal page encouraging users to follow on X for feature updates and market alerts. Placement and format should feel native to the product, not bolted-on — consider a footer callout, a dismissible banner on first visit, or inline within the "what's new" section.
 
-- Terminal feature request flow: Build a lightweight in-product feature request mechanism on the Terminal page. To prevent spam without friction for real users: use a honeypot field + rate limiting by IP, optionally a simple math or logic CAPTCHA (no reCAPTCHA — bad UX). Keep the form minimal (idea, email optional). Show a public-facing "requested features" count or upvote wall to create social proof and reduce duplicate submissions.
+---
 
-- WhatsApp Community broadcast funnel: Build a lead capture and nurture pipeline that funnels prospects into a WhatsApp Community. Entry points on the landing page (e.g. "Join our Dubai Investor Community" CTA) capture the lead and route them via WhatsApp API or a join link. Once inside the community, run a structured broadcast cadence — market updates, distress deal alerts, Golden Visa news, interest rate changes — content that positions us as the trusted signal in Dubai real estate. Define broadcast frequency, content calendar structure, and opt-in/opt-out compliance. Consider a simple backend (webhook or n8n/Make automation) that triggers broadcasts from existing data pipelines (e.g. reusing the Telegram distress deal feed).
+## In Progress
+
+- [ ] Community Screener — complete data layer before making visible to users
+
+---
+
+## Site & Product
+
+- [ ]
+- [ ]
+
+---
+
+## Content & Copy
+
+- [ ]
+- [ ]
+
+---
+
+## Tech & Pipelines
+
+
+- [x] Reddit Monitor Pipeline — voice-trained AI reply drafts sent to Telegram every 4hrs. Monitors r/DubaiExpats, r/dubai, r/expats for property questions. Fetches user's own Reddit comment history → trains Gemini on writing style → generates non-slop replies with real Supabase data → routes to Telegram for 30s copy-paste approval. See: /app/api/reddit-monitor/
+- [ ]
+
+---
+
+## Marketing & Growth
+
+- [ ]
+- [ ]
+
+---
+
+## Done
+
+- [x] RERA Broker #95133 added to hero, trust signals, about page, footer
+- [x] Founder section rewritten with fintech background narrative
+- [x] Homepage section order restructured (Founder moved up, KnowledgeHub moved down)
+- [x] Distress deal cards — full card clickable to calendar link
+- [x] Golden Visa Wizard — email now correctly POSTing to Google Sheets (was broken)
+- [x] Community Screener hidden from sidebar until ready
+- [x] Mobile sticky bar hidden on /studio page
+- [x] Telegram X post pipeline — 3 PF + 3 Bayut deals per run
+- [x] Blog-to-XPost pipeline — bypasses Sanity, sends directly to Telegram
+- [x] cron-job.org configured for automatic 4-hourly X posting
+- [x] LinkedIn post generator pipeline — 3 rotating formats, sends draft to Telegram
+- [x] LinkedIn company page description written
+- [x] Blog sidebar form — instant checkmark, no calendar, "within 24 hours" message
+- [x] Blog sidebar form — "How did you hear about us?" field added
+- [x] Blog index — compact list cards for all posts below the feature
+- [x] Blog generator prompt — anti-AI-slop rules, banned phrases, forced specificity

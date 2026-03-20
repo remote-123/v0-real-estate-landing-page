@@ -6,13 +6,14 @@ import { Button } from "@/components/ui/button"
 import { Calendar } from "lucide-react"
 import Link from "next/link"
 
-export function DistressFilters() {
+export function DistressFilters({ communities = [] }: { communities?: string[] }) {
     const router = useRouter()
     const searchParams = useSearchParams()
 
     const activeCategory = searchParams.get('type') || "All"
     const activeSort = searchParams.get('sort') || "biggest-drop"
     const activeSource = searchParams.get('source') || "pf"
+    const activeArea = searchParams.get('area') || ''
 
     const categories = ["All", "Apartment", "Villa", "Townhouse", "Penthouse"]
 
@@ -66,7 +67,7 @@ export function DistressFilters() {
             </div>
 
             {/* Sorting Dropdown */}
-            <div className="w-full sm:w-auto shrink-0 flex justify-end">
+            <div className="w-full sm:w-auto shrink-0 flex flex-col sm:flex-row gap-2 justify-end">
                 <select
                     value={activeSort}
                     onChange={(e) => updateFilter('sort', e.target.value)}
@@ -76,6 +77,18 @@ export function DistressFilters() {
                     <option value="biggest-percent">Sort by: Biggest % Drop</option>
                     <option value="recent">Sort by: Recently Listed</option>
                 </select>
+                {communities.length > 0 && (
+                    <select
+                        value={activeArea}
+                        onChange={(e) => updateFilter('area', e.target.value)}
+                        className="w-full sm:w-auto bg-card border border-border rounded-md px-4 py-2.5 text-xs font-medium text-foreground outline-none focus:ring-1 focus:ring-accent appearance-none cursor-pointer"
+                    >
+                        <option value="">All Areas</option>
+                        {communities.map(c => (
+                            <option key={c} value={c}>{c}</option>
+                        ))}
+                    </select>
+                )}
             </div>
 
         </div>

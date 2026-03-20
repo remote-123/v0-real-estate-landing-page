@@ -10,6 +10,7 @@
 - Never continuously check status after spawning a swarm — wait for results
 - ALWAYS read a file before editing it
 - NEVER commit secrets, credentials, or .env files
+- Summarize your work in the DAILY_LOG.md file after every task
 
 ## File Organization
 

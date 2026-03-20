@@ -1,0 +1,342 @@
+# North Capital DXB — Growth Automation Playbook
+*Solo operator edition — everything either runs itself or routes to Telegram for 30-second human approval*
+
+---
+
+## Context: Your Existing Automation Stack
+
+```
+Email (PR/PDF) → Apps Script → /api/ai-blog-generator → Gemini → Sanity (draft) → Telegram (approve to publish)
+Apify (Bayut/PF) → Supabase rental_listings → /terminal/rental-drops
+cron-job.org → X post pipeline (distress deals, 4x/day)
+LinkedIn pipeline → 3 rotating formats → Telegram → manual publish
+```
+
+**What's missing:** All of the above are *content pipelines*, not *discovery pipelines*. They produce content but don't yet pull new audiences into the top of the funnel. These 7 pipelines fix that.
+
+---
+
+## Pipeline Rankings (Impact vs Effort)
+
+| # | Pipeline | Traffic Type | Effort | Impact |
+|---|----------|-------------|--------|--------|
+| 1 | **Programmatic SEO — Community Pages** | Organic search | Low | 🔥🔥🔥 |
+| 2 | **Weekly Data Digest Newsletter** | Repeat + referral | Low | 🔥🔥🔥 |
+| 3 | **Reddit/Forum Signal Monitor → Telegram** | Referral | Medium | 🔥🔥 |
+| 4 | **WhatsApp/Telegram Group Distribution Bot** | Direct/referral | Low | 🔥🔥🔥 |
+| 5 | **Monthly DLD Data Report → Journalist Outreach** | Backlinks + referral | Medium | 🔥🔥 |
+| 6 | **AEO FAQ Auto-Generator** | AI search / featured snippets | Low | 🔥🔥 |
+| 7 | **YouTube Shorts Script Pipeline** | Search + social | Medium | 🔥 |
+
+---
+
+## Pipeline 1 — Programmatic SEO: Community Pages
+### *"Turn your Supabase data into 50+ Google-indexable property pages"*
+
+**The insight:** You already have `rental_listings` (live Bayut/PF data) and `mock-communities` (40+ areas). Every community is a high-intent keyword:
+- "Dubai Marina rental prices 2026" — 2,400 searches/mo
+- "JVC rental yield" — 1,100 searches/mo
+- "Business Bay average rent" — 1,800 searches/mo
+
+None of your competitors serve these as real data pages. They serve static blog posts. You have live data.
+
+**What to build:**
+```
+/terminal/communities/[slug]  ← already scaffolded, just needs data
+/terminal/communities/dubai-marina
+/terminal/communities/jumeirah-village-circle
+... (40+ pages, all pre-built from mock-communities.ts)
+```
+
+**Automation flow:**
+```
+Supabase (rental_listings + buildings) 
+  → Next.js ISR (revalidate: 86400) 
+  → /terminal/communities/[slug] 
+  → Dynamic metadata with real numbers ("Dubai Marina avg rent AED 12,400/mo")
+  → JSON-LD RealEstateListing schema
+  → Google indexes 40+ pages per deploy
+```
+
+**Pipeline cost:** ~1 day to build the data aggregation query + page template. Then it runs forever.
+
+**SEO config per page:**
+```typescript
+// Title: "Dubai Marina Rental Prices & Yields 2026 | North Capital DXB"
+// Description: "Live rental data: AED X avg/mo, X.X% gross yield, X transactions in 30 days."
+// JSON-LD: RealEstateListing + BreadcrumbList + FAQPage
+```
+
+**Estimated organic traffic:** 200–800 visits/month within 90 days of indexing. Compounding.
+
+---
+
+## Pipeline 2 — Weekly Data Digest Newsletter
+### *"Every Monday, your data generates itself + emails your list automatically"*
+
+**The insight:** You have live rental data in Supabase. Every week it changes. A newsletter that reports those changes is 95% auto-generated — you just hit send.
+
+**What it produces each week:**
+```
+📊 North Capital Weekly — [Date]
+
+TOP 3 RENTAL DROPS THIS WEEK
+  → [Area]: AED X,XXX/mo (was X,XXX, -8%)
+  → [Area]: ...
+
+YIELD LEADER (from communities screener)
+  → Dubai Sports City: 8.1% gross
+
+NEW DISTRESS DEALS THIS WEEK
+  → 3 properties at >25% below market
+
+MACRO SIGNAL
+  → One line from terminal's Economic data (GDP, M2, etc.)
+
+[CTA: View full data → northcapitaldxb.com/terminal]
+```
+
+**Automation flow:**
+```
+cron-job.org (Monday 6AM UTC)
+  → /api/weekly-digest (new route)
+  → Queries Supabase: rental_listings (top drops, new listings)
+  → Queries Sanity: distress deals added this week
+  → Gemini: generates the narrative (2–3 sentences of analysis)
+  → Sends draft to Telegram for 30-second review
+  → You hit ✅ in Telegram → email sends via Resend/Mailchimp API
+  → Also auto-posts a condensed version to LinkedIn
+```
+
+**Email capture placement:**
+- Terminal page header: "Get this data weekly → email"
+- Blog page sidebar (replace/augment the advisor form)
+- Exit-intent popup on /terminal
+
+**Why this works for traffic:** Each email links 5–6 times back to the site. A list of 500 = 200–400 weekly visits from warm leads, not cold traffic.
+
+---
+
+## Pipeline 3 — Reddit / Forum Signal Monitor → Telegram
+### *"Know when someone asks about Dubai property on Reddit. Answer with data. Link to your terminal."*
+
+**The insight:** r/DubaiExpats, r/dubai, r/expats, r/ExpatFinance get 3–10 Dubai property questions per day. The answers there are mostly opinions. You have data. A single well-placed data-backed reply with a link to your terminal is worth 20–50 visits.
+
+**What to monitor:**
+- r/DubaiExpats: "rental", "apartment", "yield", "invest", "buy vs rent"
+- r/dubai: "property", "real estate", "rent increase"
+- r/expats: "Dubai move", "Dubai property"
+- r/personalfinance (globally): "Dubai real estate"
+
+**Automation flow:**
+```
+cron-job.org (every 4 hours)
+  → /api/reddit-monitor (new route)
+  → Reddit RSS feed for each subreddit + keyword filter
+    (e.g. https://www.reddit.com/r/DubaiExpats/search.json?q=rental&sort=new)
+  → Filter: only posts < 6 hours old, no previous reply
+  → Gemini: reads post + generates a data-backed 2-paragraph reply
+    with terminal link: "You can see live rental data here: northcapitaldxb.com/terminal/rental-drops"
+  → Sends post title + generated reply to Telegram
+  → You paste + post manually (no shadow-ban risk, human posts = authentic)
+```
+
+**Implementation:** Pure Next.js API route + Reddit public JSON API (no auth needed for reading).
+
+**Effort:** 1 day. No Reddit API key needed for reading public posts.
+
+**Traffic yield:** Each quality reply = 10–80 visits. 3 replies/week = 150–300 monthly visits from warm, actively-researching audience.
+
+---
+
+## Pipeline 4 — WhatsApp/Telegram Group Distribution Bot
+### *"Your distress deals and data summaries auto-posted to expat property groups"*
+
+**The insight:** Dubai has dozens of active WhatsApp and Telegram groups for expat investors (Dubai Real Estate Investors, Dubai Property Network, UAE Expat Finance). These have thousands of members. A weekly distress deal summary with a link to your terminal = direct traffic from motivated buyers.
+
+**Two-track approach:**
+
+**Track A — Your own Telegram channel (start this week):**
+```
+Create: t.me/NorthCapitalDXB (or similar)
+→ Extend your existing LinkedIn pipeline to also post to this channel
+→ Weekly: distress deal digest, rental data summary, macro signal
+→ Cross-promote in other groups: "DM me for the North Capital data channel"
+```
+
+**Track B — Group distribution (2–4 weeks to set up):**
+```
+Join: Dubai property WhatsApp/Telegram groups as yourself
+→ Weekly: post the distress deal data summary with terminal link
+→ Do NOT spam: one value-add post per week per group, positioned as market data sharing
+→ Build credibility → group members click to see the full data → some book a call
+```
+
+**Automation for Track A:**
+```
+Extend existing distress-deals cron:
+  → After posting to X, also send to your Telegram channel
+  → Weekly digest post: Supabase query → Gemini → Telegram channel
+```
+
+**Traffic yield:** 100–500 visits/month depending on group size. Converts better than social media because the audience is already in "property research mode."
+
+---
+
+## Pipeline 5 — Monthly DLD Data Report → Journalist Outreach
+### *"Auto-generate a press-ready market summary. Email Dubai journalists. Get quoted. Get backlinks."*
+
+**The insight:** Every month, you have data that journalists need: rental trends, yield movements, transaction volumes. They currently source this from Bayut/Property Monitor reports. You can compete — and your data is real, not marketing material, which journalists prefer.
+
+**What the auto-report contains:**
+```
+NORTH CAPITAL DXB — [Month] Dubai Rental Market Report
+
+KEY FINDINGS:
+- Average 2BR rent in [Month]: AED X,XXX/mo ([±X%] vs last month)
+- Top-yield community: [Area] at X.X%
+- Fastest rental drop: [Area], -X% month-over-month
+- New listings added: X (from Bayut + PropertyFinder)
+
+DISTRESS DEAL ACTIVITY:
+- X properties listed below AED 2M AED in [Month]
+- Average discount vs market: X%
+
+DATA SOURCE: Live aggregation from Bayut and PropertyFinder listings via North Capital DXB terminal.
+```
+
+**Automation flow:**
+```
+cron-job.org (1st of every month)
+  → /api/monthly-report
+  → Supabase aggregation: rental trends by area, by bedroom type
+  → Gemini: generates press-ready narrative (authoritative, not promotional)
+  → Creates the report as a Sanity blog post (SEO asset)
+  → Sends journalist outreach email draft to Telegram
+  → You personalize + send to 10–15 Dubai RE journalists/bloggers
+```
+
+**Journalist targets (build a static list once):**
+- The National (UAE) — property desk: 3–4 reporters
+- Gulf News — real estate section
+- Khaleej Times — property reporter
+- Arabian Business — real estate
+- Property Monitor (they write reports, sometimes cite competitors)
+- Dubai real estate bloggers with readership
+
+**Traffic yield:** 1 backlink from The National = 200+ authority visits. Each mention = credibility signal. Monthly cadence builds relationships over time.
+
+---
+
+## Pipeline 6 — AEO FAQ Auto-Generator (Answer Engine Optimization)
+### *"Get cited by ChatGPT, Perplexity, and Google AI Overviews for Dubai property questions"*
+
+**The insight:** 30–40% of property research now starts with AI questions. "What's the average rental yield in Dubai?" → Google AI Overview or ChatGPT answers it. Right now, neither cites you. They cite Bayut, Property Monitor, and Zawya. This pipeline fixes that.
+
+**How AEO works:** AI engines prefer to cite pages that:
+1. Directly answer a specific question
+2. Have structured FAQ schema
+3. Are regularly updated
+4. Contain numbers/data
+
+You have all of this. You just haven't structured it for AI citation.
+
+**What to build:**
+```
+/terminal/faq  (or embedded FAQ sections on existing pages)
+
+Auto-generated FAQ entries from your live data:
+- "What is the average rental yield in Dubai?" → "Based on live aggregation across 40 communities, the average gross yield is X.X% as of [Month]."
+- "What is the cheapest area to rent in Dubai?" → "International City averages AED X,XXX/month for a 1BR..."
+- "Is Dubai property a good investment?" → One of your balanced bull/bear analyses
+- "How do I find distress deals in Dubai?" → Points to your terminal
+```
+
+**Automation flow:**
+```
+Monthly cron:
+  → Supabase query: avg yield per area, avg rental price per bedroom type
+  → Gemini: generates Q&A pairs in structured format (direct answers, no fluff)
+  → Updates a dedicated FAQ page in Sanity with fresh data
+  → Page includes: FAQPage JSON-LD schema for every Q&A
+  → Google re-indexes → feeds into AI Overviews
+```
+
+**AI citation targets:**
+- "average rent in [Dubai area]"
+- "rental yield Dubai [community]"
+- "is Dubai real estate overpriced"
+- "best areas to invest in Dubai 2026"
+- "Dubai property vs other cities"
+
+**Traffic yield:** Compounding. Once cited by an AI engine, you stay cited unless competitors build better pages. And no one in Dubai real estate is doing this systematically.
+
+---
+
+## Pipeline 7 — YouTube Shorts Script Pipeline
+### *"Your blog posts auto-become 60-second video scripts. You record once a week."*
+
+This is the only pipeline that requires YOU on camera — but the script is fully automated.
+
+**Automation flow:**
+```
+When a new Sanity blog post is published (webhook):
+  → /api/youtube-script
+  → Gemini: extracts 3 data points from the post + generates a 60-second video script
+    Format: Hook (5s) → Stat 1 (15s) → Stat 2 (15s) → Stat 3 (15s) → CTA (10s)
+  → Sends to Telegram with: script + suggested B-roll text overlays
+  → You record on your phone, post as YouTube Shorts + Instagram Reel
+```
+
+**Why YouTube specifically:**
+- YouTube = Google's search engine for video
+- "Dubai Marina rental prices 2026" has video intent
+- A 60-second script takes 5 minutes to film
+- YouTube Shorts have their own discovery algorithm
+
+**Traffic yield:** Lower than the others (3-6 months to build), but compounds because YouTube ranks in Google search results, providing a second organic entry point to the site.
+
+---
+
+## Implementation Order (Solo Operator Priority)
+
+### This Week (Build Once, Runs Forever):
+1. **Pipeline 4, Track A** — Create your Telegram channel. Extend distress-deals cron to also push to it. 2 hours.
+2. **Pipeline 6** — Build `/terminal/faq` with your first 10 Q&As (manual first pass). Add FAQPage JSON-LD. 3 hours.
+
+### Next 2 Weeks:
+3. **Pipeline 1** — Programmatic community pages. Data aggregation query + Next.js page template. 1 day.
+4. **Pipeline 3** — Reddit monitor API route + Telegram delivery. 1 day.
+
+### Month 2:
+5. **Pipeline 2** — Weekly email digest. Set up Resend/Mailchimp, build the API route, deploy. 2 days.
+6. **Pipeline 5** — Monthly report auto-generator. 1 day to build, then automated.
+
+### Month 3+:
+7. **Pipeline 7** — YouTube Shorts script generator. Add after you have a publishing rhythm.
+
+---
+
+## Estimated Traffic Stack (Month 3)
+
+| Pipeline | Monthly Visits |
+|----------|---------------|
+| Programmatic SEO (40+ community pages) | 400–900 |
+| Email newsletter (click-through from list) | 200–400 |
+| Reddit replies (referral) | 150–300 |
+| Telegram/WhatsApp groups | 100–300 |
+| AEO (AI citations + featured snippets) | 100–300 |
+| Journalist mentions (backlink traffic) | 50–200 |
+| YouTube Shorts | 50–150 |
+| **Total new automated traffic** | **~1,050–2,550/month** |
+
+On top of whatever you're currently getting. And all of it compounds — the SEO and AEO pipelines get stronger every month.
+
+---
+
+## The Meta-Principle
+
+> Every pipeline should: **run itself → route to Telegram for 30-second approval → publish**.  
+> You're the editor, not the writer. The machines write, you curate.
+
+This is how you scale a solo advisory to look like a 10-person media operation.

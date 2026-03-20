@@ -11,7 +11,7 @@ import {
   type ColumnDef,
   type SortingState,
 } from '@tanstack/react-table'
-import { ArrowUpDown, ArrowUp, ArrowDown, Search, TrendingUp, TrendingDown } from 'lucide-react'
+import { ArrowUpDown, ArrowUp, ArrowDown, Search, TrendingUp, TrendingDown, Info } from 'lucide-react'
 import { Community } from '@/lib/mock-communities'
 import { cn } from '@/lib/utils'
 
@@ -25,6 +25,7 @@ const formatNumber = (n: number) =>
   new Intl.NumberFormat('en-US').format(n)
 
 function YieldBadge({ value }: { value: number }) {
+  if (value === 0) return <span className="font-mono text-xs text-muted-foreground/30">—</span>
   const color =
     value >= 7 ? 'text-emerald-400 bg-emerald-400/10 ring-emerald-400/20' :
     value >= 5.5 ? 'text-yellow-400 bg-yellow-400/10 ring-yellow-400/20' :
@@ -37,12 +38,21 @@ function YieldBadge({ value }: { value: number }) {
 }
 
 function MomBadge({ value }: { value: number }) {
-  const isPos = value >= 0
+  const num = Number(value)
+  const isPos = num >= 0
   return (
     <span className={cn('flex items-center gap-0.5 font-mono text-xs font-semibold',
       isPos ? 'text-emerald-400' : 'text-red-400')}>
       {isPos ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-      {isPos ? '+' : ''}{value.toFixed(1)}%
+      {isPos ? '+' : ''}{num.toFixed(1)}%
+    </span>
+  )
+}
+
+function InfoTip({ text }: { text: string }) {
+  return (
+    <span title={text} className="ml-1 inline-flex items-center cursor-help">
+      <Info className="h-3 w-3 text-muted-foreground/40 hover:text-muted-foreground transition-colors" />
     </span>
   )
 }
@@ -130,6 +140,9 @@ export function CommunitiesTable({ data }: Props) {
         </button>
       ),
       cell: ({ row }) => {
+        if (row.original.totalUnits === 0) {
+          return <span className="font-mono text-sm text-muted-foreground/30 tabular-nums">—</span>
+        }
         const aptPct = Math.round((row.original.apartments / row.original.totalUnits) * 100)
         return (
           <div className="text-right">
@@ -200,7 +213,9 @@ export function CommunitiesTable({ data }: Props) {
       accessorKey: 'momChange',
       header: ({ column }) => (
         <button className="flex items-center justify-end w-full" onClick={() => column.toggleSorting()}>
-          MoM Δ <SortIcon sorted={column.getIsSorted()} />
+          MoM Δ
+          <InfoTip text="Month-over-Month change: how much the avg price per sqft moved vs the previous month. Green = rising, red = falling." />
+          <SortIcon sorted={column.getIsSorted()} />
         </button>
       ),
       cell: ({ getValue }) => (
@@ -214,14 +229,16 @@ export function CommunitiesTable({ data }: Props) {
       accessorKey: 'avgDaysOnMarket',
       header: ({ column }) => (
         <button className="flex items-center justify-end w-full" onClick={() => column.toggleSorting()}>
-          DOM <SortIcon sorted={column.getIsSorted()} />
+          DOM
+          <InfoTip text="Days on Market: average number of days a listing sits before it sells. Lower = faster-moving market." />
+          <SortIcon sorted={column.getIsSorted()} />
         </button>
       ),
-      cell: ({ getValue }) => (
-        <span className="font-mono text-sm text-muted-foreground tabular-nums">
-          {getValue<number>()}d
-        </span>
-      ),
+      cell: ({ getValue }) => {
+        const val = getValue<number>()
+        if (val === 0) return <span className="font-mono text-sm text-muted-foreground/30 tabular-nums">—</span>
+        return <span className="font-mono text-sm text-muted-foreground tabular-nums">{val}d</span>
+      },
       size: 70,
     },
   ], [])

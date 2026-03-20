@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { Activity, ArrowDownRight, Clock, MapPin, Search } from "lucide-react"
 import { DistressFeedCard } from "@/components/terminal/distress-feed-card"
 import { DistressFilters } from "@/components/terminal/distress-filters"
+import { sql } from "@/lib/db"
 
 // Note: If using `searchParams`, Next.js app router automatically opts into dynamic rendering.
 // However, the underlying fetch calls will still independently cache their payloads.
@@ -43,6 +44,7 @@ async function fetchBayutDeals() {
             const createdDate = new Date(item.meta?.created_at || Date.now())
             const daysOnMarket = Math.max(1, Math.floor((Date.now() - createdDate.getTime()) / (1000 * 3600 * 24)))
 
+            const isOffplanDrop = !!(offplanOriginal && offplanOriginal > currentPrice)
             return {
                 id: item.id.toString(),
                 title: item.title,
@@ -55,6 +57,7 @@ async function fetchBayutDeals() {
                 currentPrice: currentPrice,
                 createdAt: createdDate.getTime(),
                 externalUrl: item.meta?.url || '',
+                isOffplanDrop,
             }
         });
     } catch (error) {
@@ -108,12 +111,81 @@ async function fetchPropertyFinderDeals() {
                 currentPrice: currentPrice,
                 createdAt: createdDate.getTime(),
                 externalUrl: item.property_url || '',
+                isOffplanDrop: false,
             }
         })
     } catch (error) {
         console.error("Property Finder Fetch Error:", error)
         return []
     }
+}
+
+async function fetchAreaBenchmarks(): Promise<Map<string, number>> {
+    try {
+        const rows = await sql<{ area_name_en: string; avg_psf: number }[]>`
+      SELECT area_name_en, AVG(meter_sale_price)::numeric(10,0) AS avg_psf
+      FROM dld_transactions
+      WHERE trans_group_en = 'Sales'
+        AND meter_sale_price > 50
+        AND meter_sale_price < 10000
+        AND instance_date >= NOW() - INTERVAL '18 months'
+        AND area_name_en IS NOT NULL
+      GROUP BY area_name_en
+      HAVING COUNT(*) >= 5
+    `
+        const map = new Map<string, number>()
+        for (const r of rows) map.set(r.area_name_en.toLowerCase(), Number(r.avg_psf))
+        return map
+    } catch { return new Map() }
+}
+
+function matchBenchmark(location: string, benchmarks: Map<string, number>): number | null {
+    const parts = location.split(',').map(p => p.trim().toLowerCase()).filter(Boolean)
+    for (const [areaKey, psf] of benchmarks) {
+        for (const part of parts) {
+            if (areaKey.includes(part) || part.includes(areaKey)) return psf
+        }
+    }
+    return null
+}
+
+function getDomTier(days: number): 'fresh' | 'aging' | 'stale' | 'overdue' {
+    if (days < 14) return 'fresh'
+    if (days < 30) return 'aging'
+    if (days < 90) return 'stale'
+    return 'overdue'
+}
+
+function scoreDistress(
+    psf: number,
+    areaBenchmarkPsf: number | null,
+    days: number,
+    isOffplanDrop: boolean,
+    originalPrice: number,
+    currentPrice: number
+): { score: number; tags: string[] } {
+    let score = 0
+    const tags: string[] = []
+
+    if (days >= 90) { score += 40; tags.push('OVERDUE_90D') }
+    else if (days >= 60) { score += 30; tags.push('HIGH_DOM') }
+    else if (days >= 30) { score += 20; tags.push('AGING') }
+    else if (days >= 14) { score += 10 }
+
+    if (areaBenchmarkPsf && psf > 0) {
+        const ratio = psf / areaBenchmarkPsf
+        if (ratio < 0.85) { score += 40; tags.push('BELOW_MARKET') }
+        else if (ratio < 0.92) { score += 25; tags.push('BELOW_MARKET') }
+        else if (ratio < 0.97) { score += 10 }
+    }
+
+    if (isOffplanDrop && originalPrice > 0) {
+        const dropPct = ((originalPrice - currentPrice) / originalPrice) * 100
+        if (dropPct >= 15) { score += 20; tags.push('OFFPLAN_CUT') }
+        else if (dropPct >= 8) { score += 10; tags.push('OFFPLAN_CUT') }
+    }
+
+    return { score: Math.min(score, 100), tags }
 }
 
 export const metadata: Metadata = {
@@ -150,13 +222,27 @@ export default async function DistressDealsPage(props: {
     const source = typeof searchParams.source === 'string' ? searchParams.source : 'pf'
     const typeFilter = typeof searchParams.type === 'string' ? searchParams.type : 'All'
     const sortFilter = typeof searchParams.sort === 'string' ? searchParams.sort : 'biggest-drop'
+    const areaFilter = typeof searchParams.area === 'string' ? searchParams.area : ''
 
-    // Fetch the data requested
-    let rawDeals = []
-    if (source === 'pf') {
-        rawDeals = await fetchPropertyFinderDeals()
-    } else {
-        rawDeals = await fetchBayutDeals()
+    const [rawFetched, benchmarks] = await Promise.all([
+        source === 'pf' ? fetchPropertyFinderDeals() : fetchBayutDeals(),
+        fetchAreaBenchmarks(),
+    ])
+
+    let rawDeals = rawFetched.map((deal: any) => {
+        const psf = deal.sizeSqft > 0 ? Math.round(deal.currentPrice / deal.sizeSqft) : 0
+        const areaBenchmarkPsf = matchBenchmark(deal.location, benchmarks)
+        const { score: distressScore, tags: distressTags } = scoreDistress(
+            psf, areaBenchmarkPsf, deal.daysOnMarket, deal.isOffplanDrop, deal.originalPrice, deal.currentPrice
+        )
+        const domTier = getDomTier(deal.daysOnMarket)
+        return { ...deal, psf, areaBenchmarkPsf, distressScore, distressTags, domTier }
+    })
+
+    const communities = [...new Set(rawDeals.map((d: any) => d.location.split(',').pop()?.trim() || '').filter(Boolean))].sort() as string[]
+
+    if (areaFilter) {
+        rawDeals = rawDeals.filter((d: any) => d.location.toLowerCase().includes(areaFilter.toLowerCase()))
     }
 
     // Filter by type
@@ -178,6 +264,21 @@ export default async function DistressDealsPage(props: {
         ...deal,
         rank: index + 1
     }))
+
+    const areaStats = Object.entries(
+        deals.reduce((acc: Record<string, { count: number; totalDom: number; topScore: number }>, d: any) => {
+            const community = d.location.split(',').pop()?.trim() || 'Unknown'
+            if (!acc[community]) acc[community] = { count: 0, totalDom: 0, topScore: 0 }
+            acc[community].count++
+            acc[community].totalDom += d.daysOnMarket
+            if (d.distressScore > acc[community].topScore) acc[community].topScore = d.distressScore
+            return acc
+        }, {})
+    ).map(([area, s]: [string, any]) => ({
+        area, count: s.count,
+        avgDom: Math.round(s.totalDom / s.count),
+        topScore: s.topScore
+    })).sort((a: any, b: any) => b.count - a.count).slice(0, 6)
 
 
 
@@ -245,8 +346,27 @@ export default async function DistressDealsPage(props: {
 
             {/* FILTERS */}
             <section>
-                <DistressFilters />
+                <DistressFilters communities={communities} />
             </section>
+
+            {/* AREA INTELLIGENCE */}
+            {areaStats.length >= 2 && (
+                <section className="px-4 sm:px-0">
+                    <h3 className="font-mono text-xs tracking-widest text-muted-foreground uppercase pb-3 border-b border-border/50 flex items-center gap-2 mb-3">
+                        <MapPin className="h-3 w-3" /> Area Intelligence
+                    </h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+                        {areaStats.map((s: any) => (
+                            <div key={s.area} className="rounded-lg border border-border/50 bg-card p-3 space-y-1">
+                                <p className="text-[10px] font-mono text-muted-foreground truncate">{s.area}</p>
+                                <p className="font-mono text-sm font-bold">{s.count} <span className="text-muted-foreground font-normal text-[10px]">deals</span></p>
+                                <p className="text-[10px] text-muted-foreground">Avg DOM: {s.avgDom}d</p>
+                                {s.topScore > 0 && <p className="text-[10px] font-mono text-accent">Score {s.topScore}</p>}
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            )}
 
             {/* FEED GRID */}
             <section className="space-y-4 px-0 sm:px-0 pb-20">
@@ -265,6 +385,12 @@ export default async function DistressDealsPage(props: {
                             key={deal.id || idx}
                             {...deal}
                             rank={idx + 1}
+                            psf={deal.psf}
+                            distressScore={deal.distressScore}
+                            distressTags={deal.distressTags}
+                            areaBenchmarkPsf={deal.areaBenchmarkPsf}
+                            domTier={deal.domTier}
+                            isOffplanDrop={deal.isOffplanDrop}
                         />
                     ))}
                 </div>

@@ -1,6 +1,6 @@
 'use client'
 
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import { TrendingUp } from 'lucide-react'
 
 interface PricePoint {
@@ -12,10 +12,13 @@ interface Props {
   priceHistory: PricePoint[]
 }
 
+const ACCENT = '#10b981' // emerald-500
+
 export function CommunityCharts({ priceHistory }: Props) {
   const min = Math.min(...priceHistory.map(d => d.pricePerSqft))
   const max = Math.max(...priceHistory.map(d => d.pricePerSqft))
-  const change = ((priceHistory[11].pricePerSqft - priceHistory[0].pricePerSqft) / priceHistory[0].pricePerSqft * 100).toFixed(1)
+  const last = priceHistory[priceHistory.length - 1].pricePerSqft
+  const change = ((last - priceHistory[0].pricePerSqft) / priceHistory[0].pricePerSqft * 100).toFixed(1)
   const isPos = Number(change) >= 0
 
   return (
@@ -32,42 +35,49 @@ export function CommunityCharts({ priceHistory }: Props) {
         </span>
       </div>
 
-      <ResponsiveContainer width="100%" height={180}>
-        <LineChart data={priceHistory} margin={{ top: 4, right: 4, left: -16, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.4} />
+      <ResponsiveContainer width="100%" height={200}>
+        <AreaChart data={priceHistory} margin={{ top: 4, right: 4, left: -16, bottom: 0 }}>
+          <defs>
+            <linearGradient id="psf-fill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={ACCENT} stopOpacity={0.25} />
+              <stop offset="95%" stopColor={ACCENT} stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" stroke="#ffffff14" />
           <XAxis
             dataKey="month"
-            tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+            tick={{ fontSize: 10, fill: '#6b7280' }}
             tickLine={false}
             axisLine={false}
           />
           <YAxis
             domain={[Math.floor(min * 0.97), Math.ceil(max * 1.03)]}
-            tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+            tick={{ fontSize: 10, fill: '#6b7280' }}
             tickLine={false}
             axisLine={false}
             tickFormatter={v => `${(v / 1000).toFixed(1)}K`}
           />
           <Tooltip
             contentStyle={{
-              backgroundColor: 'hsl(var(--card))',
-              border: '1px solid hsl(var(--border))',
+              backgroundColor: '#1a1a1a',
+              border: '1px solid #2a2a2a',
               borderRadius: '8px',
               fontSize: '12px',
               fontFamily: 'monospace',
             }}
-            labelStyle={{ color: 'hsl(var(--muted-foreground))', marginBottom: 4 }}
+            labelStyle={{ color: '#9ca3af', marginBottom: 4 }}
             formatter={(value: number) => [`AED ${new Intl.NumberFormat('en-US').format(value)} / sqft`, '']}
           />
-          <Line
+          <Area
             type="monotone"
             dataKey="pricePerSqft"
-            stroke="hsl(var(--accent))"
+            stroke={ACCENT}
             strokeWidth={2}
+            fill="url(#psf-fill)"
             dot={false}
-            activeDot={{ r: 4, fill: 'hsl(var(--accent))' }}
+            activeDot={{ r: 4, fill: ACCENT, strokeWidth: 0 }}
           />
-        </LineChart>
+        </AreaChart>
       </ResponsiveContainer>
     </section>
   )

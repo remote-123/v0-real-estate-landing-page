@@ -1,5 +1,6 @@
 import { ArrowUpRight, ArrowDownRight, Minus } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { supabaseServer } from "@/lib/supabase-server"
 
 // UAE Central Bank Base Rate — updated manually when CBUAE changes rates.
 // Current: 4.40% (effective Sept 2024 — matching Fed cut cycle).
@@ -34,6 +35,27 @@ async function fetchDubaiResiPrice() {
     }
 }
 
+async function fetchDfmIndex() {
+    try {
+        const { data, error } = await supabaseServer
+            .from('market_indicators')
+            .select('*')
+            .eq('id', 'dfm-real-estate')
+            .single()
+
+        if (error || !data) return null
+
+        const change = data.value - data.previous_value
+        const pctChange = data.previous_value ? (change / data.previous_value) * 100 : 0
+        return {
+            value: data.value,
+            changePct: pctChange
+        }
+    } catch {
+        return null
+    }
+}
+
 function TrendIcon({ dir }: { dir: "up" | "down" | "neutral" }) {
     if (dir === "up") return <ArrowUpRight className="h-3.5 w-3.5" />
     if (dir === "down") return <ArrowDownRight className="h-3.5 w-3.5" />
@@ -42,9 +64,14 @@ function TrendIcon({ dir }: { dir: "up" | "down" | "neutral" }) {
 
 export async function TerminalTickerCards() {
     const resiData = await fetchDubaiResiPrice()
+    const dfmData = await fetchDfmIndex()
 
     const resiTrendDir: "up" | "down" | "neutral" = resiData
         ? resiData.change24h > 0 ? "up" : resiData.change24h < 0 ? "down" : "neutral"
+        : "neutral"
+
+    const dfmTrendDir: "up" | "down" | "neutral" = dfmData
+        ? dfmData.changePct > 0 ? "up" : dfmData.changePct < 0 ? "down" : "neutral"
         : "neutral"
 
     return (
@@ -70,6 +97,31 @@ export async function TerminalTickerCards() {
                     )}
                     {!resiData && (
                         <span className="text-[10px] text-muted-foreground/50">Price unavailable</span>
+                    )}
+                </div>
+            </div>
+
+            {/* DFM Real Estate Index Card */}
+            <div className="flex items-center gap-3 rounded-lg border border-border/50 bg-card/60 px-4 py-2.5 backdrop-blur-sm">
+                <div className="flex items-center gap-1.5">
+                    <span className="flex h-1.5 w-1.5 rounded-full bg-blue-500" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">DFM Real Estate Index</span>
+                </div>
+                <div className="flex items-baseline gap-1.5">
+                    <span className="text-sm font-bold font-mono text-foreground">
+                        {dfmData ? dfmData.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "—"}
+                    </span>
+                    {dfmData && (
+                        <span className={cn(
+                            "flex items-center gap-0.5 text-[10px] font-semibold",
+                            dfmTrendDir === "up" ? "text-emerald-500" : dfmTrendDir === "down" ? "text-red-500" : "text-muted-foreground"
+                        )}>
+                            <TrendIcon dir={dfmTrendDir} />
+                            {dfmData.changePct > 0 ? "+" : ""}{dfmData.changePct.toFixed(2)}%
+                        </span>
+                    )}
+                    {!dfmData && (
+                        <span className="text-[10px] text-muted-foreground/50">Unavailable</span>
                     )}
                 </div>
             </div>

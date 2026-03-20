@@ -3,6 +3,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { createClient } from 'next-sanity';
 import { getGeminiPrompt } from '@/lib/ai-guidelines';
+import { sendTelegramError } from '@/lib/telegram';
 
 export const maxDuration = 60;
 
@@ -86,6 +87,8 @@ export async function POST(req: Request) {
       });
     }
 
+    const emailContext = { subject: body.subject?.slice(0, 100) ?? '(none)' };
+
     let responseText: string;
 
     try {
@@ -97,14 +100,27 @@ export async function POST(req: Request) {
       });
       responseText = claudeMsg.content[0].type === 'text' ? claudeMsg.content[0].text : '';
     } catch (claudeError: any) {
-      // FALLBACK: Gemini 2.5 Flash — if Claude hits rate limit or is unavailable
       console.warn(`⚠️ Claude failed (${claudeError.message}). Falling back to Gemini 2.5 Flash...`);
-      const geminiModel = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-      const geminiResult = await geminiModel.generateContent(promptParts);
-      responseText = geminiResult.response.text();
+      try {
+        const geminiModel = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+        const geminiResult = await geminiModel.generateContent(promptParts);
+        responseText = geminiResult.response.text();
+      } catch (geminiError: any) {
+        await sendTelegramError('/api/ai-blog-generator', 'AI generation (Claude + Gemini both failed)', geminiError, emailContext);
+        console.error('❌ Both AI providers failed:', geminiError);
+        return NextResponse.json({ error: geminiError.message }, { status: 500 });
+      }
     }
-    const jsonString = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
-    const aiData = JSON.parse(jsonString);
+
+    let aiData: any;
+    try {
+      const jsonString = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
+      aiData = JSON.parse(jsonString);
+    } catch (parseError: any) {
+      await sendTelegramError('/api/ai-blog-generator', 'JSON parse of AI response', parseError, emailContext);
+      console.error('❌ JSON parse failed:', parseError);
+      return NextResponse.json({ error: 'AI returned invalid JSON' }, { status: 500 });
+    }
 
     // Safety check: ensure title is a string so .toLowerCase() doesn't crash
     const safeTitle = (aiData.title || "Untitled Market Insight").toString();
@@ -122,11 +138,22 @@ export async function POST(req: Request) {
       publishedAt: new Date().toISOString()
     };
 
+    let createdDoc: any;
+    try {
+      createdDoc = await writeClient.create(doc);
+    } catch (sanityError: any) {
+      await sendTelegramError('/api/ai-blog-generator', 'Sanity draft creation', sanityError, {
+        ...emailContext,
+        title: safeTitle.slice(0, 100),
+      });
+      console.error('❌ Sanity write failed:', sanityError);
+      return NextResponse.json({ error: sanityError.message }, { status: 500 });
+    }
 
-    const createdDoc = await writeClient.create(doc);
     return NextResponse.json({ success: true, draftId: createdDoc._id });
 
   } catch (error: any) {
+    await sendTelegramError('/api/ai-blog-generator', 'Unexpected error', error);
     console.error('❌ Blog Generation Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

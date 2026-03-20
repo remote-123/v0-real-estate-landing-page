@@ -99,7 +99,8 @@ Blog URL: ${blogUrl}
 
 ${post.suggestedHashtags}
 
-🖼 <b>Image brief:</b> ${post.imageBrief}`
+🖼 <b>Image brief:</b> ${post.imageBrief}`,
+      process.env.TELEGRAM_THREAD_ID_XPOST
     );
 
     return NextResponse.json({ success: true });

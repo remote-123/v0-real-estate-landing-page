@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { RentalTable, type RentalListing } from "@/components/terminal/rental-table"
-import { supabaseServer } from "@/lib/supabase-server"
+import { sql } from "@/lib/db"
 
 export const metadata: Metadata = {
     title: "Rental Drops Dubai | North Capital DXB",
@@ -13,39 +13,41 @@ export const metadata: Metadata = {
 async function fetchListingsFromDB(): Promise<RentalListing[]> {
     const cutoff = new Date(Date.now() - 120 * 24 * 60 * 60 * 1000).toISOString()
 
-    const { data, error } = await supabaseServer
-        .from("rental_listings")
-        .select("*")
-        .gte("listed_at", cutoff)
-        .order("listed_at", { ascending: false })
-        .limit(60)
-
-    if (error || !data) return []
-
-    return data.map((row): RentalListing => ({
-        id: row.id,
-        title: row.title ?? "",
-        cluster: row.cluster ?? "",
-        area: row.area ?? "Dubai",
-        type: row.type ?? "PROPERTY",
-        bedrooms: row.bedrooms ?? "Studio",
-        sizeSqft: row.size_sqft ?? 0,
-        annualPrice: row.annual_price ?? 0,
-        monthlyPrice: row.monthly_price ?? 0,
-        pricePerSqft: row.price_per_sqft ?? 0,
-        listedAt: new Date(row.listed_at).getTime(),
-        source: row.source as "bayut" | "pf",
-        externalUrl: row.external_url ?? "",
-    }))
+    try {
+        const data = await sql`
+            SELECT * FROM rental_listings
+            WHERE listed_at >= ${cutoff}
+            ORDER BY listed_at DESC
+            LIMIT 60
+        `
+        return data.map((row: any): RentalListing => ({
+            id: row.id,
+            title: row.title ?? "",
+            cluster: row.cluster ?? "",
+            area: row.area ?? "Dubai",
+            type: row.type ?? "PROPERTY",
+            bedrooms: row.bedrooms ?? "Studio",
+            sizeSqft: row.size_sqft ?? 0,
+            annualPrice: row.annual_price ?? 0,
+            monthlyPrice: row.monthly_price ?? 0,
+            pricePerSqft: row.price_per_sqft ?? 0,
+            listedAt: new Date(row.listed_at).getTime(),
+            source: row.source as "bayut" | "pf",
+            externalUrl: row.external_url ?? "",
+        }))
+    } catch { return [] }
 }
 
 async function enrichWithBuildingAge(listings: RentalListing[]): Promise<RentalListing[]> {
-    const { data } = await supabaseServer
-        .from("buildings")
-        .select("community_name, construction_year")
-        .not("construction_year", "is", null)
+    let data: any[] = []
+    try {
+        data = await sql`
+            SELECT community_name, construction_year FROM buildings
+            WHERE construction_year IS NOT NULL
+        `
+    } catch { return listings }
 
-    if (!data || data.length === 0) return listings
+    if (data.length === 0) return listings
 
     const yearsByComm = new Map<string, number[]>()
     for (const row of data) {
