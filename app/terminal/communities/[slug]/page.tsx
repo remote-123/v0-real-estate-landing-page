@@ -129,6 +129,20 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title: `${name} — Community Intelligence | North Capital DXB`,
     description: `Price per sqft, transaction volume, and supply pipeline for ${name}, Dubai.`,
+    openGraph: {
+      images: [
+        {
+          url: '/images/terminal-communities-social.png',
+          width: 1200,
+          height: 630,
+          alt: `${name} Community Intelligence — North Capital DXB`,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      images: ['/images/terminal-communities-social.png'],
+    },
   }
 }
 

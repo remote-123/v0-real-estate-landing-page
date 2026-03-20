@@ -1,5 +1,32 @@
 # Daily Log
 
+## 2026-03-20 — Deploy Announce: Automated Telegram SMM on feature rollout
+
+### Task
+Standalone CLI script — calls Claude Haiku + Telegram directly (no API route needed, initiated from Claude Code). Generates 3 conversion-focused messages on deploy.
+
+### Files Changed
+
+**`scripts/announce-deploy.ts`**
+- Calls Claude Haiku directly with Dubai-investor system prompt → 3 messages: teaser, benefit, CTA
+- `mode=queue` (default): msg 1 → channel now, msgs 2+3 → `TELEGRAM_THREAD_ID_SMM_QUEUE` as a draft block
+- `mode=immediate`: all 3 → channel, 4s stagger
+- Prints stripped preview to console
+
+**`package.json`**
+- Added `"announce-deploy": "npx tsx scripts/announce-deploy.ts"`
+
+### New env var (optional)
+- `TELEGRAM_THREAD_ID_SMM_QUEUE` — topic thread for queued drafts
+
+### Usage
+```bash
+npm run announce-deploy -- "Price Index chart" "YoY stat cards" --url /terminal/price-index
+npm run announce-deploy -- "Distress Deals V2" --mode immediate
+```
+
+---
+
 ## 2026-03-15 — Communities Page: Mock Data Replaced with Real DLD Data
 
 ### Task

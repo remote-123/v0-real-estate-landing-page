@@ -12,6 +12,20 @@ export const metadata: Metadata = {
   alternates: {
     canonical: 'https://www.northcapitaldxb.com/terminal/communities',
   },
+  openGraph: {
+    images: [
+      {
+        url: '/images/terminal-communities-social.png',
+        width: 1200,
+        height: 630,
+        alt: 'Dubai Community Intelligence — North Capital DXB',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    images: ['/images/terminal-communities-social.png'],
+  },
 }
 
 type CommunityRow = {

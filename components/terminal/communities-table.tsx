@@ -298,7 +298,7 @@ export function CommunitiesTable({ data }: Props) {
             ))}
           </thead>
           <tbody>
-            {table.getFilteredRowModel().rows.map((row, i) => (
+            {table.getRowModel().rows.map((row, i) => (
               <tr
                 key={row.id}
                 onClick={() => router.push(`/terminal/communities/${row.original.slug}`)}
