@@ -27,7 +27,8 @@ export async function POST(req: Request) {
     try {
         // Verify Telegram webhook secret (set via setWebhook?secret_token=...)
         const webhookSecret = req.headers.get('x-telegram-bot-api-secret-token')
-        if (process.env.TELEGRAM_WEBHOOK_SECRET && webhookSecret !== process.env.TELEGRAM_WEBHOOK_SECRET) {
+        const expectedSecret = process.env.TELEGRAM_WEBHOOK_SECRET?.trim()
+        if (expectedSecret && webhookSecret !== expectedSecret) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
         }
 
