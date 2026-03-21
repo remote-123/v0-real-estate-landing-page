@@ -41,6 +41,14 @@ export async function POST(req: Request) {
 
         const chatId = message.chat.id
         const threadId = message.message_thread_id
+        const fromId = String(message.from?.id ?? '')
+        const allowedId = process.env.TELEGRAM_ALLOWED_USER_ID
+
+        // Silently ignore messages from anyone other than the authorised user
+        if (allowedId && fromId !== allowedId) {
+            return NextResponse.json({ ok: true })
+        }
+
         const text: string = message.text.trim()
 
         // Extract URL from message
