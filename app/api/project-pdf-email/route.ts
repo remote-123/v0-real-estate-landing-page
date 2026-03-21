@@ -20,7 +20,7 @@ export async function POST(req: Request) {
     const body = await req.json();
 
     // 1. SECURITY CHECK
-    if (body.secret !== process.env.CRON_SECRET) {
+    if (body.secret !== process.env.BLOG_GENERATOR_SECRET) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
