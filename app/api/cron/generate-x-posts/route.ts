@@ -6,10 +6,10 @@ export async function GET(req: Request) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'https://www.northcapitaldxb.com'}/api/ai-x-post-generator`, {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'https://www.northcapitaldxb.com'}/api/distress-xpost`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ secret: 'NORTHCAPITAL_SUPER_SECRET_KEY_2026' }),
+    body: JSON.stringify({ secret: process.env.CRON_SECRET }),
   });
 
   const data = await res.json();
