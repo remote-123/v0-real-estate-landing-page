@@ -1,5 +1,56 @@
 # Daily Log
 
+## 2026-03-21 — API cleanup, key isolation, Bayut discontinued, cron wiring fixed
+
+### Tasks Completed
+
+1. **Blog pipeline confirmed working** — `ai-blog-generator` test via Gmail label succeeded end-to-end. Sanity draft created at `/blog/dubai-transaction-analysis-march-2026-primary-market-captures-74-of-capital-flow`.
+
+2. **API route renames** (descriptive names, all committed):
+   - `ai-x-post-generator` → `distress-xpost`
+   - `ai-project-generator` → `project-pdf-email`
+   - `manual-project-import` → `project-pdf-upload`
+   - `ai-linkedin-post-generator` → `distress-linkedin`
+
+3. **Gemini key isolation** — 3 separate keys now, each scoped to a function:
+   - `GEMINI_BLOG_API_KEY` → `ai-blog-generator`, `ai-blog-to-xpost`
+   - `GEMINI_DISTRESS_API_KEY` → `distress-xpost`, `distress-linkedin`
+   - `GEMINI_PDF_API_KEY` → `project-pdf-email`, `project-pdf-upload`
+
+4. **Bayut discontinued** — removed from `distress-xpost` and `distress-linkedin`. PropertyFinder only. Bayut's RapidAPI data quality not reliable enough for real-time use.
+
+5. **distress-xpost improvements** — USP prompt now requires `[Avg: AED X/sqft | Listing: AED Y/sqft]` bracket, `pricePerSqft` computed per listing, location added as dedicated line in post text.
+
+6. **Hardcoded secrets eliminated** — all `NORTHCAPITAL_SUPER_SECRET_KEY_2026` replaced with env vars. Secret routing:
+   - `CRON_SECRET` → distress-xpost, distress-linkedin, reddit-monitor (cron-job.org)
+   - `BLOG_GENERATOR_SECRET` → ai-blog-generator, project-pdf-email (Apps Script)
+   - `ADMIN_PASSCODE` → project-pdf-upload (manual form)
+
+7. **Cron wrapper routes fixed** — `/api/cron/generate-x-posts` and `/api/cron/generate-linkedin-posts` updated to call new internal route names and forward `CRON_SECRET` from env. cron-job.org URLs unchanged.
+
+8. **ai-blog-to-xpost** — title and hashtags now in `<code>` blocks for one-tap copy in Telegram.
+
+### Files Changed
+- `app/api/distress-xpost/route.ts` — rewrite: PF only, pricePerSqft, USP prompt, new key
+- `app/api/distress-linkedin/route.ts` — PF only, pricePerSqft in context, new key
+- `app/api/project-pdf-email/route.ts` — new key, correct secret (BLOG_GENERATOR_SECRET)
+- `app/api/project-pdf-upload/route.ts` — new key
+- `app/api/ai-blog-to-xpost/route.ts` — code blocks for title + hashtags
+- `app/api/cron/generate-x-posts/route.ts` — updated internal URL + secret
+- `app/api/cron/generate-linkedin-posts/route.ts` — updated internal URL + secret
+
+### Env Vars Added to Vercel
+- `GEMINI_DISTRESS_API_KEY` (same value as GEMINI_API_KEY)
+- `GEMINI_PDF_API_KEY` (new key: AIzaSyCD66...)
+
+### Pending
+- Add `GEMINI_DISTRESS_API_KEY` and `GEMINI_PDF_API_KEY` to `.env.local`
+- Rotate Supabase PAT that was previously in `.mcp.json`
+- Publish Sanity draft from blog pipeline test
+- Add `TELEGRAM_THREAD_ID_SMM_QUEUE` env var and run `npm run heartbeat` for first test
+
+---
+
 ## 2026-03-21 — Product Marketing Context: Full rewrite for North Capital DXB
 
 ### Task
