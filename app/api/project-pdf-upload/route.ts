@@ -5,7 +5,7 @@ import { getGeminiPrompt, PROJECT_JSON_FORMAT } from "@/lib/ai-guidelines"
 
 export const maxDuration = 60;
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_PDF_API_KEY!)
 
 const writeClient = createClient({
   projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,

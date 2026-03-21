@@ -5,7 +5,7 @@ import { sendTelegram } from '@/lib/telegram';
 
 export const maxDuration = 60;
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_DISTRESS_API_KEY!);
 
 // Rotate format based on day of week: Mon = Distress Spotlight, Wed = Market Take, Fri = Data Drop
 function getFormatForToday(): 'distress' | 'market-take' | 'data-drop' {
@@ -16,16 +16,6 @@ function getFormatForToday(): 'distress' | 'market-take' | 'data-drop' {
 }
 
 async function fetchDeals() {
-  const [pfRes, bayutRes] = await Promise.allSettled([
-    fetchPropertyFinderDeals(),
-    fetchBayutDeals(),
-  ]);
-  const pf = pfRes.status === 'fulfilled' ? pfRes.value : [];
-  const bayut = bayutRes.status === 'fulfilled' ? bayutRes.value : [];
-  return [...pf, ...bayut].sort((a, b) => b.discountPercent - a.discountPercent);
-}
-
-async function fetchPropertyFinderDeals() {
   const url = 'https://propertyfinder-uae-data.p.rapidapi.com/search-buy?location_id=1&sort=newest&page=1&is_new_construction=false';
   const res = await fetch(url, {
     method: 'GET',
@@ -40,8 +30,11 @@ async function fetchPropertyFinderDeals() {
   const rawData = Array.isArray(data?.data) ? data.data : [];
   return rawData
     .filter((item: any) => item?.property_id && (item.price?.value || 0) > 0)
+    .filter((item: any) => !item.is_direct_from_developer)
     .map((item: any) => {
       const currentPrice = item.price?.value || 0;
+      const sizeSqft = Math.round(item.size?.value || 0);
+      const pricePerSqft = sizeSqft > 0 ? Math.round(currentPrice / sizeSqft) : 0;
       const numericId = parseInt(item.property_id, 10) || 0;
       const dropFactor = 0.05 + ((numericId % 20) / 100);
       const originalPrice = Math.round(currentPrice * (1 + dropFactor));
@@ -51,59 +44,14 @@ async function fetchPropertyFinderDeals() {
         location: item.address?.full_name || 'Dubai',
         type: item.property_type?.toUpperCase() || 'PROPERTY',
         bedrooms: item.bedrooms?.toString() || 'Studio',
-        sizeSqft: Math.round(item.size?.value || 0),
+        sizeSqft,
+        pricePerSqft,
         currentPrice,
         originalPrice,
         discountPercent,
-        source: 'PropertyFinder',
       };
-    });
-}
-
-async function fetchBayutDeals() {
-  const url = 'https://uae-real-estate2.p.rapidapi.com/properties_search?page=0&langs=en';
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-rapidapi-host': 'uae-real-estate2.p.rapidapi.com',
-      'x-rapidapi-key': process.env.RAPIDAPI_KEY || '',
-    },
-    body: JSON.stringify({
-      purpose: 'for-sale',
-      categories: ['apartments', 'villas', 'penthouses', 'townhouses'],
-      price_min: 1000000,
-      price_max: 50000000,
-      sale_type: 'any',
-      is_completed: true,
-      index: 'date-desc',
-    }),
-    cache: 'no-store',
-  });
-  if (!res.ok) throw new Error('Bayut fetch failed');
-  const data = await res.json();
-  const rawData = Array.isArray(data?.results) ? data.results : [];
-  return rawData
-    .filter((item: any) => item?.id && item.price > 0)
-    .map((item: any) => {
-      const currentPrice = item.price;
-      const offplanOriginal = item.offplan_details?.original_price;
-      const originalPrice = (offplanOriginal && offplanOriginal > currentPrice)
-        ? offplanOriginal
-        : Math.round(currentPrice * (1 + 0.05 + ((item.id % 20) / 100)));
-      const discountPercent = Math.round(((originalPrice - currentPrice) / originalPrice) * 1000) / 10;
-      return {
-        title: item.title || '',
-        location: `${item.location?.sub_community?.name || ''}, ${item.location?.community?.name || ''}`.replace(/^, /, '') || 'Dubai',
-        type: item.type?.sub?.toUpperCase() || 'PROPERTY',
-        bedrooms: item.details?.bedrooms?.toString() || 'Studio',
-        sizeSqft: Math.round(item.area?.built_up || 0),
-        currentPrice,
-        originalPrice: Math.round(originalPrice),
-        discountPercent,
-        source: 'Bayut',
-      };
-    });
+    })
+    .sort((a: any, b: any) => b.discountPercent - a.discountPercent);
 }
 
 const LINKEDIN_PROMPTS = {
@@ -215,7 +163,7 @@ export async function POST(req: Request) {
     // Build deal context for Gemini — top 5 for context richness
     const top5 = deals.slice(0, 5);
     const dealsContext = top5.map((d, i) =>
-      `Deal ${i + 1}: ${d.title} | ${d.location} | ${d.type} | ${d.bedrooms} BR | ${d.sizeSqft > 0 ? `${d.sizeSqft.toLocaleString()} sqft` : 'Size N/A'} | AED ${d.originalPrice.toLocaleString()} → AED ${d.currentPrice.toLocaleString()} (-${d.discountPercent}%)`
+      `Deal ${i + 1}: ${d.title} | ${d.location} | ${d.type} | ${d.bedrooms} BR | ${d.sizeSqft > 0 ? `${d.sizeSqft.toLocaleString()} sqft` : 'Size N/A'}${d.pricePerSqft > 0 ? ` | AED ${d.pricePerSqft.toLocaleString()}/sqft` : ''} | AED ${d.originalPrice.toLocaleString()} → AED ${d.currentPrice.toLocaleString()} (-${d.discountPercent}%)`
     ).join('\n');
 
     const prompt = `${NORTH_CAPITAL_SYSTEM_PROMPT}\n\n${LINKEDIN_PROMPTS[format]}\n\nDeals data:\n${dealsContext}`;
