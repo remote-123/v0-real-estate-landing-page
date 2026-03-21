@@ -93,11 +93,11 @@ Blog URL: ${blogUrl}
 
     await sendTelegram(
 `📝 <b>BLOG X DRAFT — READY TO POST</b>
-<i>${title}</i>
+<code>${title}</code>
 
 <code>${post.postText}</code>
 
-${post.suggestedHashtags}
+<code>${post.suggestedHashtags}</code>
 
 🖼 <b>Image brief:</b> ${post.imageBrief}`,
       process.env.TELEGRAM_THREAD_ID_XPOST

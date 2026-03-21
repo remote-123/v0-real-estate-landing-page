@@ -201,7 +201,7 @@ Return STRICTLY as JSON — no markdown, no backticks:
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    if (body.secret !== 'NORTHCAPITAL_SUPER_SECRET_KEY_2026') {
+    if (body.secret !== process.env.CRON_SECRET) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
