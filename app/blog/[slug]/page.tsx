@@ -1,11 +1,12 @@
 import Image from "next/image"
+import Link from "next/link"
 import { notFound } from "next/navigation"
 import { client } from "@/sanity/lib/client"
 import { urlForImage } from "@/sanity/lib/image"
 import { PortableText } from "next-sanity"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
-import { Clock, User, CheckCircle2, HelpCircle, Twitter, Linkedin, MessageCircle } from "lucide-react"
+import { Clock, User, CheckCircle2, HelpCircle, Twitter, Linkedin, MessageCircle, ArrowUpRight } from "lucide-react"
 import { BlogAdvisorForm } from "@/components/blog-advisor-form"
 
 
@@ -22,6 +23,14 @@ const query = `*[_type == "post" && slug.current == $slug][0]{
   faqs,
   body,
   _updatedAt
+}`
+
+const relatedQuery = `*[_type == "post" && slug.current != $slug] | order(publishedAt desc) [0..2] {
+  title,
+  "slug": slug.current,
+  excerpt,
+  publishedAt,
+  mainImage
 }`
 
 export async function generateStaticParams() {
@@ -89,7 +98,10 @@ const ptComponents = {
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const post = await client.fetch(query, { slug })
+  const [post, relatedPosts] = await Promise.all([
+    client.fetch(query, { slug }),
+    client.fetch(relatedQuery, { slug }),
+  ])
 
   if (!post) notFound()
 
@@ -265,6 +277,57 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                         </p>
                       </div>
                     ))}
+                  </div>
+                </div>
+              )}
+
+              {relatedPosts && relatedPosts.length > 0 && (
+                <div className="mt-16 border-t border-border pt-12">
+                  <h2 className="font-serif text-2xl font-bold text-foreground mb-8">More Insights</h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                    {relatedPosts.map((related: any) => (
+                      <Link
+                        key={related.slug}
+                        href={`/blog/${related.slug}`}
+                        className="group flex flex-col rounded-xl border border-border bg-card overflow-hidden hover:border-accent/40 transition-colors"
+                      >
+                        {related.mainImage ? (
+                          <div className="relative aspect-[16/9] w-full overflow-hidden shrink-0">
+                            <Image
+                              src={urlForImage(related.mainImage).width(600).height(338).url()}
+                              alt={related.title}
+                              fill
+                              className="object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                          </div>
+                        ) : (
+                          <div className="aspect-[16/9] w-full bg-secondary/40 shrink-0" />
+                        )}
+                        <div className="flex flex-col flex-1 p-4 gap-2">
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                            {related.publishedAt
+                              ? new Date(related.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                              : 'Recent'}
+                          </p>
+                          <h3 className="text-sm font-semibold text-foreground leading-snug group-hover:text-accent transition-colors line-clamp-3">
+                            {related.title}
+                          </h3>
+                          <div className="mt-auto pt-3 flex items-center gap-1 text-xs font-medium text-accent">
+                            Read more
+                            <ArrowUpRight className="h-3 w-3 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                  <div className="mt-8 text-center">
+                    <Link
+                      href="/blog"
+                      className="inline-flex items-center gap-2 text-sm font-medium text-accent hover:underline"
+                    >
+                      View all insights
+                      <ArrowUpRight className="h-3.5 w-3.5" />
+                    </Link>
                   </div>
                 </div>
               )}
