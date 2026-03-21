@@ -16,7 +16,8 @@
     "ingest:dld-buildings-registry": "npx tsx scripts/ingest/dld_buildings_registry.ts",
     "ingest:dld-units": "npx tsx scripts/ingest/dld_units.ts",
     "ingest:dld-transactions": "npx tsx scripts/ingest/dld_transactions.ts",
-    "announce-deploy": "npx tsx scripts/announce-deploy.ts"
+    "announce-deploy": "npx tsx scripts/announce-deploy.ts",
+    "heartbeat": "npx tsx scripts/cofounder-heartbeat.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.78.0",

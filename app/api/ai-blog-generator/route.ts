@@ -1,14 +1,12 @@
 import { NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { createClient } from 'next-sanity';
 import { getGeminiPrompt } from '@/lib/ai-guidelines';
 import { sendTelegramError } from '@/lib/telegram';
+import { createClient } from 'next-sanity';
 
-export const maxDuration = 60;
+export const maxDuration = 300;
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_BLOG_API_KEY!);
 
 const writeClient = createClient({
   projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
@@ -59,12 +57,11 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    if (body.secret !== "NORTHCAPITAL_SUPER_SECRET_KEY_2026") {
+    if (body.secret !== process.env.BLOG_GENERATOR_SECRET) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // OPTIONAL PDF DOWNLOAD
-    let base64Pdf = null;
+    let base64Pdf: string | null = null;
     if (body.pdfUrl) {
       const pdfResponse = await fetch(body.pdfUrl);
       if (pdfResponse.ok) {
@@ -73,48 +70,31 @@ export async function POST(req: Request) {
       }
     }
 
+    const emailContext = { subject: body.subject?.slice(0, 100) ?? '(none)' };
     const prompt = getGeminiPrompt(jsonFormatRule);
 
-    // Build the payload dynamically
     const promptParts: any[] = [
       prompt,
-      `Email Subject: ${body.subject}\nEmail Body: ${body.body}`
+      `Email Subject: ${body.subject}\nEmail Body: ${body.body}`,
     ];
-
     if (base64Pdf) {
-      promptParts.push({
-        inlineData: { data: base64Pdf, mimeType: "application/pdf" }
-      });
+      promptParts.push({ inlineData: { data: base64Pdf, mimeType: 'application/pdf' } });
     }
 
-    const emailContext = { subject: body.subject?.slice(0, 100) ?? '(none)' };
-
     let responseText: string;
-
     try {
-      // PRIMARY: Claude Sonnet — best long-form writing quality
-      const claudeMsg = await anthropic.messages.create({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 8096,
-        messages: [{ role: 'user', content: promptParts.filter(p => typeof p === 'string').join('\n\n') }],
-      });
-      responseText = claudeMsg.content[0].type === 'text' ? claudeMsg.content[0].text : '';
-    } catch (claudeError: any) {
-      console.warn(`⚠️ Claude failed (${claudeError.message}). Falling back to Gemini 2.5 Flash...`);
-      try {
-        const geminiModel = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-        const geminiResult = await geminiModel.generateContent(promptParts);
-        responseText = geminiResult.response.text();
-      } catch (geminiError: any) {
-        await sendTelegramError('/api/ai-blog-generator', 'AI generation (Claude + Gemini both failed)', geminiError, emailContext);
-        console.error('❌ Both AI providers failed:', geminiError);
-        return NextResponse.json({ error: geminiError.message }, { status: 500 });
-      }
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+      const result = await model.generateContent(promptParts);
+      responseText = result.response.text();
+    } catch (geminiError: any) {
+      await sendTelegramError('/api/ai-blog-generator', 'Gemini 2.5 Flash generation failed', geminiError, emailContext);
+      console.error('❌ Gemini failed:', geminiError);
+      return NextResponse.json({ error: geminiError.message }, { status: 500 });
     }
 
     let aiData: any;
     try {
-      const jsonString = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
+      const jsonString = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
       aiData = JSON.parse(jsonString);
     } catch (parseError: any) {
       await sendTelegramError('/api/ai-blog-generator', 'JSON parse of AI response', parseError, emailContext);
@@ -122,8 +102,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'AI returned invalid JSON' }, { status: 500 });
     }
 
-    // Safety check: ensure title is a string so .toLowerCase() doesn't crash
-    const safeTitle = (aiData.title || "Untitled Market Insight").toString();
+    const safeTitle = (aiData.title || 'Untitled Market Insight').toString();
 
     const doc = {
       _type: 'post',
@@ -131,11 +110,11 @@ export async function POST(req: Request) {
       title: safeTitle,
       slug: { current: safeTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') },
       author: 'NorthCapital Research',
-      excerpt: aiData.excerpt || "",
+      excerpt: aiData.excerpt || '',
       keyTakeaways: aiData.keyTakeaways || [],
       faqs: aiData.faqs || [],
       body: aiData.bodyBlocks || [],
-      publishedAt: new Date().toISOString()
+      publishedAt: new Date().toISOString(),
     };
 
     let createdDoc: any;

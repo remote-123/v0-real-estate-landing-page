@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NORTH_CAPITAL_SYSTEM_PROMPT } from '@/lib/ai-guidelines';
-import { sendTelegram } from '@/lib/telegram';
+import { sendTelegram, sendTelegramError } from '@/lib/telegram';
 
 export const maxDuration = 60;
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_BLOG_API_KEY!);
 
 const BLOG_XPOST_PROMPT = `
 You are a senior investment strategist writing for X (Twitter). Your audience is high-net-worth global investors — they are analytical, data-literate, and deeply sceptical of generic real estate marketing.
@@ -106,6 +106,7 @@ ${post.suggestedHashtags}
     return NextResponse.json({ success: true });
 
   } catch (error: any) {
+    await sendTelegramError('/api/ai-blog-to-xpost', 'Unexpected error', error);
     console.error('❌ Blog X Post Generation Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

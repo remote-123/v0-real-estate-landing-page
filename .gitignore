@@ -32,3 +32,6 @@ next-env.d.ts
 
 # Local MCP config (contains access tokens)
 .mcp.json
+
+# Co-founder heartbeat daily backlog files (keep cofounder.json, ignore daily noise)
+state/backlog-*.md

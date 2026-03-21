@@ -1,5 +1,192 @@
 # Daily Log
 
+## 2026-03-21 — Product Marketing Context: Full rewrite for North Capital DXB
+
+### Task
+Rewrote `docs/product-marketing-context.md` with accurate, current information. Previous version (March 2026-03-05) was a reasonable first draft but lacked live metrics, real case studies, persona specifics, and the Terminal as a distinct product section.
+
+### Key Changes
+- Added **The Terminal** as a standalone section — describes all 5 live pages, data sources (DLD), row counts, and how the terminal feeds the advisory funnel
+- Updated all metrics with live website figures: 7.2–9.5% net yield, AED 522B 2024 transaction volume, population projection 3.7M → 5.8M by 2040, AED 1.2M+ entry, AED 2M Golden Visa threshold
+- Added real case studies: Emaar Beachfront (+81% net appreciation), Marina Gate (9.2% net yield, AED 185k/yr), District One Villas (AED 12.5M → 19M in 14 months)
+- Added Golden Visa Buyer as a fourth persona
+- Expanded Customer Language section with verbatim phrases from website and persona research
+- Added Active Marketing Channels table (terminal SEO, blog, LinkedIn, Reddit, Telegram)
+- Added Glossary with product-specific terms (DLD Benchmark, One-Price Advantage, Distress Deal, etc.)
+- Replaced placeholder proof points with actual credentials: RERA #95133, Aeon & Trisl partnership, terminal data scale
+- Added founder quote from live website
+
+### Files Changed
+**`docs/product-marketing-context.md`** — Full rewrite.
+
+---
+
+## 2026-03-21 — Co-Founder Heartbeat: Autonomous backlog + marketing content pipeline
+
+### Task
+Built an autonomous heartbeat script (co-founder agent). Reads mission, todo.md, and DAILY_LOG, generates 10 product tasks + 8 ready-to-post marketing drafts via Claude Haiku, sends both to Telegram SMM queue thread, writes a dated backlog file to state/.
+
+**Files:** `docs/MISSION.md`, `state/cofounder.json`, `scripts/cofounder-heartbeat.ts`
+**Usage:** `npm run heartbeat` — or configure cron-job.org to call it every 2-3 days
+
+---
+
+## 2026-03-21 — Sales Discovery Coach Skill Added (North Capital DXB)
+
+### Task
+Fetched `sales/sales-discovery-coach.md` from `msitarzewski/agency-agents` and adapted it for North Capital DXB property advisory calls. Removed all SaaS/B2B discovery framing. Rebuilt the entire methodology around Dubai real estate buyer qualification.
+
+### Key Adaptations
+- Defined three buyer archetypes as the primary qualifying framework: Golden Visa Buyer (AED 2M+ threshold), Yield Investor, and End-User/Self-Occupier — each with distinct signals, data narratives, and urgency drivers
+- Added a DLD Data Qualification Questions section covering `dld_transactions`, `dld_price_index`, `dld_service_charges`, and `dld_projects` as mid-call advisory tools
+- Built a Red Flag Signals table specific to Dubai (budget at AED 2M threshold, no mortgage pre-approval, prior off-plan negative experience, absent decision-maker)
+- Adapted the Objection Handling table to Dubai-specific objections: market overheating concerns, off-plan payment plan comparisons, Golden Visa regulatory uncertainty
+- Preserved the upfront contract structure, 60/40 talk ratio rule, and AECR objection framework — these are methodology-agnostic and still apply
+- Coaching principles rewritten to emphasise data-led advisor positioning vs. listing-pusher dynamic
+
+### Files Changed
+**`.agent/skills/sales-discovery-coach.md`** — Created. Adapted from `msitarzewski/agency-agents/sales/sales-discovery-coach.md`.
+
+---
+
+## 2026-03-21 — Sales Deal Strategist Skill Added (North Capital DXB)
+
+### Task
+Fetched `sales/sales-deal-strategist.md` from `msitarzewski/agency-agents` and adapted it into a Dubai secondary market deal strategy agent. Removed all B2B/enterprise/MEDDPICC/Challenger Sale framing. Replaced with a six-dimension qualification framework anchored to DLD registered transaction data, full landed-cost modelling (buyer and seller), and a distress scoring system built from observable listing signals (DOM, price cuts, PSF vs. P25).
+
+### Files Changed
+
+**`.agent/skills/sales-deal-strategist.md`**
+- Six qualification dimensions: Price-to-DLD Benchmark, Distress Score (0-10 composite), Transaction Cost Clarity, Golden Visa Eligibility, Seller Motivation, Title and Legal Clarity.
+- Full landed cost breakdowns for cash and mortgage buyers; net proceeds model for sellers including NOC, service charge arrears, and early settlement fees.
+- Golden Visa structuring notes: AED 2M threshold, equity vs. value distinction for mortgaged properties, offplan paid-amount rule.
+- DLD-anchored offer construction: P25 PSF opening, median PSF walk-away, floor/view normalisation, distress discount bands.
+- Concession strategy: decreasing-increment concessions with non-price terms (NOC fee, service charge contribution, completion date flexibility).
+- MOU structuring table covering deposit, completion period, NOC responsibility, service charge arrears, tenancy, and default penalty.
+- Red flags specific to Dubai: blocked NOC, bank valuation gap, expired AIP, sub-assignment no-transfer clause, unauthenticated POA.
+- Deal assessment template with DLD comparable transaction table, cost model, and offer strategy block.
+
+---
+
+## 2026-03-21 — Image Prompt Engineer Skill Added (North Capital DXB)
+
+### Task
+Fetched `design/design-image-prompt-engineer.md` from `msitarzewski/agency-agents`. Adapted it fully for North Capital DXB image generation use cases with a Bloomberg-terminal / Palantir / institutional-dark-mode aesthetic. Replaced all generic lifestyle/fashion/portrait examples with five North Capital DXB-specific output types.
+
+### Files Changed
+
+**`.agent/skills/design-image-prompt-engineer.md`**
+- Created from upstream agency-agents source.
+- Defined five use cases: property listing hero images (architectural photography), data visualisation thumbnails, Dubai area photography, terminal-style social graphics, dark-theme dashboard UI mockups.
+- Enforced brand colour system (emerald `#10b981`, near-black `#0a0a0a`, cool grey palette) across all prompt templates.
+- Genre-specific prompt patterns for each use case with full negative prompt lists banning luxury lifestyle and stock-photo aesthetics.
+- Platform-specific optimisation notes for Midjourney, DALL-E 3, Stable Diffusion/SDXL, and Flux.
+- Reference photographer/style anchors: Hufton+Crow, Iwan Baan, Bloomberg Businessweek data graphics, Pentagram information design.
+- Four complete example prompt templates: architectural hero, data vis thumbnail, yield stat social card, dashboard UI mockup.
+- Three advanced North Capital DXB-specific patterns: distress deal visual, transaction volume chart thumbnail, Creek Harbour pipeline photography.
+
+---
+
+## 2026-03-21 — LinkedIn Content Creator Skill Added (North Capital DXB)
+
+### Task
+Fetched the source `marketing-linkedin-content-creator.md` from `msitarzewski/agency-agents` (marketing/ subdirectory) and adapted it for North Capital DXB. Stripped all generic B2B SaaS / startup framing. Replaced voice profile, hooks, content pillars, and success metrics with Dubai real estate data terminal context. Enforced no-exclamation-mark rule and data-first posture throughout. Named data sources (DLD, Bayut, PropertyFinder, REIDIN, CBRE, Knight Frank) as required citations for every post.
+
+### Files Changed
+
+**`.agent/skills/marketing-linkedin-content-creator.md`**
+- Created from upstream agency-agents source.
+- 5 content pillars: DLD Data Drops, Yield and Pricing Analysis, Market Structure and Signals, Frameworks and Decision Tools, Contrarian and Corrective Takes.
+- 5 hook types grounded in data specificity, not emotion.
+- 4 post templates: Data Drop, Analysis, Framework, Contrarian Take each with explicit structure and formatting rules.
+- 30-day content calendar, 10-slide carousel architecture, profile optimisation framework treating LinkedIn as a data room.
+- Data sources reference table with 7 named sources and update frequencies.
+- 90-day success metrics with save rate weighted at 3x likes.
+
+---
+
+## 2026-03-21 — Podcast Strategist Skill Added (North Capital DXB)
+
+### Task
+Fetched `marketing/marketing-podcast-strategist.md` from `msitarzewski/agency-agents` (file was in the `marketing/` subdirectory, not the repo root). Adapted it for North Capital DXB — stripped all Chinese platform operations (Xiaoyuzhou, Ximalaya, WeChat, Jike, Douyin) and replaced with a Dubai investor-grade podcast strategy grounded in DLD open data.
+
+### Key Adaptations
+- Repositioned from "companionship audio content" to "Planet Money for Dubai real estate" — data brief + narrative layer format per episode
+- Defined four listener personas (active investor, expat buyer, landlord, broker/advisor) with specific information needs mapped to each
+- Built four episode types anchored to DLD data: weekly data brief, area deep-dive (using `dld_transactions`, `dld_price_index`, `dld_service_charges`, `dld_projects`), distress deal analysis, and regulatory response episodes
+- Replaced Chinese platform ops with Spotify/Apple Podcasts/Anghami + LinkedIn clip + Telegram post repurposing workflow
+- Added strict guest qualification rules (no agent marketing reps; guests must bring proprietary data, regulatory authority, or deal-level investor experience)
+- Stage-gated monetization: no ads for first 50 episodes, then selective PropTech/financial services sponsors only — no developer-sponsored analysis ever
+- Replaced Chinese success metrics with Dubai-specific analytics targets and a 12-month success definition tied to terminal conversion and organic broker sharing
+
+### Files Changed
+**`.agent/skills/marketing-podcast-strategist.md`** — Created adapted skill file. Includes: show positioning framework, four episode type definitions, full production workflow, distribution playbook, episode brief template, analytics targets, editorial standards, and communication style guide.
+
+---
+
+## 2026-03-21 — Marketing Growth Hacker Skill Added
+
+### Task
+Fetched the upstream `marketing/marketing-growth-hacker.md` from `msitarzewski/agency-agents` and adapted it for North Capital DXB. Replaced all generic SaaS acquisition framing with the product's actual model: free data terminal driving leads for broker advisory services. Removed viral loop / K-factor / CAC-LTV metrics that do not apply. Built the agent around the four active organic channels (SEO, Reddit, Telegram, LinkedIn) with operating models for each. Added an ICE-scored experiment framework with a documented log format, a five-stage funnel model with instrumentation priorities, and a content principles section enforcing the terminal's data-first, institutional-tone positioning.
+
+### Files Changed
+
+**`.agent/skills/marketing-growth-hacker.md`**
+- Created new skill file adapted from agency-agents source.
+- Four channel operating models (SEO, Reddit, Telegram, LinkedIn) with target intent, content types, cadence, and measurement.
+- Hypothesis-driven experiment framework with ICE scoring and a structured log format.
+- Five-stage funnel model: Discovery → Terminal Session → Repeat Visit → Community Sign-up → Consultation Booked.
+- Success metrics table calibrated to organic channel reality (not VC-growth benchmarks).
+- Anti-patterns section calling out community-channel misuse and vanity metric traps.
+
+---
+
+## 2026-03-21 — Add product-feedback-synthesizer agent skill (North Capital DXB)
+
+### Task
+Fetched `product/product-feedback-synthesizer.md` from `msitarzewski/agency-agents` and adapted it into a North Capital DXB-specific feedback processing agent. Strips generic UX-research framing; replaces it with a ruthless prioritisation system for a solo founder + Claude Code workflow.
+
+### Files Changed
+
+**`.agent/skills/product-feedback-synthesizer.md`**
+- Five feedback channels defined with explicit bias notes: Telegram, Reddit (r/DubaiExpats, r/dubai), broker calls, WhatsApp Community, direct email.
+- 3-axis scoring (Signal Strength, Founder Effort, Revenue Relevance) → Priority Score formula → disposition mapping to roadmap phases or data gap flags.
+- Six hard prioritisation rules: data-first, kill mock data before new features, phase gates, broker signals 2:1, no feature without named data source, UX friction before new features.
+- Trust signal handling distinguishes data integrity issues (P0) from messaging gaps.
+- Worked example maps a Reddit rental-yield question to Phase 2 yield-map page.
+
+---
+
+## 2026-03-21 — Behavioral Nudge Engine Skill Added
+
+### Task
+Fetched the source `product-behavioral-nudge-engine.md` from `msitarzewski/agency-agents` (located at `product/` subdirectory) and adapted it for North Capital DXB. Stripped all SaaS/e-commerce framing, replaced with property decision behavioral economics. Defined four precise nudge contexts (depth explorer, distress deal viewer, area screener, 3rd-visit return user) each grounded in a specific behavioral principle (loss aversion, anchoring, commitment/consistency, reciprocity). Added TypeScript nudge resolution logic, a dismissal persistence model, and a success metrics table. Enforced no-dark-patterns constraint throughout.
+
+### Files Changed
+
+**`.agent/skills/product-behavioral-nudge-engine.md`**
+- Created new skill file adapted from agency-agents source.
+- Four nudge contexts with trigger conditions, timing rules, copy principles, and example prompts.
+- NudgeContext TypeScript schema + priority-ordered resolution function.
+- Behavioral economics principles table mapping each principle to a specific DXB terminal context.
+- Success metrics: nudge-to-booking rate, session depth at conversion, dismissal rate by context, area nudge specificity lift.
+
+---
+
+## 2026-03-21 — Add engineering-database-optimizer agent skill (North Capital DXB)
+
+### Task
+Fetched the upstream `engineering-database-optimizer.md` from `msitarzewski/agency-agents` and adapted it for the North Capital DXB stack. Replaced all generic and MySQL/PlanetScale examples with project-specific ones: `dld_transactions`, `mv_txn_monthly`, `rental_listings`, Supabase transaction pooler (port 6543), and CONCURRENTLY-safe index/migration patterns. Preserved the original agent structure (Identity, Core Mission, 7 deliverable sections, Critical Rules, Communication Style).
+
+### Files Changed
+
+**`.agent/skills/engineering-database-optimizer.md`**
+- Created from scratch (adapted from upstream source).
+- Sections: schema design for DLD tables, EXPLAIN ANALYZE patterns, `mv_txn_monthly` definition + refresh strategy, N+1 elimination in server components, Supabase pooler mode guide (transaction vs session), safe migrations for 1M+ row tables, slow query detection via `pg_stat_statements`.
+- All 10 critical rules are project-specific (no generic advice).
+
+---
+
 ## 2026-03-21 — Communities Screener: Sparkline Graph, Data Cleanup & Agent Expansion
 
 ### Task
