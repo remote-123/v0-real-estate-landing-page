@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { ArrowUpRight, Calendar } from "lucide-react"
 import { client } from "@/sanity/lib/client"
 import { urlForImage } from "@/sanity/lib/image"
+import { BlogOgImage } from "@/components/blog-og-image"
 
 export const revalidate = 60
 
@@ -98,12 +99,17 @@ export default async function BlogPage() {
             <Link href={`/blog/${featured.slug}`} className="group">
               <article className="grid overflow-hidden rounded-xl border border-border bg-card md:grid-cols-2 shadow-sm transition-shadow hover:shadow-md">
                 <div className="relative aspect-[4/3] overflow-hidden md:aspect-auto">
-                  <Image
-                    src={featured.mainImage ? urlForImage(featured.mainImage).width(800).url() : "/placeholder.svg"}
-                    alt={featured.title}
-                    fill
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
+                  {featured.mainImage ? (
+                    <Image
+                      src={urlForImage(featured.mainImage).width(800).url()}
+                      alt={featured.title}
+                      fill
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                      priority
+                    />
+                  ) : (
+                    <BlogOgImage title={featured.title} priority />
+                  )}
                 </div>
                 <div className="flex flex-col justify-center gap-4 p-8 md:p-12">
                   <div className="flex items-center gap-3">

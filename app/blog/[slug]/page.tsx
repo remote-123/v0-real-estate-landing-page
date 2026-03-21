@@ -8,6 +8,7 @@ import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { Clock, User, CheckCircle2, HelpCircle, Twitter, Linkedin, MessageCircle, ArrowUpRight } from "lucide-react"
 import { BlogAdvisorForm } from "@/components/blog-advisor-form"
+import { BlogOgImage } from "@/components/blog-og-image"
 
 
 export const revalidate = 60
@@ -225,8 +226,8 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
             {/* LEFT SIDE: Main Article Content */}
             <article className="lg:col-span-8">
-              {post.mainImage && (
-                <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl mb-12 shadow-xl border border-border">
+              <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl mb-12 shadow-xl border border-border">
+                {post.mainImage ? (
                   <Image
                     src={urlForImage(post.mainImage).width(1200).url()}
                     alt={post.title}
@@ -234,8 +235,10 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                     className="object-cover"
                     priority
                   />
-                </div>
-              )}
+                ) : (
+                  <BlogOgImage title={post.title} priority />
+                )}
+              </div>
 
               {post.keyTakeaways && post.keyTakeaways.length > 0 && (
                 <div className="mb-12 rounded-xl border border-accent/20 bg-accent/5 p-6 md:p-8 shadow-sm">
@@ -301,7 +304,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                             />
                           </div>
                         ) : (
-                          <div className="aspect-[16/9] w-full bg-secondary/40 shrink-0" />
+                          <div className="aspect-[16/9] w-full bg-accent/10 shrink-0" />
                         )}
                         <div className="flex flex-col flex-1 p-4 gap-2">
                           <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
