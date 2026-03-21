@@ -47,7 +47,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   const ogImage = post.mainImage
     ? urlForImage(post.mainImage).width(1200).height(630).url()
-    : "/images/hero-dubai.jpg"
+    : `https://www.northcapitaldxb.com/api/blog-og?title=${encodeURIComponent(post.title)}`
 
   return {
     title: `${post.title} | NorthCapitalDXB Insights`,
