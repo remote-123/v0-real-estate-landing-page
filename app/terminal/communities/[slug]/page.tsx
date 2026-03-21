@@ -1,12 +1,16 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
-import { ArrowLeft, Building2, TrendingUp, TrendingDown, BarChart3, Layers } from 'lucide-react'
+import { ArrowLeft, Building2, Layers } from 'lucide-react'
 import Link from 'next/link'
 import { sql } from '@/lib/db'
-import { CommunityCharts } from '@/components/terminal/community-charts'
+import { CommunityCharts, type MultiPricePoint } from '@/components/terminal/community-charts'
+import { CommunityFilters } from '@/components/terminal/community-filters'
 import { cn } from '@/lib/utils'
+import { Suspense } from 'react'
 
 export const dynamic = 'force-dynamic'
+
+type TypeFilter = 'flat' | 'villa'
 
 function toSlug(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
@@ -22,58 +26,81 @@ type AreaRow = {
   pipeline_units: number
 }
 
-type PriceHistoryRow = {
+type RoomHistoryRow = {
   txn_month: string
+  room_label: string
   avg_psf: number
 }
 
-async function fetchAreaData(slug: string): Promise<{ area: AreaRow; history: { month: string; pricePerSqft: number }[] } | null> {
+// Map DB room label → chart key
+const ROOM_KEY: Record<string, string> = {
+  'Studio': 'studio',
+  '1 BR':   '1br',
+  '2 BR':   '2br',
+  '3 BR':   '3br',
+  '4 BR+':  '4br',
+  'Villa':  'all',
+}
+
+async function fetchAreaData(
+  slug: string,
+  type: TypeFilter,
+): Promise<{
+  area: AreaRow
+  history: MultiPricePoint[]
+  noData: boolean
+} | null> {
   try {
-    // Get all area names to match by slug
+    // Type-agnostic discovery — don't 404 just because the type has no data
     const areas = await sql<{ area_name_en: string }[]>`
       SELECT DISTINCT area_name_en FROM mv_txn_monthly
-      WHERE area_name_en IS NOT NULL AND trans_group_en = 'Sales' AND property_type_en = 'Unit'
+      WHERE area_name_en IS NOT NULL AND trans_group_en = 'Sales'
     `
     const match = areas.find(a => toSlug(a.area_name_en) === slug)
     if (!match) return null
 
     const areaName = match.area_name_en
 
-    const [stats, history] = await Promise.all([
+    const typeCond = type === 'flat'
+      ? sql`AND m.property_type_en = 'Unit' AND m.property_sub_type_en = 'Flat'`
+      : sql`AND m.property_type_en = 'Villa'`
+
+    const [stats, roomHistory] = await Promise.all([
+      // KPI stats (aggregate over all rooms)
       sql<AreaRow[]>`
         WITH latest_month AS (
           SELECT MAX(txn_month) AS max_month FROM mv_txn_monthly
         ),
         curr AS (
           SELECT
-            area_name_en,
-            SUM(txn_count)                                                          AS txn_count,
-            SUM(txn_count * avg_psf)  / NULLIF(SUM(txn_count), 0)                 AS avg_psm,
-            SUM(txn_count * avg_value) / NULLIF(SUM(txn_count), 0)                AS avg_val
+            m.area_name_en,
+            SUM(m.txn_count)                                                       AS txn_count,
+            SUM(m.txn_count * m.avg_price_sqm) / NULLIF(SUM(m.txn_count), 0)      AS avg_psm,
+            SUM(m.txn_count * m.avg_price)     / NULLIF(SUM(m.txn_count), 0)      AS avg_val
           FROM mv_txn_monthly m
           CROSS JOIN latest_month lm
           WHERE m.txn_month = lm.max_month
             AND m.trans_group_en = 'Sales'
-            AND m.property_type_en = 'Unit'
             AND m.area_name_en = ${areaName}
-          GROUP BY area_name_en
+            ${typeCond}
+          GROUP BY m.area_name_en
         ),
         prev AS (
           SELECT
-            area_name_en,
-            SUM(txn_count * avg_psf) / NULLIF(SUM(txn_count), 0)  AS avg_psm
+            m.area_name_en,
+            SUM(m.txn_count * m.avg_price_sqm) / NULLIF(SUM(m.txn_count), 0) AS avg_psm
           FROM mv_txn_monthly m
           CROSS JOIN latest_month lm
           WHERE m.txn_month = lm.max_month - INTERVAL '1 month'
             AND m.trans_group_en = 'Sales'
-            AND m.property_type_en = 'Unit'
             AND m.area_name_en = ${areaName}
-          GROUP BY area_name_en
+            ${typeCond}
+          GROUP BY m.area_name_en
         ),
         supply AS (
           SELECT
             area_name_en,
-            SUM(COALESCE(no_of_units, 0))                                                                            AS total_units,
+            SUM(COALESCE(no_of_units, 0))                                                                               AS total_units,
             SUM(CASE WHEN project_status IN ('ACTIVE','NOT_STARTED','PENDING') THEN COALESCE(no_of_units,0) ELSE 0 END) AS pipeline_units
           FROM dld_projects
           WHERE area_name_en = ${areaName}
@@ -92,30 +119,66 @@ async function fetchAreaData(slug: string): Promise<{ area: AreaRow; history: { 
         LEFT JOIN supply s ON c.area_name_en = s.area_name_en
       `,
 
-      sql<PriceHistoryRow[]>`
-        SELECT
-          txn_month,
-          ROUND((SUM(txn_count * avg_psf) / NULLIF(SUM(txn_count), 0) / 10.764)::numeric, 0) AS avg_psf
-        FROM mv_txn_monthly
-        WHERE area_name_en = ${areaName}
-          AND trans_group_en = 'Sales'
-          AND property_type_en = 'Unit'
-        GROUP BY txn_month
-        ORDER BY txn_month DESC
-        LIMIT 12
-      `,
+      // Multi-room price history in one query
+      type === 'flat'
+        ? sql<RoomHistoryRow[]>`
+            SELECT
+              txn_month,
+              CASE
+                WHEN rooms_en = 'Studio'                                        THEN 'Studio'
+                WHEN rooms_en = '1 B/R'                                         THEN '1 BR'
+                WHEN rooms_en = '2 B/R'                                         THEN '2 BR'
+                WHEN rooms_en = '3 B/R'                                         THEN '3 BR'
+                WHEN rooms_en IN ('4 B/R','5 B/R','6 B/R','PENTHOUSE')         THEN '4 BR+'
+              END AS room_label,
+              ROUND((SUM(m.txn_count * m.avg_price_sqm) / NULLIF(SUM(m.txn_count), 0) / 10.764)::numeric, 0) AS avg_psf
+            FROM mv_txn_monthly m
+            WHERE m.area_name_en = ${areaName}
+              AND m.trans_group_en = 'Sales'
+              AND m.property_type_en = 'Unit'
+              AND m.property_sub_type_en = 'Flat'
+              AND m.rooms_en IN ('Studio','1 B/R','2 B/R','3 B/R','4 B/R','5 B/R','6 B/R','PENTHOUSE')
+            GROUP BY txn_month, room_label
+            ORDER BY txn_month DESC
+            LIMIT 120
+          `
+        : sql<RoomHistoryRow[]>`
+            SELECT
+              txn_month,
+              'Villa' AS room_label,
+              ROUND((SUM(m.txn_count * m.avg_price_sqm) / NULLIF(SUM(m.txn_count), 0) / 10.764)::numeric, 0) AS avg_psf
+            FROM mv_txn_monthly m
+            WHERE m.area_name_en = ${areaName}
+              AND m.trans_group_en = 'Sales'
+              AND m.property_type_en = 'Villa'
+            GROUP BY txn_month, room_label
+            ORDER BY txn_month DESC
+            LIMIT 24
+          `,
     ])
 
-    if (!stats[0]) return null
+    // Graceful no-data: area exists but no transactions for this type
+    const area: AreaRow = stats[0] ?? {
+      area_name_en: areaName,
+      txn_count: 0,
+      avg_psf: 0,
+      avg_value: 0,
+      mom_change: null,
+      total_units: 0,
+      pipeline_units: 0,
+    }
 
-    const priceHistory = history
-      .reverse()
-      .map(r => ({
-        month: new Date(r.txn_month).toLocaleString('en-US', { month: 'short', year: '2-digit' }),
-        pricePerSqft: Number(r.avg_psf),
-      }))
+    // Pivot room history into { month, studio, 1br, 2br, ... }
+    const monthMap = new Map<string, MultiPricePoint>()
+    for (const row of [...roomHistory].reverse()) {
+      const month = new Date(row.txn_month).toLocaleString('en-US', { month: 'short', year: '2-digit' })
+      if (!monthMap.has(month)) monthMap.set(month, { month })
+      const key = ROOM_KEY[row.room_label]
+      if (key) monthMap.get(month)![key] = Number(row.avg_psf)
+    }
+    const history = Array.from(monthMap.values())
 
-    return { area: stats[0], history: priceHistory }
+    return { area, history, noData: !stats[0] }
   } catch {
     return null
   }
@@ -123,35 +186,34 @@ async function fetchAreaData(slug: string): Promise<{ area: AreaRow; history: { 
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
-  const result = await fetchAreaData(slug)
+  const result = await fetchAreaData(slug, 'flat')
   if (!result) return {}
   const name = result.area.area_name_en
   return {
     title: `${name} — Community Intelligence | North Capital DXB`,
     description: `Price per sqft, transaction volume, and supply pipeline for ${name}, Dubai.`,
     openGraph: {
-      images: [
-        {
-          url: '/images/terminal-communities-social.png',
-          width: 1200,
-          height: 630,
-          alt: `${name} Community Intelligence — North Capital DXB`,
-        },
-      ],
+      images: [{ url: '/images/terminal-communities-social.png', width: 1200, height: 630, alt: `${name} Community Intelligence — North Capital DXB` }],
     },
-    twitter: {
-      card: 'summary_large_image',
-      images: ['/images/terminal-communities-social.png'],
-    },
+    twitter: { card: 'summary_large_image', images: ['/images/terminal-communities-social.png'] },
   }
 }
 
-export default async function CommunityPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function CommunityPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>
+  searchParams: Promise<Record<string, string>>
+}) {
   const { slug } = await params
-  const result = await fetchAreaData(slug)
+  const sp = await searchParams
+  const type: TypeFilter = sp.type === 'villa' ? 'villa' : 'flat'
+
+  const result = await fetchAreaData(slug, type)
   if (!result) notFound()
 
-  const { area, history } = result
+  const { area, history, noData } = result
   const momChange = Number(area.mom_change ?? 0)
   const momColor = momChange >= 0 ? 'text-emerald-400' : 'text-red-400'
 
@@ -162,13 +224,10 @@ export default async function CommunityPage({ params }: { params: Promise<{ slug
   }
 
   const totalUnits = area.total_units
-  const aptPct = totalUnits > 0 ? Math.round(0.78 * 100) : 0
-  const villaPct = 100 - aptPct
 
   return (
     <div className="flex w-full flex-col px-0 sm:px-8 xl:px-12 py-0 sm:py-6 space-y-6 max-w-7xl mx-auto pb-24 lg:pb-12">
 
-      {/* Back */}
       <Link
         href="/terminal/communities"
         className="flex items-center gap-2 text-xs font-mono text-muted-foreground hover:text-foreground transition-colors px-4 sm:px-0"
@@ -176,7 +235,6 @@ export default async function CommunityPage({ params }: { params: Promise<{ slug
         <ArrowLeft className="h-3 w-3" /> Back to Community Screener
       </Link>
 
-      {/* Header */}
       <section className="border-y sm:border border-border/50 rounded-none sm:rounded-2xl p-6 bg-card space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
           <div>
@@ -185,37 +243,51 @@ export default async function CommunityPage({ params }: { params: Promise<{ slug
             </div>
             <h1 className="font-serif text-3xl sm:text-4xl font-bold text-foreground">{area.area_name_en}</h1>
           </div>
-          <div className="flex items-center gap-2">
-            <span className={cn('font-mono text-xl font-bold', momColor)}>
-              {momChange >= 0 ? '+' : ''}{momChange.toFixed(1)}% MoM
-            </span>
-          </div>
+          {!noData && (
+            <div className="flex items-center gap-2">
+              <span className={cn('font-mono text-xl font-bold', momColor)}>
+                {momChange >= 0 ? '+' : ''}{momChange.toFixed(1)}% MoM
+              </span>
+            </div>
+          )}
         </div>
 
-        {/* KPI row */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[
-            { label: 'AED / sqft', value: new Intl.NumberFormat('en-US').format(area.avg_psf) },
-            { label: 'Avg Sale Price', value: formatPrice(area.avg_value) },
-            { label: 'Txns (latest month)', value: new Intl.NumberFormat('en-US').format(area.txn_count) },
-            { label: 'MoM Change', value: `${momChange >= 0 ? '+' : ''}${momChange.toFixed(1)}%`, className: momColor },
-          ].map(kpi => (
-            <div key={kpi.label} className="rounded-lg bg-background border border-border/50 p-3">
-              <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-wide mb-1">{kpi.label}</p>
-              <p className={cn('font-mono text-base font-bold text-foreground leading-tight', kpi.className)}>
-                {kpi.value}
-              </p>
-            </div>
-          ))}
-        </div>
+        <Suspense fallback={null}>
+          <CommunityFilters selectedType={type} />
+        </Suspense>
+
+        {noData ? (
+          <p className="font-mono text-sm text-muted-foreground py-2">
+            No {type === 'flat' ? 'flat' : 'villa'} sales recorded in this area.{' '}
+            <Link
+              href={`?type=${type === 'flat' ? 'villa' : 'flat'}`}
+              className="text-emerald-400 hover:underline"
+            >
+              Try {type === 'flat' ? 'Villa' : 'Flat'}
+            </Link>
+          </p>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              { label: 'AED / sqft', value: new Intl.NumberFormat('en-US').format(area.avg_psf) },
+              { label: 'Avg Sale Price', value: formatPrice(area.avg_value) },
+              { label: 'Txns (latest month)', value: new Intl.NumberFormat('en-US').format(area.txn_count) },
+              { label: 'MoM Change', value: `${momChange >= 0 ? '+' : ''}${momChange.toFixed(1)}%`, className: momColor },
+            ].map(kpi => (
+              <div key={kpi.label} className="rounded-lg bg-background border border-border/50 p-3">
+                <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-wide mb-1">{kpi.label}</p>
+                <p className={cn('font-mono text-base font-bold text-foreground leading-tight', kpi.className)}>
+                  {kpi.value}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
-      {/* Price history chart */}
-      {history.length >= 2 && <CommunityCharts priceHistory={history} />}
+      {history.length >= 2 && <CommunityCharts priceHistory={history} type={type} />}
 
-      {/* Unit breakdown + Supply */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Supply pipeline */}
         <section className="border border-border/50 rounded-xl p-5 bg-card space-y-4">
           <div className="flex items-center gap-2">
             <Layers className="h-4 w-4 text-muted-foreground" />
@@ -248,7 +320,6 @@ export default async function CommunityPage({ params }: { params: Promise<{ slug
           )}
         </section>
 
-        {/* Total tracked projects */}
         <section className="border border-border/50 rounded-xl p-5 bg-card space-y-4">
           <div className="flex items-center gap-2">
             <Building2 className="h-4 w-4 text-muted-foreground" />
@@ -265,9 +336,8 @@ export default async function CommunityPage({ params }: { params: Promise<{ slug
         </section>
       </div>
 
-      {/* Data note */}
       <p className="text-[11px] font-mono text-muted-foreground/40 px-1">
-        Source: Dubai Land Department · Price history based on registered sales transactions · Transactions tab coming soon
+        Source: Dubai Land Department · Price history based on registered sales transactions
       </p>
 
     </div>

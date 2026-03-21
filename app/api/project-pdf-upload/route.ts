@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { cookies } from "next/headers"
 import { GoogleGenerativeAI } from "@google/generative-ai"
 import { createClient } from "next-sanity"
 import { getGeminiPrompt, PROJECT_JSON_FORMAT } from "@/lib/ai-guidelines"
@@ -17,14 +18,14 @@ const writeClient = createClient({
 
 export async function POST(req: Request) {
   try {
+    const cookieStore = await cookies()
+    const auth = cookieStore.get("admin_auth")?.value
+    if (!auth || auth !== process.env.ADMIN_PASSCODE) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
     const formData = await req.formData()
     const file = formData.get("file") as File
-    const passcode = formData.get("passcode") as string
-    
-    // 1. SECURITY CHECK 
-    if (passcode !== process.env.ADMIN_PASSCODE) {
-      return NextResponse.json({ error: "Unauthorized: Invalid passcode" }, { status: 401 })
-    }
 
     if (!file) return NextResponse.json({ error: "No file provided" }, { status: 400 })
 

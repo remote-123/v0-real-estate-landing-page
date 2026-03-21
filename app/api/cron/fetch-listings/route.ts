@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { supabaseServer } from "@/lib/supabase-server"
+import { sql } from "@/lib/db"
 
 async function fetchBayut(): Promise<any[]> {
   const res = await fetch("https://uae-real-estate2.p.rapidapi.com/properties_search?page=0&langs=en", {
@@ -109,13 +109,24 @@ export async function GET(req: Request) {
       return NextResponse.json({ message: "No listings fetched" })
     }
 
-    const { error } = await supabaseServer
-      .from("rental_listings")
-      .upsert(rows, { onConflict: "id" })
-
-    if (error) {
-      console.error("[Cron] Supabase error:", error.message)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+    for (const row of rows) {
+      await sql`
+        INSERT INTO rental_listings
+          (id, source, title, cluster, area, type, bedrooms, size_sqft,
+           annual_price, monthly_price, price_per_sqft, external_url, listed_at, raw)
+        VALUES
+          (${row.id}, ${row.source}, ${row.title}, ${row.cluster}, ${row.area},
+           ${row.type}, ${row.bedrooms}, ${row.size_sqft}, ${row.annual_price},
+           ${row.monthly_price}, ${row.price_per_sqft}, ${row.external_url},
+           ${row.listed_at}, ${sql.json(row.raw)})
+        ON CONFLICT (id) DO UPDATE SET
+          source = EXCLUDED.source, title = EXCLUDED.title, cluster = EXCLUDED.cluster,
+          area = EXCLUDED.area, type = EXCLUDED.type, bedrooms = EXCLUDED.bedrooms,
+          size_sqft = EXCLUDED.size_sqft, annual_price = EXCLUDED.annual_price,
+          monthly_price = EXCLUDED.monthly_price, price_per_sqft = EXCLUDED.price_per_sqft,
+          external_url = EXCLUDED.external_url, listed_at = EXCLUDED.listed_at,
+          raw = EXCLUDED.raw
+      `
     }
 
     return NextResponse.json({ ok: true, bayut: bayutRows.length, pf: pfRows.length, total: rows.length })

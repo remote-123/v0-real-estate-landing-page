@@ -172,7 +172,7 @@ export function SupplyPipelineTable({ projects }: Props) {
           <table className="w-full text-sm border-collapse">
             <thead>
               <tr className="border-b border-border/40 bg-muted/20">
-                <th className={thClass("project_name_en")} onClick={() => handleSort("project_name_en")}>
+                <th className={cn(thClass("project_name_en"), "sticky left-0 z-10 bg-card")} onClick={() => handleSort("project_name_en")}>
                   <span className="flex items-center">Project Name <SortIcon col="project_name_en" sortKey={sortKey} sortDir={sortDir} /></span>
                 </th>
                 <th className={thClass("area_name_en")} onClick={() => handleSort("area_name_en")}>
@@ -211,7 +211,7 @@ export function SupplyPipelineTable({ projects }: Props) {
                       i % 2 === 0 ? "bg-transparent" : "bg-muted/10"
                     )}
                   >
-                    <td className="px-3 py-2.5 max-w-[220px]">
+                    <td className="px-3 py-2.5 max-w-[220px] sticky left-0 z-10 bg-card">
                       <p className="font-medium text-foreground truncate leading-tight">
                         {p.project_name_en ?? "—"}
                       </p>

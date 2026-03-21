@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { sendTelegram } from '@/lib/telegram'
-import { supabaseServer } from '@/lib/supabase-server'
+import { sql } from '@/lib/db'
 
 export const maxDuration = 60
 
@@ -112,40 +112,36 @@ function isRecent(utcSeconds: number): boolean {
 }
 
 async function getSeenPostIds(): Promise<Set<string>> {
-    const { data } = await supabaseServer
-        .from('reddit_seen_posts')
-        .select('post_id')
-        .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
-
-    return new Set((data || []).map((r: any) => r.post_id))
+    const rows = await sql`
+        SELECT post_id FROM reddit_seen_posts
+        WHERE created_at >= ${new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()}
+    `
+    return new Set(rows.map((r: any) => r.post_id))
 }
 
 // ─── Voice samples ─────────────────────────────────────────────────────────────
 
 async function getVoiceSamples(limit = 6): Promise<string[]> {
     // Pull the highest-scored comments as style examples
-    const { data } = await supabaseServer
-        .from('reddit_voice_samples')
-        .select('comment_body, score, subreddit')
-        .gte('score', 1)           // Only upvoted comments — proven quality
-        .order('score', { ascending: false })
-        .limit(limit)
-
-    if (!data || data.length === 0) return []
-    return data.map((r: any) => r.comment_body)
+    const rows = await sql`
+        SELECT comment_body FROM reddit_voice_samples
+        WHERE score >= 1
+        ORDER BY score DESC
+        LIMIT ${limit}
+    `
+    return rows.map((r: any) => r.comment_body)
 }
 
 // ─── Market data for grounding ─────────────────────────────────────────────────
 
 async function getMarketSnapshot(): Promise<string> {
     // Pull a fresh snapshot of rental data to ground the reply in real numbers
-    const { data } = await supabaseServer
-        .from('rental_listings')
-        .select('area, bedrooms, monthly_price, price_per_sqft')
-        .gte('listed_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
-        .limit(200)
-
-    if (!data || data.length === 0) return 'No live data available.'
+    const data = await sql`
+        SELECT area, bedrooms, monthly_price, price_per_sqft FROM rental_listings
+        WHERE listed_at >= ${new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()}
+        LIMIT 200
+    `
+    if (data.length === 0) return 'No live data available.'
 
     // Compute avg monthly price per area × bedroom type (top 8 areas by volume)
     const areaMap = new Map<string, number[]>()
@@ -320,16 +316,17 @@ export async function POST(req: Request) {
 
                 await sendTelegram(tgMessage, process.env.TELEGRAM_THREAD_ID_REDDIT)
 
-                // Mark as seen in Supabase
-                await supabaseServer.from('reddit_seen_posts').upsert({
-                    post_id: post.name,
-                    subreddit: post.subreddit,
-                    post_title: post.title,
-                    post_url: postUrl,
-                    post_body: post.selftext?.substring(0, 1000) || '',
-                    generated_reply: reply,
-                    telegram_sent: true,
-                }, { onConflict: 'post_id' })
+                // Mark as seen in Neon
+                await sql`
+                    INSERT INTO reddit_seen_posts
+                        (post_id, subreddit, post_title, post_url, post_body, generated_reply, telegram_sent)
+                    VALUES
+                        (${post.name}, ${post.subreddit}, ${post.title}, ${postUrl},
+                         ${post.selftext?.substring(0, 1000) || ''}, ${reply}, true)
+                    ON CONFLICT (post_id) DO UPDATE SET
+                        generated_reply = EXCLUDED.generated_reply,
+                        telegram_sent = true
+                `
 
                 sent++
                 await new Promise(r => setTimeout(r, 1000)) // Stagger Telegram messages

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { supabaseServer } from '@/lib/supabase-server'
+import { sql } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,14 +11,13 @@ export const dynamic = 'force-dynamic'
  */
 export async function GET() {
     try {
-        // 1. Fetch raw metricsaggregated from rental listings
+        // 1. Fetch raw metrics aggregated from rental listings
         // We group by 'cluster' (which is the community name in our ingest)
-        const { data: rawStats, error } = await supabaseServer
-            .from('rental_listings')
-            .select('cluster, area, annual_price, price_per_sqft, listed_at')
-            .gte('listed_at', new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString()) // Last 60 days
-
-        if (error) throw error
+        const rawStats = await sql`
+          SELECT cluster, area, annual_price, price_per_sqft, listed_at
+          FROM rental_listings
+          WHERE listed_at >= ${new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString()}
+        `
 
         // 2. Aggregate data by community/cluster
         const communityMap = new Map<string, any>()

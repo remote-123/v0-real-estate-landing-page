@@ -179,11 +179,18 @@ export function ServiceChargesTable({ rows }: Props) {
       </div>
 
       {/* Table */}
-      <div className="rounded-md border border-border/40 bg-card/40 overflow-hidden overflow-x-auto">
+      <div className="rounded-md border border-border/40 bg-card/40 overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="w-full text-sm border-collapse min-w-[640px]">
           <thead>
             <tr className="border-b border-border/40 bg-muted/30">
-              {headerCell("Project", "project_name", "left")}
+              <th
+                className="text-[10px] uppercase tracking-wider text-muted-foreground/70 px-4 py-3 text-left whitespace-nowrap cursor-pointer select-none hover:text-muted-foreground transition-colors sticky left-0 z-10 bg-muted/30"
+                onClick={() => handleSort("project_name")}
+              >
+                Project
+                <SortIcon active={sortKey === "project_name"} dir={sortDir} />
+              </th>
               {headerCell("Community", "master_community_name_en", "left")}
               <th className="text-[10px] uppercase tracking-wider text-muted-foreground/70 px-4 py-3 text-left whitespace-nowrap">
                 Mgmt Company
@@ -208,7 +215,7 @@ export function ServiceChargesTable({ rows }: Props) {
                     i % 2 === 0 ? "bg-card/20" : "bg-muted/10"
                   )}
                 >
-                  <td className="px-4 py-3 text-left font-medium text-foreground max-w-[200px]">
+                  <td className="px-4 py-3 text-left font-medium text-foreground max-w-[200px] sticky left-0 z-10 bg-card">
                     <span className="block truncate" title={row.project_name}>
                       {row.project_name}
                     </span>
@@ -234,6 +241,7 @@ export function ServiceChargesTable({ rows }: Props) {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Pagination */}

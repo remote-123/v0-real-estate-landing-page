@@ -1,5 +1,82 @@
 # Daily Log
 
+## 2026-03-22 (Sprint 6) — Admin panel revamp + URL-to-blog pipeline + Telegram inbound
+
+### Tasks Completed
+
+1. **Admin panel revamped** with shared layout + sidebar (`components/admin/admin-shell.tsx`). Single passcode login at `/admin/login` sets an `HttpOnly` cookie (`admin_auth`, 8h). All child pages are protected by `app/admin/layout.tsx` (server-side redirect if no valid cookie).
+
+2. **`/admin/import`** — Removed passcode field. Auth now from cookie. API route (`/api/project-pdf-upload`) updated to check cookie via `cookies()` from `next/headers` instead of formData passcode.
+
+3. **`/admin/blog-from-url`** — New admin page. Paste any article URL → Gemini reads it → creates Sanity draft.
+
+4. **`/api/blog-from-url`** — New route. Accepts cookie auth (admin UI) or `BLOG_GENERATOR_SECRET` (programmatic/Telegram). Fetches URL, strips HTML to plain text (8k char cap), runs Gemini 2.5 Flash with same editorial rules as ai-blog-generator, creates Sanity draft post.
+
+5. **`/api/telegram-webhook`** — New route. Verifies `x-telegram-bot-api-secret-token` header. Detects URLs in incoming DMs to the bot. Acknowledges, calls `/api/blog-from-url` internally, replies with Sanity Studio link on success.
+
+### Remaining setup (user action required)
+- Add `TELEGRAM_WEBHOOK_SECRET` and `NEXT_PUBLIC_SITE_URL` to Vercel env vars
+- After deploy, register webhook: `https://api.telegram.org/bot{TOKEN}/setWebhook?url=https://northcapitaldxb.com/api/telegram-webhook&secret_token={TELEGRAM_WEBHOOK_SECRET}`
+
+---
+
+## 2026-03-21 (Sprint 5) — Fixed communities slug 404
+
+### Tasks Completed
+
+1. **Fixed `/terminal/communities/[slug]` returning 404**: `fetchAreaData()` in `app/terminal/communities/[slug]/page.tsx` was querying non-existent columns `m.avg_price_sqm` and `m.avg_price`. The query silently errored, returning `null`, triggering `notFound()`. Fixed by replacing with the correct Neon `mv_txn_monthly` column names: `avg_psf` and `avg_value`. The `/10.764` PSM→PSF conversion is preserved (Neon stores `avg_psf` as AED/sqm despite the name). All three query occurrences fixed (curr CTE, prev CTE, price history query).
+
+---
+
+## 2026-03-21 (Sprint 4) — Supabase fully deprecated, Neon migration complete
+
+### Tasks Completed
+
+1. **Confirmed Neon state**: 1.66M dld_transactions, 1.27M dld_units, mv_txn_monthly already existed with correct schema (avg_psf, median_psf, area_id, rooms_en etc.) and data. Neon is more complete than Supabase.
+
+2. **Created missing tables in Neon**: `rental_listings` (dropped old wrong-schema version, recreated with correct columns: id text pk, source, cluster, area, type, bedrooms, annual_price, monthly_price, price_per_sqft, external_url, listed_at, raw jsonb), `reddit_seen_posts`, `reddit_voice_samples`.
+
+3. **Migrated 3 remaining Supabase routes to lib/db.ts (Neon)**:
+   - `app/api/cron/fetch-listings/route.ts` — upsert rental_listings via postgres.js
+   - `app/api/communities/stats/route.ts` — reads rental_listings via sql``
+   - `app/api/reddit-monitor/route.ts` — reads/writes reddit_seen_posts, reddit_voice_samples, rental_listings via sql``
+
+4. **Deleted lib/supabase.ts and lib/supabase-server.ts** — no remaining Supabase JS client imports in app/.
+
+5. **Migration script**: `scripts/migrate-remaining-to-neon.ts` saved for reference.
+
+**All app routes now use Neon exclusively via lib/db.ts.**
+
+---
+
+## 2026-03-21 (Sprint 3) — Phase 1 video pipeline built (Shotstack distress Shorts)
+
+### Tasks Completed
+
+1. **`/api/distress-video`** — New route. Fetches top distress deal (PropertyFinder, sorted by days on market, filtered to deals with images). Renders a 15s 9:16 MP4 via Shotstack: property image background (zoomIn + dark filter) + full HTML overlay (DISTRESS DEAL badge, title, location, AED price in emerald, sqft/psf/DOM detail, CTA). Polls until done (90s max). Sends video download URL + listing link via Telegram on completion. Fires `sendTelegramError` on Shotstack submit/poll failure. maxDuration=120.
+
+2. **`/api/cron/generate-video-shorts`** — Cron wrapper (GET, Bearer CRON_SECRET). Calls `/api/distress-video` internally. maxDuration=60. Ready to add to cron-job.org.
+
+3. **New env var required**: `SHOTSTACK_API_KEY` — add to Vercel environment variables.
+
+---
+
+## 2026-03-21 (Sprint 2) — Debug endpoint deleted, mv_txn_monthly created, mobile table fixes
+
+### Tasks Completed
+
+1. **Deleted `/api/debug/rental-raw`** — temporary debug endpoint removed entirely.
+
+2. **Lead form audit** — `/api/contact` is wired up correctly: writes to Google Sheets (Sheet1!A:J) and fires a Telegram notification. No fix needed.
+
+3. **ISR caching** — `/projects` and `/blog` both already have `export const revalidate = 60`. No change needed.
+
+4. **`mv_txn_monthly` created** — Materialised view on `dld_transactions` aggregating by month, area, trans_group, property_type, property_sub_type. Columns: txn_count, total_value, avg_price, avg_price_sqm, avg_rent, avg_rent_sqm, avg_area_sqm. Unique index + 3 supporting indexes created. pg_cron enabled, nightly refresh scheduled at 02:00 UTC. This unblocks all Phase 2 terminal pages.
+
+5. **Mobile table overflow fixed** — Added `sticky left-0 z-10 bg-card` to first column (Project Name) in both `service-charges-table.tsx` and `supply-pipeline-table.tsx`. Restructured service charges outer div to match supply pipeline's `overflow-hidden` > inner `overflow-x-auto` pattern so sticky positioning works correctly.
+
+---
+
 ## 2026-03-21 — API cleanup, key isolation, Bayut discontinued, cron wiring fixed
 
 ### Tasks Completed

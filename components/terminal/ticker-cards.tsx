@@ -1,6 +1,6 @@
 import { ArrowUpRight, ArrowDownRight, Minus } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { supabaseServer } from "@/lib/supabase-server"
+import { sql } from "@/lib/db"
 
 // UAE Central Bank Base Rate — updated manually when CBUAE changes rates.
 // Current: 4.40% (effective Sept 2024 — matching Fed cut cycle).
@@ -37,13 +37,13 @@ async function fetchDubaiResiPrice() {
 
 async function fetchDfmIndex() {
     try {
-        const { data, error } = await supabaseServer
-            .from('market_indicators')
-            .select('*')
-            .eq('id', 'dfm-real-estate')
-            .single()
-
-        if (error || !data) return null
+        const rows = await sql`
+            SELECT value, previous_value FROM market_indicators
+            WHERE key = 'dfm-real-estate'
+            LIMIT 1
+        `
+        const data = rows[0]
+        if (!data) return null
 
         const change = data.value - data.previous_value
         const pctChange = data.previous_value ? (change / data.previous_value) * 100 : 0
