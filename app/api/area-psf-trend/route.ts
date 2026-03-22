@@ -13,6 +13,52 @@ export const revalidate = 86400 // 24h
  *
  * meter_sale_price is AED/sqm — divide by 10.764 to get AED/sqft.
  */
+// PF/Bayut use marketing brand names; DLD uses Arabic administrative names.
+// This map translates the most common brand names to their DLD area_name_en equivalents.
+const BRAND_TO_DLD: Record<string, string> = {
+  "dubai marina":                         "Marsa Dubai",
+  "marsa dubai":                          "Marsa Dubai",
+  "jumeirah village circle":              "Al Barsha South Fourth",
+  "jvc":                                  "Al Barsha South Fourth",
+  "jumeirah lake towers":                 "Al Thanyah Fifth",
+  "jlt":                                  "Al Thanyah Fifth",
+  "downtown dubai":                       "Burj Khalifa",
+  "dubai hills estate":                   "Hadaeq Sheikh Mohammed Bin Rashid",
+  "dubai hills":                          "Hadaeq Sheikh Mohammed Bin Rashid",
+  "difc":                                 "Trade Center First",
+  "jumeirah beach residence":             "Al Safouh Second",
+  "jbr":                                  "Al Safouh Second",
+  "al safouh":                            "Al Safouh Second",
+  "arabian ranches":                      "Al Hebiah Third",
+  "motor city":                           "Al Hebiah Fourth",
+  "sports city":                          "Al Hebiah First",
+  "dubai sports city":                    "Al Hebiah First",
+  "discovery gardens":                    "Jabal Ali First",
+  "al furjan":                            "Jabal Ali First",
+  "international city":                   "Warsan Fourth",
+  "silicon oasis":                        "Nadd Hessa",
+  "dubai silicon oasis":                  "Nadd Hessa",
+  "dso":                                  "Nadd Hessa",
+  "town square":                          "Al Hebiah Sixth",
+  "jumeirah village triangle":            "Al Barsha South Fifth",
+  "jvt":                                  "Al Barsha South Fifth",
+  "dubai investment park":                "Dubai Investment Park Second",
+  "dip":                                  "Dubai Investment Park Second",
+  "meydan":                               "Nad Al Shiba First",
+  "nad al sheba":                         "Nad Al Shiba First",
+  "al jaddaf":                            "Al Jadaf",
+  "culture village":                      "Al Jadaf",
+  "jumeirah":                             "Jumeirah First",
+  "business bay":                         "Business Bay",
+  "palm jumeirah":                        "Palm Jumeirah",
+  "mirdif":                               "Mirdif",
+  "al barsha":                            "Al Barsha First",
+}
+
+function translateToDld(token: string): string {
+  return BRAND_TO_DLD[token.toLowerCase()] ?? token
+}
+
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
   const location = searchParams.get("location")?.trim() || searchParams.get("area")?.trim() || ""
@@ -27,12 +73,12 @@ export async function GET(req: Request) {
       ? ["Townhouse"]
       : ["Flat", "Hotel Apartment", "Penthouse"]
 
-  // Split "Marina Gate 1, Dubai Marina, Dubai" → try community first (index 1), then others
-  // Skip tokens that are too short or are just "Dubai" / "UAE"
+  // Split "Marina Gate 1, Dubai Marina, Dubai" → try community first, then others
+  // Translate brand names (Dubai Marina → Marsa Dubai) before querying DLD
   const SKIP = new Set(["dubai", "uae", "abu dhabi", "sharjah", "ajman"])
   const tokens = location
     .split(",")
-    .map(t => t.trim())
+    .map(t => translateToDld(t.trim()))
     .filter(t => t.length > 3 && !SKIP.has(t.toLowerCase()))
 
   // Reorder: try from the end (community/emirate) toward the start (building)

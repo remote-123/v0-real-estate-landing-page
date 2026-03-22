@@ -80,7 +80,45 @@ async function fetchPropertyFinderDeals() {
     }
 }
 
-// Returns a map keyed by "area_lower|TYPE" e.g. "dubai marina|APARTMENT"
+// PF uses marketing brand names; DLD uses Arabic administrative names.
+const BRAND_TO_DLD: Record<string, string> = {
+    "dubai marina":              "marsa dubai",
+    "marsa dubai":               "marsa dubai",
+    "jumeirah village circle":   "al barsha south fourth",
+    "jvc":                       "al barsha south fourth",
+    "jumeirah lake towers":      "al thanyah fifth",
+    "jlt":                       "al thanyah fifth",
+    "downtown dubai":            "burj khalifa",
+    "dubai hills estate":        "hadaeq sheikh mohammed bin rashid",
+    "dubai hills":               "hadaeq sheikh mohammed bin rashid",
+    "difc":                      "trade center first",
+    "jumeirah beach residence":  "al safouh second",
+    "jbr":                       "al safouh second",
+    "al safouh":                 "al safouh second",
+    "arabian ranches":           "al hebiah third",
+    "motor city":                "al hebiah fourth",
+    "sports city":               "al hebiah first",
+    "dubai sports city":         "al hebiah first",
+    "discovery gardens":         "jabal ali first",
+    "al furjan":                 "jabal ali first",
+    "international city":        "warsan fourth",
+    "silicon oasis":             "nadd hessa",
+    "dubai silicon oasis":       "nadd hessa",
+    "dso":                       "nadd hessa",
+    "town square":               "al hebiah sixth",
+    "jumeirah village triangle": "al barsha south fifth",
+    "jvt":                       "al barsha south fifth",
+    "meydan":                    "nad al shiba first",
+    "nad al sheba":              "nad al shiba first",
+    "al jaddaf":                 "al jadaf",
+    "culture village":           "al jadaf",
+}
+
+function translateBrandToDld(token: string): string {
+    return BRAND_TO_DLD[token.toLowerCase()] ?? token.toLowerCase()
+}
+
+// Returns a map keyed by "area_lower|TYPE" e.g. "marsa dubai|APARTMENT"
 // meter_sale_price is AED/sqm — divide by 10.764 to get AED/sqft
 async function fetchAreaBenchmarks(): Promise<Map<string, number>> {
     try {
@@ -112,7 +150,8 @@ async function fetchAreaBenchmarks(): Promise<Map<string, number>> {
 }
 
 function matchBenchmark(location: string, type: string, benchmarks: Map<string, number>): number | null {
-    const parts = location.split(',').map(p => p.trim().toLowerCase()).filter(Boolean)
+    // Translate each token from brand name to DLD name before matching
+    const parts = location.split(',').map(p => translateBrandToDld(p.trim())).filter(Boolean)
     const normType = type.includes('VILLA') ? 'VILLA' : type.includes('TOWN') ? 'TOWNHOUSE' : 'APARTMENT'
     for (const [key, psf] of benchmarks) {
         const [areaKey, benchType] = key.split('|')
@@ -121,7 +160,7 @@ function matchBenchmark(location: string, type: string, benchmarks: Map<string, 
             if (areaKey.includes(part) || part.includes(areaKey)) return psf
         }
     }
-    // Fallback: any type match in the area
+    // Fallback: any type match
     for (const [key, psf] of benchmarks) {
         const [areaKey] = key.split('|')
         for (const part of parts) {
