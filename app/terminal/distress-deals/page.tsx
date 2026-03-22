@@ -12,7 +12,7 @@ async function fetchPropertyFinderDeals() {
             'x-rapidapi-host': 'propertyfinder-uae-data.p.rapidapi.com',
             'x-rapidapi-key': process.env.RAPIDAPI_KEY || ''
         },
-        next: { revalidate: 14400 } // Cache Property Finder API response for 4 hours
+        next: { revalidate: 28800 } // Cache 8 hours — 3 refreshes/day max (was 4h = 6/day)
     }
 
     function parseItems(data: any): any[] {
@@ -46,7 +46,7 @@ async function fetchPropertyFinderDeals() {
     }
 
     try {
-        const pages = [1, 2, 3, 4, 5]
+        const pages = [1, 2, 3]
         const results = await Promise.all(
             pages.map(page => {
                 const url = `https://propertyfinder-uae-data.p.rapidapi.com/search-buy?location_id=1&sort=newest&page=${page}&is_new_construction=false`
