@@ -16,9 +16,7 @@ function PsfTrendChart({ area, type, listingPsf }: { area: string; type: string;
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Extract first meaningful area token for the query
-    const areaToken = area.split(",")[0].trim()
-    fetch(`/api/area-psf-trend?area=${encodeURIComponent(areaToken)}&type=${encodeURIComponent(type)}`)
+    fetch(`/api/area-psf-trend?location=${encodeURIComponent(area)}&type=${encodeURIComponent(type)}`)
       .then(r => r.json())
       .then(j => { if (Array.isArray(j.data)) setData(j.data) })
       .catch(() => {})

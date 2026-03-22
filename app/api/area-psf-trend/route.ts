@@ -2,24 +2,24 @@ import { NextResponse } from "next/server"
 import { sql } from "@/lib/db"
 
 export const runtime = "nodejs"
-export const revalidate = 86400 // 24h — DLD data doesn't change intraday
+export const revalidate = 86400 // 24h
 
 /**
- * GET /api/area-psf-trend?area=Dubai+Marina&type=APARTMENT
+ * GET /api/area-psf-trend?location=Marina+Gate+1,+Dubai+Marina,+Dubai&type=APARTMENT
  *
- * Returns 18 monthly avg PSF data points for an area+type combination.
- * Used by the distress-deals modal PSF trend chart.
+ * PF location strings are "Building, Community, Emirate".
+ * We try each comma-separated token against DLD area_name_en (community level),
+ * using the first token that returns data.
  *
- * meter_sale_price is AED/sqm in DLD — divide by 10.764 for AED/sqft
+ * meter_sale_price is AED/sqm — divide by 10.764 to get AED/sqft.
  */
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
-  const area = searchParams.get("area")?.trim() || ""
+  const location = searchParams.get("location")?.trim() || searchParams.get("area")?.trim() || ""
   const type = searchParams.get("type")?.trim().toUpperCase() || "APARTMENT"
 
-  if (!area) return NextResponse.json({ error: "area required" }, { status: 400 })
+  if (!location) return NextResponse.json({ error: "location required" }, { status: 400 })
 
-  // Map PF type → DLD property_sub_type_en values
   const typeFilter =
     type.includes("VILLA")
       ? ["Villa", "Villa Compound"]
@@ -27,29 +27,50 @@ export async function GET(req: Request) {
       ? ["Townhouse"]
       : ["Flat", "Hotel Apartment", "Penthouse"]
 
+  // Split "Marina Gate 1, Dubai Marina, Dubai" → try community first (index 1), then others
+  // Skip tokens that are too short or are just "Dubai" / "UAE"
+  const SKIP = new Set(["dubai", "uae", "abu dhabi", "sharjah", "ajman"])
+  const tokens = location
+    .split(",")
+    .map(t => t.trim())
+    .filter(t => t.length > 3 && !SKIP.has(t.toLowerCase()))
+
+  // Reorder: try from the end (community/emirate) toward the start (building)
+  // PF format is usually "Building, Community, Emirate" — community is index 1 from end after stripping Dubai
+  const ordered = [...tokens].reverse()
+
   try {
-    const rows = await sql<{ month: string; avg_psf: number; txn_count: number }[]>`
-      SELECT
-        TO_CHAR(DATE_TRUNC('month', instance_date), 'YYYY-MM') AS month,
-        ROUND(AVG(meter_sale_price / 10.764)::numeric, 0)::integer  AS avg_psf,
-        COUNT(*)::integer                                            AS txn_count
-      FROM dld_transactions
-      WHERE trans_group_en  = 'Sales'
-        AND area_name_en    ILIKE ${`%${area}%`}
-        AND property_sub_type_en = ANY(${typeFilter})
-        AND meter_sale_price BETWEEN 500 AND 150000
-        AND instance_date >= NOW() - INTERVAL '18 months'
-      GROUP BY DATE_TRUNC('month', instance_date)
-      ORDER BY DATE_TRUNC('month', instance_date)
-    `
+    for (const token of ordered) {
+      const rows = await sql<{ month: string; avg_psf: number; txn_count: number }[]>`
+        SELECT
+          TO_CHAR(DATE_TRUNC('month', instance_date), 'YYYY-MM') AS month,
+          ROUND(AVG(meter_sale_price / 10.764)::numeric, 0)::integer AS avg_psf,
+          COUNT(*)::integer                                           AS txn_count
+        FROM dld_transactions
+        WHERE trans_group_en = 'Sales'
+          AND area_name_en ILIKE ${`%${token}%`}
+          AND property_sub_type_en = ANY(${typeFilter})
+          AND meter_sale_price BETWEEN 500 AND 150000
+          AND instance_date >= NOW() - INTERVAL '18 months'
+        GROUP BY DATE_TRUNC('month', instance_date)
+        ORDER BY DATE_TRUNC('month', instance_date)
+      `
 
-    const data = rows.map(r => ({
-      month: r.month,
-      avg_psf: Number(r.avg_psf),
-      txn_count: Number(r.txn_count),
-    }))
+      if (rows.length >= 2) {
+        return NextResponse.json({
+          matched_area: token,
+          type,
+          data: rows.map(r => ({
+            month: r.month,
+            avg_psf: Number(r.avg_psf),
+            txn_count: Number(r.txn_count),
+          })),
+        })
+      }
+    }
 
-    return NextResponse.json({ area, type, data })
+    // Nothing matched — return empty
+    return NextResponse.json({ matched_area: null, type, data: [] })
   } catch (err: any) {
     console.error("[area-psf-trend]", err.message)
     return NextResponse.json({ error: err.message }, { status: 500 })
