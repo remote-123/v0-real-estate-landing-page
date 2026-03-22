@@ -1,70 +1,9 @@
 import type { Metadata } from "next"
-import { Activity, ArrowDownRight, Clock, MapPin, Search } from "lucide-react"
+import { MapPin } from "lucide-react"
 import { DistressFeedCard } from "@/components/terminal/distress-feed-card"
 import { DistressFilters } from "@/components/terminal/distress-filters"
 import { sql } from "@/lib/db"
 
-// Note: If using `searchParams`, Next.js app router automatically opts into dynamic rendering.
-// However, the underlying fetch calls will still independently cache their payloads.
-
-async function fetchBayutDeals() {
-    const url = 'https://uae-real-estate2.p.rapidapi.com/properties_search?page=0&langs=en'
-    const options = {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'x-rapidapi-host': 'uae-real-estate2.p.rapidapi.com',
-            'x-rapidapi-key': process.env.RAPIDAPI_KEY || ''
-        },
-        body: JSON.stringify({
-            purpose: 'for-sale',
-            categories: ['apartments', 'villas', 'penthouses', 'townhouses'],
-            price_min: 1000000,
-            price_max: 50000000,
-            sale_type: 'any',
-            is_completed: true,
-            index: 'date-desc'
-        }),
-        next: { revalidate: 14400 } // Cache Bayut API response for 4 hours
-    }
-    try {
-        const res = await fetch(url, options)
-        if (!res.ok) throw new Error("Failed to fetch from RapidAPI Bayut")
-        const data = await res.json()
-        return data.results.map((item: any) => {
-            const currentPrice = item.price
-            const offplanOriginal = item.offplan_details?.original_price
-            let originalPrice = currentPrice
-            if (offplanOriginal && offplanOriginal > currentPrice) {
-                originalPrice = offplanOriginal
-            } else {
-                const dropFactor = 0.05 + ((item.id % 20) / 100)
-                originalPrice = currentPrice * (1 + dropFactor)
-            }
-            const createdDate = new Date(item.meta?.created_at || Date.now())
-            const daysOnMarket = Math.max(1, Math.floor((Date.now() - createdDate.getTime()) / (1000 * 3600 * 24)))
-
-            const isOffplanDrop = !!(offplanOriginal && offplanOriginal > currentPrice)
-            return {
-                id: item.id.toString(),
-                title: item.title,
-                location: `${item.location?.sub_community?.name || ''}, ${item.location?.community?.name || ''}`.replace(/^, /, ''),
-                type: item.type?.sub?.toUpperCase() || 'PROPERTY',
-                bedrooms: item.details?.bedrooms || 'Studio',
-                sizeSqft: Math.round(item.area?.built_up || 0),
-                daysOnMarket,
-                originalPrice: Math.round(originalPrice),
-                currentPrice: currentPrice,
-                createdAt: createdDate.getTime(),
-                externalUrl: item.meta?.url || '',
-                isOffplanDrop,
-            }
-        });
-    } catch (error) {
-        console.error("Bayut Fetch Error:", error)
-        return []
-    }
-}
 
 async function fetchPropertyFinderDeals() {
     const url = 'https://propertyfinder-uae-data.p.rapidapi.com/search-buy?location_id=1&sort=newest&page=1&is_new_construction=false'
