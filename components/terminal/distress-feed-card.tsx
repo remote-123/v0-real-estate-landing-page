@@ -34,6 +34,11 @@ function PsfTrendChart({ area, type, listingPsf }: { area: string; type: string;
 
   const chartData = data.map(d => ({ ...d, label: shortMonth(d.month) }))
 
+  // Expand Y-axis domain to always include the listing PSF reference line
+  const allValues = [...data.map(d => d.avg_psf), ...(listingPsf > 0 ? [listingPsf] : [])]
+  const yMin = Math.floor(Math.min(...allValues) * 0.93)
+  const yMax = Math.ceil(Math.max(...allValues) * 1.07)
+
   return (
     <ResponsiveContainer width="100%" height={130}>
       <LineChart data={chartData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
@@ -46,6 +51,7 @@ function PsfTrendChart({ area, type, listingPsf }: { area: string; type: string;
           axisLine={false}
         />
         <YAxis
+          domain={[yMin, yMax]}
           tick={{ fontSize: 9, fill: "var(--muted-foreground)" }}
           tickLine={false}
           axisLine={false}
