@@ -81,7 +81,7 @@ function PsfTrendChart({ area, type, listingPsf }: { area: string; type: string;
   )
 }
 
-interface DistressFeedCardProps {
+export interface DistressFeedCardProps {
     rank: number
     title: string
     location: string
@@ -135,7 +135,7 @@ function ScoreMeter({ score }: { score: number }) {
     )
 }
 
-function DealModal({ deal, onClose }: { deal: DistressFeedCardProps; onClose: () => void }) {
+export function DealModal({ deal, onClose }: { deal: DistressFeedCardProps; onClose: () => void }) {
     const drop = deal.originalPrice - deal.currentPrice
     const dropPct = ((drop / deal.originalPrice) * 100).toFixed(1)
     const psfVsArea = deal.areaBenchmarkPsf && deal.psf > 0

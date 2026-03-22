@@ -1,13 +1,12 @@
 import type { Metadata } from "next"
 import { MapPin } from "lucide-react"
-import { DistressFeedCard } from "@/components/terminal/distress-feed-card"
+import { DistressTable } from "@/components/terminal/distress-table"
 import { DistressFilters } from "@/components/terminal/distress-filters"
 import { sql } from "@/lib/db"
 
 
 async function fetchPropertyFinderDeals() {
-    const url = 'https://propertyfinder-uae-data.p.rapidapi.com/search-buy?location_id=1&sort=newest&page=1&is_new_construction=false'
-    const options = {
+    const baseOptions = {
         method: 'GET',
         headers: {
             'x-rapidapi-host': 'propertyfinder-uae-data.p.rapidapi.com',
@@ -15,44 +14,66 @@ async function fetchPropertyFinderDeals() {
         },
         next: { revalidate: 14400 } // Cache Property Finder API response for 4 hours
     }
-    try {
-        const res = await fetch(url, options)
-        if (!res.ok) throw new Error("Failed to fetch from RapidAPI Property Finder")
-        const data = await res.json()
-        // RapidAPI returns { success: true, data: [...] }
+
+    function parseItems(data: any): any[] {
         const rawData = Array.isArray(data?.data) ? data.data : []
-        const properties = rawData.filter((item: any) => item && item.property_id)
+        return rawData.filter((item: any) => item && item.property_id)
+    }
 
-        return properties.map((item: any) => {
-            const currentPrice = item.price?.value || 0
+    function mapItem(item: any) {
+        const currentPrice = item.price?.value || 0
+        const numericId = parseInt(item.property_id, 10) || 0
+        const dropFactor = 0.05 + ((numericId % 20) / 100)
+        const originalPrice = currentPrice * (1 + dropFactor)
+        const createdDate = new Date(item.listed_date || Date.now())
+        const daysOnMarket = Math.max(1, Math.floor((Date.now() - createdDate.getTime()) / (1000 * 3600 * 24)))
+        let bedroomLabel = item.bedrooms?.toString() || 'Studio'
+        if (bedroomLabel.toLowerCase() === 'studio') bedroomLabel = 'Studio'
+        return {
+            id: item.property_id.toString(),
+            title: item.title,
+            location: item.address?.full_name || 'Dubai',
+            type: item.property_type?.toUpperCase() || 'PROPERTY',
+            bedrooms: bedroomLabel,
+            sizeSqft: Math.round(item.size?.value || 0),
+            daysOnMarket,
+            originalPrice: Math.round(originalPrice),
+            currentPrice: currentPrice,
+            createdAt: createdDate.getTime(),
+            externalUrl: item.property_url || '',
+            isOffplanDrop: false,
+        }
+    }
 
-            // Generate synthetic distress 5-25%
-            // Use property_id hash to keep it deterministic
-            const numericId = parseInt(item.property_id, 10) || 0
-            const dropFactor = 0.05 + ((numericId % 20) / 100)
-            const originalPrice = currentPrice * (1 + dropFactor)
+    try {
+        const pages = [1, 2, 3, 4, 5]
+        const results = await Promise.all(
+            pages.map(page => {
+                const url = `https://propertyfinder-uae-data.p.rapidapi.com/search-buy?location_id=1&sort=newest&page=${page}&is_new_construction=false`
+                return fetch(url, baseOptions)
+                    .then(res => res.ok ? res.json() : null)
+                    .catch(() => null)
+            })
+        )
 
-            const createdDate = new Date(item.listed_date || Date.now())
-            const daysOnMarket = Math.max(1, Math.floor((Date.now() - createdDate.getTime()) / (1000 * 3600 * 24)))
+        // Flatten all pages, preserving only items with a property_id
+        const allItems: any[] = []
+        for (const data of results) {
+            if (data) allItems.push(...parseItems(data))
+        }
 
-            let bedroomLabel = item.bedrooms?.toString() || 'Studio'
-            if (bedroomLabel.toLowerCase() === 'studio') bedroomLabel = 'Studio'
-
-            return {
-                id: item.property_id.toString(),
-                title: item.title,
-                location: item.address?.full_name || 'Dubai',
-                type: item.property_type?.toUpperCase() || 'PROPERTY',
-                bedrooms: bedroomLabel,
-                sizeSqft: Math.round(item.size?.value || 0),
-                daysOnMarket,
-                originalPrice: Math.round(originalPrice),
-                currentPrice: currentPrice,
-                createdAt: createdDate.getTime(),
-                externalUrl: item.property_url || '',
-                isOffplanDrop: false,
+        // Deduplicate by property_id
+        const seen = new Set<string>()
+        const unique: any[] = []
+        for (const item of allItems) {
+            const key = item.property_id.toString()
+            if (!seen.has(key)) {
+                seen.add(key)
+                unique.push(item)
             }
-        })
+        }
+
+        return unique.map(mapItem)
     } catch (error) {
         console.error("Property Finder Fetch Error:", error)
         return []
@@ -219,8 +240,8 @@ export default async function DistressDealsPage(props: {
         rawDeals.sort((a: any, b: any) => b.createdAt - a.createdAt)
     }
 
-    // Limit to top 25 & map rank
-    const deals = rawDeals.slice(0, 25).map((deal: any, index: number) => ({
+    // Limit to top 100 & map rank
+    const deals = rawDeals.slice(0, 100).map((deal: any, index: number) => ({
         ...deal,
         rank: index + 1
     }))
@@ -328,32 +349,20 @@ export default async function DistressDealsPage(props: {
                 </section>
             )}
 
-            {/* FEED GRID */}
+            {/* DEALS TABLE */}
             <section className="space-y-4 px-0 sm:px-0 pb-20">
                 <h3 className="font-mono text-sm tracking-widest text-muted-foreground uppercase pb-2 px-4 sm:px-0 border-b border-border/50 flex items-center justify-between">
                     <span>Active Distress Deals</span>
                     <span className="text-xs">Showing {deals.length} records</span>
                 </h3>
 
-                <div className="flex flex-col space-y-3">
-                    {deals.length === 0 ? (
-                        <div className="flex items-center justify-center p-12 border border-border/50 rounded-xl bg-card">
-                            <p className="text-muted-foreground text-sm">No distress deals found matching the current criteria or connection dropped.</p>
-                        </div>
-                    ) : deals.map((deal: any, idx: number) => (
-                        <DistressFeedCard
-                            key={deal.id || idx}
-                            {...deal}
-                            rank={idx + 1}
-                            psf={deal.psf}
-                            distressScore={deal.distressScore}
-                            distressTags={deal.distressTags}
-                            areaBenchmarkPsf={deal.areaBenchmarkPsf}
-                            domTier={deal.domTier}
-                            isOffplanDrop={deal.isOffplanDrop}
-                        />
-                    ))}
-                </div>
+                {deals.length === 0 ? (
+                    <div className="flex items-center justify-center p-12 border border-border/50 rounded-xl bg-card">
+                        <p className="text-muted-foreground text-sm">No distress deals found matching the current criteria or connection dropped.</p>
+                    </div>
+                ) : (
+                    <DistressTable deals={deals} />
+                )}
             </section>
 
         </div>
