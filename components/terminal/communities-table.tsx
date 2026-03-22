@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useMemo } from 'react'
 import { useRouter } from 'next/navigation'
+import { useLocalStorage } from '@/lib/hooks/use-local-storage'
 import {
   useReactTable,
   getCoreRowModel,
@@ -88,8 +89,8 @@ interface Props {
 
 export function CommunitiesTable({ data }: Props) {
   const router = useRouter()
-  const [sorting, setSorting] = useState<SortingState>([])
-  const [globalFilter, setGlobalFilter] = useState('')
+  const [sorting, setSorting] = useLocalStorage<SortingState>('terminal:communities:sort', [])
+  const [globalFilter, setGlobalFilter] = useLocalStorage<string>('terminal:communities:filter', '')
 
   const columns = useMemo<ColumnDef<Community>[]>(() => [
     {

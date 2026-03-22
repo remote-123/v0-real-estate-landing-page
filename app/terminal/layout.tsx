@@ -1,18 +1,13 @@
 import React from "react"
 import type { Metadata } from "next"
 import Link from "next/link"
-import { Calendar, Menu } from "lucide-react"
-import { InvestorSidebar, SidebarContent } from "@/components/terminal/sidebar"
+import { Calendar } from "lucide-react"
+import { InvestorSidebar } from "@/components/terminal/sidebar"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { FeedbackModal } from "@/components/terminal/feedback-modal"
+import { MobileNav } from "@/components/terminal/mobile-nav"
 import { Button } from "@/components/ui/button"
 import { SITE_CONFIG } from "@/lib/constants"
-import {
-    Sheet,
-    SheetContent,
-    SheetTrigger,
-    SheetHeader,
-    SheetTitle,
-} from "@/components/ui/sheet"
 
 export const metadata: Metadata = {
     title: 'Investor Terminal | North Capital DXB',
@@ -72,20 +67,7 @@ export default function InvestorTerminalLayout({
                 <header className="sticky top-0 z-30 flex h-16 items-center border-b border-border/50 bg-background/80 backdrop-blur-md px-6 lg:px-8">
                     <div className="flex flex-1 items-center justify-between">
                         <div className="flex items-center gap-4">
-                            <Sheet>
-                                <SheetTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="lg:hidden">
-                                        <Menu className="h-5 w-5" />
-                                        <span className="sr-only">Toggle navigation</span>
-                                    </Button>
-                                </SheetTrigger>
-                                <SheetContent side="left" className="p-0 w-64">
-                                    <SheetHeader className="sr-only">
-                                        <SheetTitle>Navigation Menu</SheetTitle>
-                                    </SheetHeader>
-                                    <SidebarContent />
-                                </SheetContent>
-                            </Sheet>
+                            <MobileNav />
                             <h1 className="text-[10px] sm:text-sm font-medium text-muted-foreground uppercase tracking-widest flex items-center gap-2">
                                 <span className="hidden sm:inline">Investor Terminal</span>
                                 <span className="sm:mx-2 opacity-30">/</span>
@@ -100,6 +82,7 @@ export default function InvestorTerminalLayout({
                                     Book an Appointment
                                 </Link>
                             </Button>
+                            <FeedbackModal />
                             <ThemeToggle />
                             <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/50 shrink-0">
                                 <div className="h-2 w-2 rounded-full bg-emerald-500" />

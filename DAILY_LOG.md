@@ -1,5 +1,152 @@
 # Daily Log
 
+## 2026-03-23 (continued) — Distress Deals snapshot cron + UI overhaul
+
+### Tasks Completed
+1. **`distress_listings` table created in Neon** — full schema with `canonical_key`, `snapshots` JSONB, `price_drop_confirmed`, `confidence_tier`, DLD enrichment columns, 5 indexes
+2. **`/api/cron/snapshot-distress-listings` route created** — daily cron: fetches PF sale listings, upserts with price tracking, detects real price drops, re-listing matching via canonical_key, DLD PSF enrichment, marks disappeared listings, prunes expired rows
+3. **Distress deals UI overhaul**:
+   - Removed Bayut toggle (deprecated 2026-03-21)
+   - Replaced "Book an Appointment" with "Secure a Deal" WhatsApp button
+   - Each card now opens a detail modal (DealModal) with PSF vs market, score meter, CTAs
+   - Feedback modal with lightbulb icon, CAPTCHA, Telegram integration
+4. **Terminal UX improvements**: localStorage filter persistence, mobile sidebar auto-close, Yield Decay hidden, feedback modal
+5. **Build verified clean** ✅
+
+### Register Cron
+- URL: `https://northcapitaldxb.com/api/cron/snapshot-distress-listings`
+- Method: GET
+- Header: `Authorization: Bearer CRON_SECRET`
+- Schedule: Daily 6:30 AM UTC (30 min after main listings cron)
+
+---
+
+## 2026-03-23 — Distress Deals data accuracy strategy research
+
+### Task
+Researched the existing distress-deals implementation end-to-end and produced a complete strategy for replacing synthetic price-drop data with verifiable evidence.
+
+### Key Findings
+- `app/terminal/distress-deals/page.tsx`: all "original price" and "DROP %" values are fabricated using `(listing_id % 20) / 100` as a drop factor — no real price history exists
+- `app/api/cron/telegram-distress-digest/route.ts`: daily Telegram digest also uses the same synthetic drop formula
+- The Bayut API toggle in `DistressFilters` is dead code — Bayut was deprecated 2026-03-21
+- The DLD PSF benchmark comparison (`fetchAreaBenchmarks`) already queries `dld_transactions` and is the only genuine signal currently in use
+
+### Strategy Produced
+Full strategy covers:
+1. `distress_listings` table schema — snapshot store with `price_at_first_seen`, append-only `snapshots` JSONB, `price_drop_confirmed` boolean, `canonical_key` for re-listing detection, `dld_area_avg_psf` enrichment fields, `confidence_tier` (1/2/3), `retained_until` for 90-day pruning
+2. Re-listing matching algorithm — `canonical_key` = normalize(building) + bedrooms + size_bucket(±50sqft) + type; match candidates that disappeared within 90 days; confidence score from 4 signals (area match, date gap, listing gap 1-30 days, price ≤ old price); threshold 0.5 for relisting flag, 0.7 to inherit price baseline and set `price_drop_confirmed = true` immediately
+3. DLD enrichment SQL — batch UPDATE that joins `dld_transactions` on area+type+bedrooms to populate `dld_area_avg_psf` and `dld_psf_delta_pct`
+4. Three confidence tiers: Tier 1 = we observed a real drop; Tier 2 = PSF is 10%+ below DLD 12-month avg; Tier 3 = DOM signal only
+5. Cron pseudocode for `/api/cron/snapshot-distress` — fetch, mark disappeared, upsert with history, DLD enrichment, recompute scores, prune
+6. UI changes: remove synthetic strikethrough price for Tier 3, add "Verified Drop" / "Below DLD Avg" badges, price history timeline in modal, replace header macro stats with truthful counts, add tier filter buttons, remove dead Bayut toggle
+
+### Files to Create/Modify
+- `app/api/cron/snapshot-distress/route.ts` — new cron route
+- `app/terminal/distress-deals/page.tsx` — read from `distress_listings` instead of live API
+- `components/terminal/distress-feed-card.tsx` — tier badges, history timeline, DLD block
+- `components/terminal/distress-filters.tsx` — remove Bayut, add tier filter
+
+---
+
+## 2026-03-22 — AI video pipeline research: tools for automated data-driven social video
+
+### Task
+Researched and compared all tool categories needed for a fully automated "data to published short-form video" pipeline for northcapitaldxb.com — covering script generation, AI voiceover, AI avatars, stock footage APIs, video renderers, data visualization in video, and auto-publishing APIs. Produced structured report with recommended stack and cost model at 10 videos/week.
+
+### Key Recommendation (full report in conversation)
+Recommended stack: Gemini Flash (scripts, free) + ElevenLabs Creator tier (voiceover, $22/mo) + Shotstack (rendering, already integrated) + Pexels API (stock footage, free) + Remotion for data chart sequences + Ayrshare Premium ($99/mo) for unified publish to Instagram/TikTok/LinkedIn/YouTube. No AI avatar needed at first. Estimated cost: $7-12/video at 10/week including all APIs.
+
+---
+
+## 2026-03-22 — Blog OG image font, "More Insights" cards, cross-sell sidebar
+
+### Tasks Completed
+
+1. **`app/api/blog-og/route.tsx`** — Replaced generic `fontFamily: 'serif'` with Playfair Display Bold (brand font). Fetches the woff2 binary at request time via the Google Fonts CSS2 API and passes it to `ImageResponse` via the `fonts` option. Title now renders in Playfair Display 700 — matches brand headings exactly.
+
+2. **`app/blog/[slug]/page.tsx`** — "More Insights" cards: replaced the `bg-accent/10` placeholder div with `BlogOgImage` component so every card always shows the dynamically-generated OG image when no `mainImage` is set. Image is now wrapped in a `relative aspect-[16/9]` container consistent with the `mainImage` path.
+
+3. **`app/blog/[slug]/page.tsx`** — OG metadata: added `type: 'image/png'` to the `images` array in `openGraph` metadata so WhatsApp, Telegram, and other social parsers correctly identify the image format.
+
+4. **`app/blog/[slug]/page.tsx`** — Added two cross-sell cards to the sticky sidebar:
+   - **Dubai Market Terminal** — links to `/terminal` with BarChart2 icon and "Explore the data" CTA
+   - **Ask on WhatsApp** — links to `wa.me/971554006230` with pre-filled message, styled with WhatsApp green
+
+---
+
+## 2026-03-22 — Adaptive blog prompt system + HowTo schema
+
+### Tasks Completed
+
+1. **`lib/ai-guidelines.ts`** — Added `BLOG_JSON_FORMAT_RULE` export. 5-type adaptive content classifier with SEO/AEO-optimised H2 templates per type (incorporates SEO auditor recommendations):
+   - `INVESTMENT_ANALYSIS` — Macro Thesis / Bull Case / Bear Case / North Capital Verdict (unchanged)
+   - `MARKET_DATA` — What the Data Shows / Trend Investors Are Missing / Investor Implication (required) / What This Means If You're Selling
+   - `REGULATORY_NEWS` — What Changed + When / Who Is Affected / What to Do Before Deadline / Property Values & Yields / Who This Helps vs Hurts. Rule: every claim attributed to named authority + effective date.
+   - `AREA_GUIDE` — Location Thesis / Rental Profile (yield, tenant mix, vacancy) / PSF Trajectory 3Y / Supply Pipeline Risk (required, with unit count + dates) / Who Should/Shouldn't Invest. Anti-lifestyle-drift rule.
+   - `HOW_TO` — Pre-conditions / Steps as numbered H2s / Mistakes + AED cost figures. Scope-limited to AED 1M+ investor processes only.
+   - Universal rules: 4+ FAQs with asset/area/metric name in question, excerpt under 155 chars with investment implication, 4 keyTakeaways with numbers, bear-equivalent required for all types.
+   - JSON output now includes `contentType` field.
+
+2. **`sanity/schemaTypes/post.ts`** — Added `contentType` field (list of 5 values, backend-only use) and `sourceUrl` field.
+
+3. **`app/blog/[slug]/page.tsx`** — Added conditional `HowTo` JSON-LD schema for HOW_TO posts (extracts H2 blocks as `HowToStep` items). Injected alongside existing FAQPage + BlogPosting schemas. Added `contentType` to GROQ query.
+
+4. **`app/api/ai-blog-generator/route.ts`** + **`app/api/blog-from-url/route.ts`** — Removed inline `jsonFormatRule`; now use shared `BLOG_JSON_FORMAT_RULE`. Store `contentType` from AI output to Sanity doc (validated against allowlist).
+
+---
+
+## 2026-03-22 (Sprint 9) — Session wrap-up: area-momentum fix + full build verified
+
+### Tasks Completed
+
+1. **`app/terminal/area-momentum/page.tsx`** — Fixed runtime crash: postgres.js returns NUMERIC columns as JS strings; `.toFixed()` and arithmetic on raw values threw at runtime. Fixed by:
+   - Coercing all numeric fields via `.map()` after `areas.slice(0, 60)` — explicit `Number()` on `curr_psf`, `price_mom_pct`, `curr_vol`, `vol_mom_pct`, `momentum_score`
+   - Updated `pct()` and `volPct()` helpers to accept `number | string` and call `Number(val)` internally
+   - Updated `AreaRow` interface fields to `number | string`
+
+2. **Build verified** — `npm run build` passes clean. All 9 terminal pages compile: `area-momentum`, `building-comparator`, `communities`, `distress-deals`, `floor-plan-pricer`, `price-index`, `rental-yield-decay`, `supply-pipeline`, `transaction-pulse`, `yield-map`.
+
+---
+
+## 2026-03-22 — Floor Plan Pricer terminal page
+
+### Tasks Completed
+
+1. **`app/terminal/floor-plan-pricer/page.tsx`** — Server component. Runs `fetchPricerData` against `dld_transactions` using PERCENTILE_CONT to compute P10/P25/P50/P75/P90 per `area_name_en` x `rooms_en`, 24-month rolling window, sales only, min 20 txns. Summary stat cards (communities, room types, total transactions). Passes full dataset as props to `PricerControls`. `export const revalidate = 3600`.
+
+2. **`components/terminal/pricer-controls.tsx`** — Client component. Area search (case-insensitive contains). Room pills: All / Studio / 1 B/R / 2 B/R / 3 B/R / 4 B/R+ (4+ matches 4-7 B/R + PENTHOUSE). Table: Community, Bedrooms, P10 (muted), P25, Median P50 (bold emerald), P75, P90 (muted), Fair Value Band badge (emerald pill), Distribution bar (xl+ only), Txns. Distribution bar is pure CSS — emerald fill P25–P75, bright P50 dot, positions as % of (v − P10) / (P90 − P10). No extra chart library.
+
+3. **`components/terminal/sidebar.tsx`** — Added `Ruler` to lucide-react imports. Added `{ href: '/terminal/floor-plan-pricer', label: 'Floor Plan Pricer', icon: Ruler }` after Area Momentum.
+
+---
+
+## 2026-03-22 (Sprint 8) — Building Comparator terminal page
+
+### Tasks Completed
+
+1. **`app/api/building-search/route.ts`** — GET `/api/building-search?q=...` typeahead. Queries `dld_transactions` for distinct `building_name_en` ILIKE match, Sales only, returns up to 15 results with `area_name_en`.
+
+2. **`app/api/building-data/route.ts`** — GET `/api/building-data?a=...&b=...`. Returns `quarterly` (3yr avg PSM per quarter per building, with deal count and nearest metro) and `serviceCharges` (annual residential service cost from `dld_service_charges`).
+
+3. **`app/terminal/building-comparator/page.tsx`** — Full `"use client"` page. Dual debounced typeahead search boxes (Building A + optional Building B). Recharts `LineChart` with emerald/blue dual lines for PSM trend. Stats grid (nearest metro, latest PSM, 3yr deal count, avg quarterly deals). Service charges table cross-referencing both buildings by year.
+
+4. **Sidebar** (`components/terminal/sidebar.tsx`) — Added `Building2` import and `{ label: "Building Comparator", href: "/terminal/building-comparator", icon: Building2 }` after Service Charges.
+
+---
+
+## 2026-03-22 (Sprint 7) — Rental Yield Decay terminal page
+
+### Tasks Completed
+
+1. **`/terminal/rental-yield-decay`** — New server component page (`app/terminal/rental-yield-decay/page.tsx`). Runs the 3-year quarterly yield query against `mv_txn_monthly`. Computes stat cards: areas below 5% threshold, average current yield, most compressed area+bedroom combo. `revalidate = 3600`.
+
+2. **`components/terminal/yield-decay-controls.tsx`** — Client component with area dropdown (sorted by transaction volume), room-type pills (Studio / 1 B/R / 2 B/R / 3 B/R / All). Recharts `LineChart` with a red dashed `ReferenceLine` at y=5 labeled "Risk-Free 5%". Lines color-coded: Studio=indigo, 1BR=emerald, 2BR=yellow, 3BR=orange. Table below chart ranks all areas by latest yield with a red dot flag on rows below 5%, and shows 1yr change in percentage points.
+
+3. **Sidebar** (`components/terminal/sidebar.tsx`) — Added `TrendingDown` import and `{ label: "Yield Decay", href: "/terminal/rental-yield-decay", icon: TrendingDown }` entry after Building Comparator.
+
+---
+
 ## 2026-03-22 (Sprint 6) — Admin panel revamp + URL-to-blog pipeline + Telegram inbound
 
 ### Tasks Completed

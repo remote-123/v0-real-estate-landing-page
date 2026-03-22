@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation"
 import {
   ArrowLeft,
   BarChart3,
+  Building2,
   Calculator,
   Compass,
   FileText,
@@ -13,6 +14,7 @@ import {
   Map,
   Settings,
   ShieldCheck,
+  TrendingDown,
   TrendingUp
 } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -34,6 +36,8 @@ export const sidebarLinks = [
       { label: "Price Index", href: "/terminal/price-index", icon: TrendingUp },
       { label: "Supply Pipeline", href: "/terminal/supply-pipeline", icon: BarChart3 },
       { label: "Service Charges", href: "/terminal/service-charges", icon: FileText },
+      { label: "Building Comparator", href: "/terminal/building-comparator", icon: Building2 },
+      // { label: "Yield Decay", href: "/terminal/rental-yield-decay", icon: TrendingDown }, // hidden — insufficient data
       // { label: "Project Screener", href: "/investor-terminal/screener", icon: Compass },
       // { label: "Investment Theses", href: "/investor-terminal/theses", icon: FileText },
     ]
@@ -47,13 +51,13 @@ export const sidebarLinks = [
   }
 ]
 
-export function SidebarContent() {
+export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname()
 
   return (
     <div className="flex flex-col h-full">
       <div className="flex h-16 items-center px-6 border-b border-border/50">
-        <Link href="/" className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2" onClick={onNavigate}>
           <span className="font-serif text-lg font-bold tracking-tight text-foreground">
             NORTH CAPITAL
           </span>
@@ -73,6 +77,7 @@ export function SidebarContent() {
                   <li key={link.href}>
                     <Link
                       href={link.href}
+                      onClick={onNavigate}
                       className={cn(
                         "group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all",
                         isActive

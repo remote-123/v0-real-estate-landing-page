@@ -219,13 +219,12 @@ export default async function DistressDealsPage(props: {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
     const searchParams = await props.searchParams
-    const source = typeof searchParams.source === 'string' ? searchParams.source : 'pf'
     const typeFilter = typeof searchParams.type === 'string' ? searchParams.type : 'All'
     const sortFilter = typeof searchParams.sort === 'string' ? searchParams.sort : 'biggest-drop'
     const areaFilter = typeof searchParams.area === 'string' ? searchParams.area : ''
 
     const [rawFetched, benchmarks] = await Promise.all([
-        source === 'pf' ? fetchPropertyFinderDeals() : fetchBayutDeals(),
+        fetchPropertyFinderDeals(),
         fetchAreaBenchmarks(),
     ])
 

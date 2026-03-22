@@ -1,10 +1,11 @@
 "use client"
 
 import { useRouter, useSearchParams } from "next/navigation"
-import { SITE_CONFIG } from "@/lib/constants"
 import { Button } from "@/components/ui/button"
-import { Calendar } from "lucide-react"
-import Link from "next/link"
+import { MessageCircle } from "lucide-react"
+
+const WA_NUMBER = "971554006230"
+const WA_MESSAGE = encodeURIComponent("Hi, I found a distress deal on North Capital DXB and I'd like to secure it. Can you help?")
 
 export function DistressFilters({ communities = [] }: { communities?: string[] }) {
     const router = useRouter()
@@ -12,7 +13,6 @@ export function DistressFilters({ communities = [] }: { communities?: string[] }
 
     const activeCategory = searchParams.get('type') || "All"
     const activeSort = searchParams.get('sort') || "biggest-drop"
-    const activeSource = searchParams.get('source') || "pf"
     const activeArea = searchParams.get('area') || ''
 
     const categories = ["All", "Apartment", "Villa", "Townhouse", "Penthouse"]
@@ -27,22 +27,6 @@ export function DistressFilters({ communities = [] }: { communities?: string[] }
         <div className="flex flex-col sm:flex-row gap-4 lg:gap-8 items-center justify-between py-6 px-4 sm:px-0">
 
             <div className="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto overflow-x-auto no-scrollbar pb-2 sm:pb-0">
-                {/* Data Source toggle */}
-                <div className="flex gap-1 p-1 rounded-lg bg-secondary/30 border border-border/50 shrink-0">
-                    <button
-                        onClick={() => updateFilter('source', 'pf')}
-                        className={`px-4 py-1.5 text-xs font-bold rounded flex items-center gap-1.5 transition-colors ${activeSource === 'pf' ? 'bg-accent text-white shadow' : 'text-muted-foreground hover:text-foreground'}`}
-                    >
-                        PROPERTY FINDER
-                    </button>
-                    <button
-                        onClick={() => updateFilter('source', 'bayut')}
-                        className={`px-4 py-1.5 text-xs font-bold rounded flex items-center gap-1.5 transition-colors ${activeSource === 'bayut' ? 'bg-accent text-white shadow' : 'text-muted-foreground hover:text-foreground'}`}
-                    >
-                        BAYUT DATA
-                    </button>
-                </div>
-
                 {/* Category segmented control */}
                 <div className="flex gap-2 p-1 rounded-lg bg-secondary/30 border border-border/50 shrink-0">
                     {categories.map(cat => (
@@ -58,11 +42,11 @@ export function DistressFilters({ communities = [] }: { communities?: string[] }
                         </button>
                     ))}
                 </div>
-                <Button asChild variant="outline" size="sm" className="gap-2 border-accent/20 hover:bg-accent/10 hover:text-accent transition-colors">
-                    <Link href={SITE_CONFIG.calendarLink} target="_blank">
-                        <Calendar className="h-3 w-3" />
-                        Book an Appointment
-                    </Link>
+                <Button asChild size="sm" className="gap-2 bg-emerald-600 hover:bg-emerald-500 text-white shrink-0">
+                    <a href={`https://wa.me/${WA_NUMBER}?text=${WA_MESSAGE}`} target="_blank" rel="noopener noreferrer">
+                        <MessageCircle className="h-3 w-3" />
+                        Secure a Deal
+                    </a>
                 </Button>
             </div>
 
