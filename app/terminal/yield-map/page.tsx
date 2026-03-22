@@ -4,6 +4,7 @@ import { sql } from "@/lib/db"
 import { StatCard } from "@/components/terminal/stat-card"
 import { YieldMapTable } from "@/components/terminal/yield-map-table"
 import type { YieldRow } from "@/components/terminal/yield-map-table"
+import { formatAreaName } from "@/lib/area-names"
 
 export const revalidate = 3600
 
@@ -103,7 +104,7 @@ export default async function YieldMapPage() {
           trendDir="up"
           trend="highest community/bed type"
           icon={TrendingUp}
-          description={topYield !== null ? `${rows[0]?.area_name_en} — ${rows[0]?.rooms_en}` : "No data"}
+          description={topYield !== null ? `${formatAreaName(rows[0]?.area_name_en)} — ${rows[0]?.rooms_en}` : "No data"}
         />
         <StatCard
           label="Avg Yield"

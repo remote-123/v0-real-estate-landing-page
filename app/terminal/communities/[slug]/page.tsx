@@ -7,6 +7,7 @@ import { CommunityCharts, type MultiPricePoint } from '@/components/terminal/com
 import { CommunityFilters } from '@/components/terminal/community-filters'
 import { cn } from '@/lib/utils'
 import { Suspense } from 'react'
+import { formatAreaName } from '@/lib/area-names'
 
 export const dynamic = 'force-dynamic'
 
@@ -188,7 +189,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params
   const result = await fetchAreaData(slug, 'flat')
   if (!result) return {}
-  const name = result.area.area_name_en
+  const name = formatAreaName(result.area.area_name_en)
   return {
     title: `${name} — Community Intelligence | North Capital DXB`,
     description: `Price per sqft, transaction volume, and supply pipeline for ${name}, Dubai.`,
@@ -241,7 +242,7 @@ export default async function CommunityPage({
             <div className="flex items-center gap-2 mb-1">
               <span className="font-mono text-xs text-muted-foreground uppercase tracking-widest">Dubai</span>
             </div>
-            <h1 className="font-serif text-3xl sm:text-4xl font-bold text-foreground">{area.area_name_en}</h1>
+            <h1 className="font-serif text-3xl sm:text-4xl font-bold text-foreground">{formatAreaName(area.area_name_en)}</h1>
           </div>
           {!noData && (
             <div className="flex items-center gap-2">

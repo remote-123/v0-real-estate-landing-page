@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { sql } from "@/lib/db"
 import { TrendingUp, Zap, BarChart3 } from "lucide-react"
 import { StatCard } from "@/components/terminal/stat-card"
+import { formatAreaName } from "@/lib/area-names"
 
 export const revalidate = 3600
 
@@ -141,7 +142,7 @@ export default async function AreaMomentumPage() {
           label="Top Momentum Score"
           value={topScore.toFixed(1)}
           icon={BarChart3}
-          description={display[0]?.area_name_en ?? "—"}
+          description={display[0] ? formatAreaName(display[0].area_name_en) : "—"}
         />
       </div>
 
@@ -194,7 +195,7 @@ export default async function AreaMomentumPage() {
                       {i + 1}
                     </td>
                     <td className="px-4 py-3 font-medium text-foreground">
-                      {area.area_name_en}
+                      {formatAreaName(area.area_name_en)}
                     </td>
                     <td className="px-4 py-3 text-right font-mono text-xs text-foreground">
                       {area.curr_psf.toLocaleString()}

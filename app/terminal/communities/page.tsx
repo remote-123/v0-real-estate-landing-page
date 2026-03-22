@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { CommunitiesTable } from '@/components/terminal/communities-table'
 import { type Community } from '@/lib/types/community'
 import { sql } from '@/lib/db'
+import { formatAreaName } from '@/lib/area-names'
 
 export const dynamic = 'force-dynamic'
 
@@ -48,7 +49,7 @@ function mapToCommunity(r: CommunityRow): Community {
   const apartments = Math.round(totalUnits * 0.78)
   return {
     slug: toSlug(r.area_name_en),
-    name: r.area_name_en,
+    name: formatAreaName(r.area_name_en),
     area: '',
     type: 'mixed',
     isFreehold: true,

@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react"
 import { cn } from "@/lib/utils"
 import type { PricerRow } from "@/app/terminal/floor-plan-pricer/page"
+import { formatAreaName } from "@/lib/area-names"
 
 const ROOM_PILLS = [
   { label: "All", value: "all" },
@@ -149,7 +150,7 @@ export function PricerControls({ data }: Props) {
                   )}
                 >
                   <td className="px-4 py-3 font-medium text-foreground whitespace-nowrap max-w-[180px] truncate">
-                    {row.area_name_en}
+                    {formatAreaName(row.area_name_en)}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
                     {row.rooms_en}

@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react"
 import { ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { formatAreaName } from "@/lib/area-names"
 
 export interface YieldRow {
   area_name_en: string
@@ -195,7 +196,7 @@ export function YieldMapTable({ rows }: Props) {
                     )}
                   >
                     <td className="px-3 py-2.5 sticky left-0 z-10 bg-card/90 font-medium text-foreground whitespace-nowrap">
-                      {r.area_name_en}
+                      {formatAreaName(r.area_name_en)}
                     </td>
                     <td className="px-3 py-2.5 text-muted-foreground whitespace-nowrap text-xs">
                       {r.rooms_en}
