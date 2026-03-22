@@ -49,6 +49,30 @@ async function fetchPFListings(): Promise<any[]> {
   return Array.isArray(data?.data) ? data.data.filter((x: any) => x?.property_id) : []
 }
 
+// ── Location extraction ───────────────────────────────────────────────────────
+// address.community.name / address.building.name do NOT exist in the PF API.
+// address only has { full_name, coordinates }.
+// location_tree is the reliable source: level 1=community, 2=sub-community, 3=building.
+
+function extractLocation(item: any): { area: string | null; building: string | null } {
+  const tree: any[] = Array.isArray(item.location_tree) ? item.location_tree : []
+  const community    = tree.find((t: any) => t.level === "1")?.name ?? null
+  const subCommunity = tree.find((t: any) => t.level === "2")?.name ?? null
+  const buildingNode = tree.find((t: any) => t.level === "3")?.name ?? null
+
+  // Fallback: parse full_name "Building, Community, Dubai" — community is second-to-last token
+  const fullParts = item.address?.full_name
+    ? item.address.full_name.split(",").map((s: string) => s.trim()).filter(Boolean)
+    : []
+  const fallbackArea     = fullParts.length >= 2 ? fullParts[fullParts.length - 2] : (fullParts[0] ?? null)
+  const fallbackBuilding = fullParts.length >= 3 ? fullParts[0] : null
+
+  return {
+    area:     community    ?? fallbackArea,
+    building: buildingNode ?? subCommunity ?? fallbackBuilding,
+  }
+}
+
 // ── Canonical key for re-listing detection ────────────────────────────────────
 
 function normalize(s: string): string {
@@ -65,14 +89,13 @@ function roundToNearest50(n: number): number {
 }
 
 function buildCanonicalKey(item: any): string | null {
-  const area = item.address?.community?.name || item.address?.full_name?.split(",")?.[0] || ""
-  const building = item.address?.building?.name || item.address?.full_name?.split(",")?.[1] || ""
+  const { area, building } = extractLocation(item)
   const beds = item.bedrooms?.toString() || ""
   const size = item.size?.value ? roundToNearest50(Math.round(item.size.value)) : 0
   const type = item.property_type?.toUpperCase() || ""
 
   if (!area && !building) return null
-  const base = normalize(building || area)
+  const base = normalize(building || area || "")
   return `${base}|${beds}|${size}|${type}`
 }
 
@@ -100,8 +123,7 @@ async function getDldAvgPsf(
         AND area_name_en ILIKE ${`%${area}%`}
         AND property_sub_type_en = ${typeFilter}
         AND rooms_en = ${bedsNum}
-        AND meter_sale_price > 200
-        AND meter_sale_price < 15000
+        AND meter_sale_price BETWEEN 500 AND 150000
         AND instance_date >= NOW() - INTERVAL '12 months'
       HAVING COUNT(*) >= 5
     `
@@ -131,8 +153,7 @@ async function run() {
 
       const sizeVal = Math.round(item.size?.value || 0)
       const psf = sizeVal > 0 ? Math.round(price / sizeVal) : null
-      const area = item.address?.community?.name || item.address?.full_name?.split(",")?.[0]?.trim() || null
-      const building = item.address?.building?.name || null
+      const { area, building } = extractLocation(item)
       const type = item.property_type?.toUpperCase() || null
       const beds = item.bedrooms?.toString() || null
       const listedDate = item.listed_date ? item.listed_date.slice(0, 10) : null
