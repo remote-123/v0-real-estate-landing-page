@@ -120,28 +120,50 @@ async function fetchPropertyFinderDeals() {
     }
 }
 
+// Returns a map keyed by "area_lower|TYPE" e.g. "dubai marina|APARTMENT"
+// meter_sale_price is AED/sqm — divide by 10.764 to get AED/sqft
 async function fetchAreaBenchmarks(): Promise<Map<string, number>> {
     try {
-        const rows = await sql<{ area_name_en: string; avg_psf: number }[]>`
-      SELECT area_name_en, AVG(meter_sale_price)::numeric(10,0) AS avg_psf
+        const rows = await sql<{ area_name_en: string; property_type: string; avg_psf: number }[]>`
+      SELECT
+        area_name_en,
+        CASE
+          WHEN property_sub_type_en IN ('Flat','Hotel Apartment','Penthouse') THEN 'APARTMENT'
+          WHEN property_sub_type_en IN ('Villa','Villa Compound') THEN 'VILLA'
+          WHEN property_sub_type_en = 'Townhouse' THEN 'TOWNHOUSE'
+          ELSE 'OTHER'
+        END AS property_type,
+        ROUND(AVG(meter_sale_price / 10.764)::numeric, 0)::integer AS avg_psf
       FROM dld_transactions
       WHERE trans_group_en = 'Sales'
-        AND meter_sale_price > 50
-        AND meter_sale_price < 10000
+        AND meter_sale_price > 500
+        AND meter_sale_price < 150000
         AND instance_date >= NOW() - INTERVAL '18 months'
         AND area_name_en IS NOT NULL
-      GROUP BY area_name_en
+      GROUP BY area_name_en, property_type
       HAVING COUNT(*) >= 5
     `
         const map = new Map<string, number>()
-        for (const r of rows) map.set(r.area_name_en.toLowerCase(), Number(r.avg_psf))
+        for (const r of rows) {
+            map.set(`${r.area_name_en.toLowerCase()}|${r.property_type}`, Number(r.avg_psf))
+        }
         return map
     } catch { return new Map() }
 }
 
-function matchBenchmark(location: string, benchmarks: Map<string, number>): number | null {
+function matchBenchmark(location: string, type: string, benchmarks: Map<string, number>): number | null {
     const parts = location.split(',').map(p => p.trim().toLowerCase()).filter(Boolean)
-    for (const [areaKey, psf] of benchmarks) {
+    const normType = type.includes('VILLA') ? 'VILLA' : type.includes('TOWN') ? 'TOWNHOUSE' : 'APARTMENT'
+    for (const [key, psf] of benchmarks) {
+        const [areaKey, benchType] = key.split('|')
+        if (benchType !== normType) continue
+        for (const part of parts) {
+            if (areaKey.includes(part) || part.includes(areaKey)) return psf
+        }
+    }
+    // Fallback: any type match in the area
+    for (const [key, psf] of benchmarks) {
+        const [areaKey] = key.split('|')
         for (const part of parts) {
             if (areaKey.includes(part) || part.includes(areaKey)) return psf
         }
@@ -230,7 +252,7 @@ export default async function DistressDealsPage(props: {
 
     let rawDeals = rawFetched.map((deal: any) => {
         const psf = deal.sizeSqft > 0 ? Math.round(deal.currentPrice / deal.sizeSqft) : 0
-        const areaBenchmarkPsf = matchBenchmark(deal.location, benchmarks)
+        const areaBenchmarkPsf = matchBenchmark(deal.location, deal.type, benchmarks)
         const { score: distressScore, tags: distressTags } = scoreDistress(
             psf, areaBenchmarkPsf, deal.daysOnMarket, deal.isOffplanDrop, deal.originalPrice, deal.currentPrice
         )
