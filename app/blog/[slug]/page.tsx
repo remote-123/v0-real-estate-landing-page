@@ -6,7 +6,7 @@ import { urlForImage } from "@/sanity/lib/image"
 import { PortableText } from "next-sanity"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
-import { Clock, User, CheckCircle2, HelpCircle, Twitter, Linkedin, MessageCircle, ArrowUpRight } from "lucide-react"
+import { Clock, User, CheckCircle2, HelpCircle, Twitter, Linkedin, MessageCircle, ArrowUpRight, BarChart2 } from "lucide-react"
 import { BlogAdvisorForm } from "@/components/blog-advisor-form"
 import { BlogOgImage } from "@/components/blog-og-image"
 
@@ -23,6 +23,7 @@ const query = `*[_type == "post" && slug.current == $slug][0]{
   keyTakeaways,
   faqs,
   body,
+  contentType,
   _updatedAt
 }`
 
@@ -55,7 +56,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     openGraph: {
       title: post.title,
       description: post.excerpt,
-      images: [{ url: ogImage, width: 1200, height: 630 }],
+      images: [{ url: ogImage, width: 1200, height: 630, type: 'image/png' }],
       type: 'article',
     },
     alternates: {
@@ -119,6 +120,22 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     }))
   } : null;
 
+  // HowTo schema — only for HOW_TO content type
+  // Extracts H2 headings from bodyBlocks as steps
+  const howToSchema = post.contentType === 'HOW_TO' && post.body && post.body.length > 0 ? {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "name": post.title,
+    "description": post.excerpt,
+    "step": (post.body as any[])
+      .filter((b: any) => b.style === 'h2' && b.children?.[0]?.text)
+      .map((b: any, idx: number) => ({
+        "@type": "HowToStep",
+        "position": idx + 1,
+        "name": b.children[0].text,
+      }))
+  } : null;
+
   const blogPostingSchema = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
@@ -156,6 +173,12 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        />
+      )}
+      {howToSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(howToSchema) }}
         />
       )}
       <script
@@ -294,18 +317,18 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                         href={`/blog/${related.slug}`}
                         className="group flex flex-col rounded-xl border border-border bg-card overflow-hidden hover:border-accent/40 transition-colors"
                       >
-                        {related.mainImage ? (
-                          <div className="relative aspect-[16/9] w-full overflow-hidden shrink-0">
+                        <div className="relative aspect-[16/9] w-full overflow-hidden shrink-0">
+                          {related.mainImage ? (
                             <Image
                               src={urlForImage(related.mainImage).width(600).height(338).url()}
                               alt={related.title}
                               fill
                               className="object-cover group-hover:scale-105 transition-transform duration-300"
                             />
-                          </div>
-                        ) : (
-                          <div className="aspect-[16/9] w-full bg-accent/10 shrink-0" />
-                        )}
+                          ) : (
+                            <BlogOgImage title={related.title} className="object-cover group-hover:scale-105 transition-transform duration-300" />
+                          )}
+                        </div>
                         <div className="flex flex-col flex-1 p-4 gap-2">
                           <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
                             {related.publishedAt
@@ -347,6 +370,43 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                 </p>
                 <BlogAdvisorForm postTitle={post.title} />
               </div>
+
+              {/* Tool 2: Terminal CTA */}
+              <Link
+                href="/terminal"
+                className="group block rounded-xl border border-border bg-card p-5 hover:border-accent/40 transition-colors"
+              >
+                <div className="flex items-start gap-3 mb-3">
+                  <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center">
+                    <BarChart2 className="h-4.5 w-4.5 text-accent" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-foreground text-sm leading-tight">Dubai Market Terminal</h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">Live DLD data, yield maps & transaction pulse</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 text-xs font-medium text-accent">
+                  Explore the data
+                  <ArrowUpRight className="h-3 w-3 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                </div>
+              </Link>
+
+              {/* Tool 3: WhatsApp CTA */}
+              <a
+                href="https://wa.me/971554006230?text=Hi%2C%20I%20read%20your%20article%20and%20have%20a%20question%20about%20investing%20in%20Dubai."
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex items-center gap-4 rounded-xl border border-[#25D366]/30 bg-[#25D366]/5 p-5 hover:bg-[#25D366]/10 hover:border-[#25D366]/50 transition-colors"
+              >
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-[#25D366] flex items-center justify-center shadow-sm">
+                  <MessageCircle className="h-5 w-5 text-white" fill="white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-foreground">Ask on WhatsApp</p>
+                  <p className="text-xs text-muted-foreground">Quick answers — usually within the hour</p>
+                </div>
+                <ArrowUpRight className="h-4 w-4 text-[#25D366] flex-shrink-0 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+              </a>
 
             </aside>
 

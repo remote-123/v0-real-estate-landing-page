@@ -72,5 +72,27 @@ export const postType = defineType({
       type: 'array',
       of: [{ type: 'block' }, { type: 'image', options: { hotspot: true } }],
     }),
+    // Content type for schema variant selection (backend only — not displayed on front end)
+    defineField({
+      name: 'contentType',
+      title: 'Content Type',
+      type: 'string',
+      description: 'Set automatically by AI generator. Used for HowTo schema injection.',
+      options: {
+        list: [
+          { title: 'Investment Analysis', value: 'INVESTMENT_ANALYSIS' },
+          { title: 'Market Data', value: 'MARKET_DATA' },
+          { title: 'Regulatory News', value: 'REGULATORY_NEWS' },
+          { title: 'Area Guide', value: 'AREA_GUIDE' },
+          { title: 'How-To', value: 'HOW_TO' },
+        ],
+      },
+    }),
+    defineField({
+      name: 'sourceUrl',
+      title: 'Source URL',
+      type: 'url',
+      description: 'Original article URL if generated from a web source.',
+    }),
   ],
 })

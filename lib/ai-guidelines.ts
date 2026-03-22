@@ -75,4 +75,107 @@ Return the output STRICTLY as a JSON object with no markdown formatting or extra
 // Helper function to dynamically inject formatting rules
 export const getGeminiPrompt = (taskFormat: string) => {
   return `${NORTH_CAPITAL_SYSTEM_PROMPT}\n\nSTRICT OUTPUT FORMAT:\n${taskFormat}`;
-};                  
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ADAPTIVE BLOG FORMAT RULE
+// Used by /api/ai-blog-generator and /api/blog-from-url
+// ─────────────────────────────────────────────────────────────────────────────
+export const BLOG_JSON_FORMAT_RULE = `
+STEP 1 — CLASSIFY THE CONTENT TYPE
+Read the source material and assign exactly one of these five types:
+
+  INVESTMENT_ANALYSIS  — A specific project, developer, or asset class deep-dive
+  MARKET_DATA          — DLD statistics, price indices, transaction volumes, yield data
+  REGULATORY_NEWS      — Government policy, visa rules, DLD procedure changes, legal updates
+  AREA_GUIDE           — Community profile, neighbourhood overview, infrastructure context
+  HOW_TO               — Process guide (buying, registering, financing, off-plan, reselling)
+
+STEP 2 — USE THE MATCHING SECTION TEMPLATE
+Write bodyBlocks H2 headings that match the classified type exactly as shown below.
+
+  INVESTMENT_ANALYSIS sections (in order):
+    1. The Macro Thesis: Why This Project Matters Now
+    2. Core Metrics at a Glance
+    3. Bull Case: Why We Back This Asset
+    4. Bear Case: Who Should Pass
+    5. North Capital Verdict
+
+  MARKET_DATA sections (in order):
+    1. What the Data Shows
+    2. The Trend Investors Are Missing
+    3. Investor Implication: What to Do With This [REQUIRED — translate data into a specific buy/hold/avoid action]
+    4. What This Means If You're Selling or Exiting [bear-equivalent: include a caveat or risk]
+    RULE: Every claim in a MARKET_DATA post must follow the pattern: "[number] [source/period] — [what it means for the investor]". Never state a number without its implication.
+
+  REGULATORY_NEWS sections (in order):
+    1. What Changed and When [include official authority name + effective date in this section]
+    2. Who Is Affected [buyer, seller, developer, landlord — be specific about which personas]
+    3. What You Must Do Before [Deadline or "Now"]
+    4. What This Means for Property Values and Yields
+    5. Who This Helps vs. Who Gets Hurt
+    RULE: Every regulatory claim must be attributed to a named authority (RERA, DLD, CBUAE, etc.) and a specific effective date. If no date is in the source material, write "as of [current month/year]" explicitly.
+
+  AREA_GUIDE sections (in order):
+    1. The Location Thesis: Why This Area, Why Now
+    2. Rental Profile: Yields, Tenant Mix, and Vacancy
+    3. Price-Per-Sqft Trajectory: Three-Year View
+    4. Supply Pipeline Risk [REQUIRED — include number of units coming + delivery dates. Most area guides omit this. Do not.]
+    5. Who Should Invest Here — and Who Should Not
+    RULE: This is NOT a lifestyle or tourism guide. Every section must contain a financial data point and an investment implication. Never describe an area's atmosphere, vibe, or lifestyle without immediately connecting it to tenant retention, vacancy rate, or rental premium data.
+    RULE: All four data dimensions must appear somewhere in the post: yield %, price psf, tenant type (nationality or income band), and supply pipeline count with delivery date.
+
+  HOW_TO sections (in order):
+    1. What You Need Before You Start [capital requirements, pre-conditions, eligibility]
+    2-N. Step [N]: [Specific Action Verb + object] [use one H2 per step, 5–8 steps total]
+    N+1. Common Mistakes and What They Cost You [REQUIRED — include specific AED cost figures for each mistake]
+    RULE: HOW_TO posts are only written for processes an investor with AED 1M+ capital would need to navigate (buying, off-plan, mortgage, DLD registration, visa qualification, yield calculation, resale). Never write a how-to for a first-home buyer or a lifestyle decision.
+    RULE: Every step H2 must contain the action verb: "Register the Title Deed with DLD" not "DLD Registration".
+
+STEP 3 — UNIVERSAL WRITING RULES (apply to all types)
+
+- Minimum 600 words in bodyBlocks. Minimum 4 H2 blocks, all using style "h2" — not "h3".
+- Every factual claim must include a specific number AND a time period. "Yields are high" is banned. "Net yields in JVC averaged 7.8% in Q1 2025" is correct.
+- Vary sentence length deliberately. Mix short punchy sentences with longer analytical ones. Never 3 sentences in a row of the same length.
+- BANNED AI PHRASES (any of these ruins the post): "In today's fast-paced world", "It's worth noting", "Furthermore", "Moreover", "It goes without saying", "In the realm of", "In conclusion", "Navigating", "Landscape", "Underpins", "Poised to", "Testament to", "Leveraging", "At the end of the day", "Deep dive", "Robust", "Paradigm shift", "Synergy", "Holistic", "Delve", "Game-changer", "Unparalleled", "Seamless".
+- Write with a clear, opinionated point of view backed by data. Never wishy-washy.
+- Short paragraphs only. 3–4 sentences max per paragraph block.
+- The FIRST sentence must open with a specific number, a counterintuitive claim, or a sharp market observation. Never a context-setter.
+- FAQs: minimum 4 questions. Every question must include the asset name, area name, regulation name, or a specific metric — never generic questions like "Is Dubai a good investment?". Phrase them exactly as a wealthy investor would type into Google or Perplexity.
+- Excerpt: must state a specific number and the investment implication. Under 155 characters. Example: "JVC net yields hit 8.1% in Q1 2025 — but only in sub-700 sqft units. Full analysis here."
+- keyTakeaways: exactly 4 items. Each must be a factual assertion with a number, not an observation.
+- If source material has tables or heavy numerical data, synthesize into analytical prose — do NOT attempt a markdown table.
+
+STEP 4 — OUTPUT FORMAT
+Return ONLY valid JSON. No markdown fences. No commentary before or after the JSON.
+
+{
+  "contentType": "INVESTMENT_ANALYSIS | MARKET_DATA | REGULATORY_NEWS | AREA_GUIDE | HOW_TO",
+  "title": "Specific, data-led headline — include a number or location. No vague superlatives.",
+  "excerpt": "Investment implication with a specific number. Under 155 characters.",
+  "keyTakeaways": [
+    "Factual assertion with a number",
+    "Factual assertion with a number",
+    "Factual assertion with a number",
+    "Factual assertion with a number"
+  ],
+  "faqs": [
+    {
+      "question": "Exact investor phrasing with asset/area/metric/regulation name in the question",
+      "answer": "2–3 sentence direct answer with specific data."
+    }
+  ],
+  "bodyBlocks": [
+    {
+      "_type": "block",
+      "style": "h2",
+      "children": [{"_type": "span", "text": "Your H2 heading from the template above"}]
+    },
+    {
+      "_type": "block",
+      "style": "normal",
+      "children": [{"_type": "span", "text": "Your paragraph text."}]
+    }
+  ]
+}
+`;
