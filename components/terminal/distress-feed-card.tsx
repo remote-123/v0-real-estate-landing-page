@@ -1,9 +1,87 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Badge } from "@/components/ui/badge"
 import { ArrowDownRight, ExternalLink, X, MessageCircle, Calendar, TrendingDown, Clock, MapPin } from "lucide-react"
 import { SITE_CONFIG } from "@/lib/constants"
+import {
+  LineChart, Line, XAxis, YAxis, Tooltip, ReferenceLine,
+  ResponsiveContainer, CartesianGrid,
+} from "recharts"
+
+interface TrendPoint { month: string; avg_psf: number; txn_count: number }
+
+function PsfTrendChart({ area, type, listingPsf }: { area: string; type: string; listingPsf: number }) {
+  const [data, setData] = useState<TrendPoint[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    // Extract first meaningful area token for the query
+    const areaToken = area.split(",")[0].trim()
+    fetch(`/api/area-psf-trend?area=${encodeURIComponent(areaToken)}&type=${encodeURIComponent(type)}`)
+      .then(r => r.json())
+      .then(j => { if (Array.isArray(j.data)) setData(j.data) })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [area, type])
+
+  if (loading) return <div className="h-32 flex items-center justify-center text-xs text-muted-foreground">Loading trend…</div>
+  if (data.length < 2) return <div className="h-32 flex items-center justify-center text-xs text-muted-foreground">Insufficient DLD data for this area</div>
+
+  const shortMonth = (m: string) => {
+    const [y, mo] = m.split("-")
+    const d = new Date(Number(y), Number(mo) - 1)
+    return d.toLocaleString("default", { month: "short" }).toUpperCase() + " " + y.slice(2)
+  }
+
+  const chartData = data.map(d => ({ ...d, label: shortMonth(d.month) }))
+
+  return (
+    <ResponsiveContainer width="100%" height={130}>
+      <LineChart data={chartData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+        <XAxis
+          dataKey="label"
+          tick={{ fontSize: 9, fill: "var(--muted-foreground)" }}
+          interval={2}
+          tickLine={false}
+          axisLine={false}
+        />
+        <YAxis
+          tick={{ fontSize: 9, fill: "var(--muted-foreground)" }}
+          tickLine={false}
+          axisLine={false}
+          tickFormatter={v => `${v}`}
+        />
+        <Tooltip
+          contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 6, fontSize: 11 }}
+          formatter={(val: number, name: string) => [
+            `AED ${val.toLocaleString()}/sqft`,
+            name === "avg_psf" ? "Area avg" : name,
+          ]}
+          labelFormatter={l => l}
+        />
+        <Line
+          type="monotone"
+          dataKey="avg_psf"
+          stroke="#10b981"
+          strokeWidth={1.5}
+          dot={false}
+          activeDot={{ r: 3 }}
+        />
+        {listingPsf > 0 && (
+          <ReferenceLine
+            y={listingPsf}
+            stroke="#f59e0b"
+            strokeWidth={1.5}
+            strokeDasharray="4 3"
+            label={{ value: `This listing ${listingPsf.toLocaleString()}`, position: "insideTopRight", fontSize: 9, fill: "#f59e0b" }}
+          />
+        )}
+      </LineChart>
+    </ResponsiveContainer>
+  )
+}
 
 interface DistressFeedCardProps {
     rank: number
@@ -119,33 +197,30 @@ function DealModal({ deal, onClose }: { deal: DistressFeedCardProps; onClose: ()
                         </div>
                     </div>
 
-                    {/* PSF vs community */}
+                    {/* PSF trend chart */}
                     {deal.psf > 0 && (
                         <div className="rounded-lg border border-border/40 bg-background/50 p-4 space-y-2">
-                            <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Price / sqft vs Community</p>
-                            <div className="flex items-end gap-4">
-                                <div>
-                                    <p className="text-[10px] text-muted-foreground">This listing</p>
-                                    <p className="font-mono text-base font-bold text-foreground">AED {formatFull(deal.psf)}</p>
+                            <div className="flex items-center justify-between">
+                                <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                                    AED/sqft — 18-month area trend
+                                </p>
+                                <div className="flex items-center gap-3 text-[9px] font-mono text-muted-foreground">
+                                    <span className="flex items-center gap-1"><span className="inline-block w-3 h-px bg-emerald-500" /> Area avg</span>
+                                    <span className="flex items-center gap-1"><span className="inline-block w-3 h-px border-t-2 border-dashed border-amber-400" /> This listing</span>
                                 </div>
-                                {deal.areaBenchmarkPsf && (
-                                    <>
-                                        <div className="text-muted-foreground/40 pb-0.5">vs</div>
-                                        <div>
-                                            <p className="text-[10px] text-muted-foreground">Area avg (18mo)</p>
-                                            <p className="font-mono text-base font-bold text-muted-foreground">AED {formatFull(deal.areaBenchmarkPsf)}</p>
-                                        </div>
-                                        {psfVsArea !== null && (
-                                            <span className={`ml-auto font-mono text-sm font-semibold ${psfVsArea < 0 ? "text-emerald-400" : "text-red-400"}`}>
-                                                {psfVsArea > 0 ? "+" : ""}{psfVsArea.toFixed(1)}%
-                                            </span>
-                                        )}
-                                    </>
-                                )}
                             </div>
+                            <PsfTrendChart area={deal.location} type={deal.type} listingPsf={deal.psf} />
+                            {deal.areaBenchmarkPsf && psfVsArea !== null && (
+                                <div className="flex items-center justify-between pt-1 border-t border-border/30">
+                                    <span className="text-[10px] text-muted-foreground">vs 18-mo avg AED {formatFull(deal.areaBenchmarkPsf)}/sqft</span>
+                                    <span className={`font-mono text-xs font-semibold ${psfVsArea < 0 ? "text-emerald-400" : "text-red-400"}`}>
+                                        {psfVsArea > 0 ? "+" : ""}{psfVsArea.toFixed(1)}%
+                                    </span>
+                                </div>
+                            )}
                             {psfVsArea !== null && psfVsArea < -5 && (
                                 <p className="text-[11px] text-emerald-400 font-medium">
-                                    This listing is priced {Math.abs(psfVsArea).toFixed(1)}% below the 18-month area average — a potential value opportunity.
+                                    Priced {Math.abs(psfVsArea).toFixed(1)}% below the 18-month {deal.type.toLowerCase()} avg for this area.
                                 </p>
                             )}
                         </div>
