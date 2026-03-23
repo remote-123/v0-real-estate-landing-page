@@ -1,5 +1,323 @@
 # Daily Log
 
+## 2026-03-23 — Overnight Build Cycle 4 (autonomous)
+
+### Summary
+Cycle 4 built 6 deliverables: two new Tools-tier terminal pages, an Area Deep-Dive section, an admin dashboard, Telegram bot commands, and a distress score field audit.
+
+### Items Built
+
+**1. Mortgage Calculator — `/terminal/mortgage-calculator`**
+- Server component shell with SEO metadata
+- Client component `components/terminal/mortgage-calculator-client.tsx` — client-side amortisation formula: monthly payment, total interest, total cost, loan amount, principal vs interest bar
+- Defaults: AED 2M / 20% / 4.5% / 25 years
+- Info note on UAE bank rate norms (3.5–5.5%, 20% min down payment)
+- Added to sidebar under new "Tools" group; added to sitemap
+
+**2. Rental Yield Calculator — `/terminal/rental-yield`**
+- Server component fetches top 15 areas by txn volume (last 12 months) from `dld_transactions`
+- Pulls avg service charge per community from `dld_service_charges` (column: `master_community_name_en`)
+- Client component `components/terminal/rental-yield-client.tsx` — area table + yield calculator; click-to-fill area price, computes gross yield and estimated net yield
+- Added to sidebar under "Tools" group; added to sitemap
+
+**3. Area Deep-Dive — `/terminal/areas/[slug]`**
+- `generateStaticParams` for top 20 areas by txn volume
+- Per-area: price history sparkline (12 months), off-plan pipeline with top-5 active projects, service charge avg, active distress count from `distress_listings`
+- Stat cards: current avg PSF, MoM change, active distress count, pipeline units
+- EmailCaptureWidget with `source="area-deep-dive"` and area name
+- Link from `/terminal/communities/[slug]` → `/terminal/areas/[slug]` ("See full area analysis →")
+- Added top-20 area URLs to sitemap
+
+**4. Admin Dashboard — `/admin/dashboard`**
+- Passcode auth via `?passcode=` query param against `ADMIN_PASSCODE` env var (inline GET form, no cookies needed)
+- Panels: distress_listings (total, last inserted, disappeared 24h), email_leads (total, active, last subscribed), whatsapp_intents (total, last 7d), market_briefings (last generated, total), dld_transactions (total rows, latest instance_date)
+- All DB calls use `Promise.allSettled` — each panel degrades independently if table is missing
+- Not in sidebar, not in sitemap, robots noindex
+
+**5. Telegram bot commands `/leads` and `/briefing`**
+- Added to existing `app/api/telegram-webhook/route.ts`
+- `/leads` — email_leads count, last 5 active emails, whatsapp_intents total + today
+- `/briefing` — latest market_briefing content (first 800 chars) + generated_at timestamp
+- Commands fire via `waitUntil` to avoid blocking Telegram's 5s timeout
+- Commands respect existing `TELEGRAM_ALLOWED_USER_ID` guard
+
+**6. Distress Score Field Audit**
+- `distressScore` is computed at render time in `app/terminal/distress-deals/page.tsx` by `scoreDistress()` — not stored in DB
+- `distress_listings` table has `confidence_score` but the page does not read it — it recomputes from live enrichment data
+- No mismatch: the card prop `distressScore` is always supplied from the server page; `confidence_score` in DB is unused by the display layer
+- No changes required; documented here for future reference
+
+### Bug Fixed
+- `dld_service_charges` table uses `master_community_name_en` not `community_name` — fixed in both `app/terminal/rental-yield/page.tsx` and `app/terminal/areas/[slug]/page.tsx`
+
+### Build Status
+`✓ Compiled successfully` — no TypeScript errors, all pages generated
+
+---
+
+## 2026-03-24 — Overnight Build Cycle 3 (autonomous)
+
+### Strategy Input
+Read `docs/OVERNIGHT_STRATEGY_2026-03-24.md` and `docs/HUMAN_ACTIONS_REQUIRED.md` from prior sessions. Mapped all 7 build items against codebase state.
+
+### What Was Built
+
+#### A. ROI Engine — Live DLD Data Connected
+**`app/terminal/roi-engine/page.tsx`** — converted from a static info page to a server component (`revalidate = 3600`):
+- `fetchAreaBenchmarks()` — queries `dld_transactions` for avg sale PSF by area + bedroom type (last 12 months, sales only, 500–150,000 AED/sqm filter, min 10 transactions)
+- `fetchServiceCharges()` — queries `dld_service_charges` by `master_community_name_en` for avg annual service cost per community (budget year 2023+)
+- New section: **Live Area Benchmarks table** — top 12 areas by transaction volume, Studio/1BR/2BR/3BR columns, `formatAreaName()` applied
+- New section: **Service Charge Reference** — community name, avg annual DLD-registered cost, project count
+- `revalidate = 3600` added — was previously not a server component at all
+- Note: `dld_service_charges.service_cost` is a total annual budget per service category (not per-sqft). Shown as reference, not per-sqft fee.
+
+#### B. Market Briefing Display Page (NEW)
+**`app/terminal/market-briefing/page.tsx`** — new server component:
+- Queries `market_briefings` table for latest record: `content`, `generated_at`, `week_label`
+- Shows week label as header, formatted content (preserves paragraphs, detects section headings for styling), generated timestamp
+- If no briefing exists: shows "Briefing generates Monday 6AM UTC" placeholder card with schedule info
+- Metadata: canonical, OG, description
+- Added to sidebar nav: Intelligence group, `Newspaper` icon
+- Added to sitemap: `/terminal/market-briefing`
+
+#### C. Distress Deep-Links (confirmed existing — no change needed)
+- `app/api/distress-xpost/route.ts` — `buildPostText()` already hardcodes `northcapitaldxb.com/terminal/distress-deals` in every post (line 31)
+- `app/api/distress-linkedin/route.ts` — already sends deep-link in the Telegram first-comment suggestion
+- Marked P3 item as complete in `docs/HUMAN_ACTIONS_REQUIRED.md`
+
+#### D. Off-Plan Pipeline — New Terminal Page (NEW)
+**`app/terminal/off-plan-pipeline/page.tsx`** — new server component (`revalidate = 3600`):
+- Data from `dld_projects` — groups by `area_name_en`, filters on active/not_started/pending statuses
+- Stat cards: Off-Plan Units Tracked, Active Projects, Areas with Pipeline, Largest Pipeline Area
+- Table: area, active units (emerald highlighted), total units, project count, earliest/latest completion year, % complete progress bar
+- `formatAreaName()` applied to area column
+- Full metadata with canonical + OG
+- Added to sidebar nav: Intelligence group, `Building2` icon
+- Added to sitemap: `/terminal/off-plan-pipeline`
+
+#### E. Blog → Terminal Deep-Linking
+**`lib/ai-guidelines.ts`** — added STEP 4 (terminal deep-links) to `BLOG_JSON_FORMAT_RULE`:
+- Lists all 14 terminal pages with matching topic keywords
+- Instructs Gemini to include natural in-text deep-links when the blog post topic matches a terminal page
+- Pattern: "Run the live data on [topic] at northcapitaldxb.com/terminal/page"
+- Does not force links — only include when genuinely relevant
+- The `getGeminiPrompt()` function injects `BLOG_JSON_FORMAT_RULE` into the prompt, so this is automatically used by both `ai-blog-generator` and `blog-from-url`
+
+#### F. Homepage — Live Distress Deals CTA
+**`components/hero.tsx`** — added a fourth CTA button in the hero:
+- "Live Distress Deals" with red pulsing dot indicator
+- Links to `/terminal/distress-deals` (highest-conversion path)
+- Styled with `border-red-500/30 text-red-400` to stand out as urgency signal
+- Placed after the existing "Market Intelligence" terminal button
+
+### Pre-existing (confirmed, no change needed)
+- X-post and LinkedIn deep-links: already present in both routes
+- Sitemap: already had all terminal pages from prior sessions; added 2 new entries
+
+### Build Status
+Clean — compiled successfully, 0 TypeScript errors. 105 pages generated. `npm run build` ✅
+
+### New Files
+- `app/terminal/market-briefing/page.tsx`
+- `app/terminal/off-plan-pipeline/page.tsx`
+
+### Modified Files
+- `app/terminal/roi-engine/page.tsx` — converted to server component with live DLD queries
+- `lib/ai-guidelines.ts` — added terminal deep-link instructions to BLOG_JSON_FORMAT_RULE
+- `components/hero.tsx` — added Live Distress Deals CTA button
+- `components/terminal/sidebar.tsx` — added Off-Plan Pipeline + Market Briefing links
+- `app/sitemap.ts` — added 2 new terminal static routes
+- `docs/HUMAN_ACTIONS_REQUIRED.md` — appended Cycle 3 items
+
+### Rental Drops Status
+`rental_listings` table still has 0 rows (per MEMORY.md, unchanged). `/terminal/rental-drops` remains commented out of sidebar. Note added to `docs/HUMAN_ACTIONS_REQUIRED.md` for founder to investigate cron-job.org logs.
+
+### Founder Actions Required
+See `docs/HUMAN_ACTIONS_REQUIRED.md` for full list. New items from this cycle:
+1. Trigger market briefing cron manually to populate `/terminal/market-briefing`: `POST /api/market-briefing/generate` Bearer CRON_SECRET
+2. Investigate `rental_listings` 0-row issue — check cron-job.org logs for `/api/cron/fetch-listings`
+3. Verify off-plan pipeline completion years: `SELECT COUNT(*) FROM dld_projects WHERE completion_date IS NOT NULL`
+
+---
+
+## 2026-03-24 — Phase 2 Autonomous Build Session (evening)
+
+### Strategy Input
+Read `docs/OVERNIGHT_STRATEGY_2026-03-24.md` — C-suite strategy council output. Extracted "Can Build Tonight" list (12 items). Mapped against existing codebase — several items were already complete from the prior session (market-briefing cron wrapper, sitemap with all terminal pages + community slugs, email capture on communities[slug], rate limiting on leads routes, metadata on all terminal pages except building-comparator which has a layout.tsx).
+
+### What Was Built
+
+#### A. Resend Email Delivery — `app/api/cron/weekly-distress-digest/route.ts`
+- Installed `resend` npm package
+- Replaced the `sendEmailToLead()` stub with a real Resend implementation
+- Added graceful fallback: if `RESEND_API_KEY` is not set, logs and skips (never crashes)
+- Generates proper HTML email with inline styles, brand header, and one-click unsubscribe link
+- Unsubscribe token = `base64url(email)` — no HMAC needed for opt-out links
+- From address: `North Capital DXB <digest@northcapitaldxb.com>` — domain must be verified in Resend
+- Telegram message updated: reports `sent: N` vs `Email delivery inactive — add RESEND_API_KEY` depending on key presence
+- Telegram error alert added to the catch block — silent failures now surface to Telegram
+
+#### B. Unsubscribe Route — `app/api/leads/unsubscribe/route.ts` (NEW)
+- `GET /api/leads/unsubscribe?token=<base64url-email>`
+- Sets `unsubscribed_at = now()` on matching `email_leads` row
+- Returns a clean HTML confirmation page (no external deps, no JS)
+- Legally required before sending commercial email (CAN-SPAM / GDPR)
+- Gracefully handles: missing token, invalid base64, email not found, already unsubscribed
+
+#### C. New Terminal Page — `/terminal/developer-track` (NEW)
+- `app/terminal/developer-track/page.tsx` — server component, `revalidate = 3600`
+- Data source: `dld_projects` table (developer_name, no_of_units, project_status, area_name_en)
+- Shows: total units, pipeline units (active/pending projects), total projects, finish rate (% completed)
+- Stat cards: Developers Tracked, Top Developer, Avg Units/Developer, Total Ranked
+- Responsive table: rank, developer name, total units, pipeline units + %, projects, finish rate %, top area
+- `formatAreaName()` applied to top area column
+- Full SEO metadata with canonical URL
+- Added to sidebar nav: `components/terminal/sidebar.tsx` → Intelligence group, uses `Users` icon
+- Added to `app/sitemap.ts` → `/terminal/developer-track`
+
+#### D. Telegram Error Alerts — `app/api/cron/generate-market-briefing/route.ts`
+- Added try/catch wrapper around the fetch call to the generate route
+- On HTTP error or exception: fires Telegram alert to `TELEGRAM_THREAD_ID_CONTENT`
+- Previously: wrapper had no error handling — a failed generate would return silently
+
+### Pre-existing (confirmed, no change needed)
+- Market briefing cron wrapper: `app/api/cron/generate-market-briefing/route.ts` — already existed from prior session
+- Sitemap: already included all 12+ terminal pages + dynamic community slugs from `mv_txn_monthly`
+- Email capture on communities[slug]: already present from prior session
+- Rate limiting on leads routes: `lib/rate-limit.ts` already wired into email-capture
+- Metadata: all terminal pages already had `export const metadata` or layout.tsx with metadata
+- Building comparator: client component with `app/terminal/building-comparator/layout.tsx` exporting metadata
+
+### Build Status
+Clean — 0 TypeScript errors. 103 pages generated. `npm run build` ✅
+
+### New Files
+- `app/api/leads/unsubscribe/route.ts`
+- `app/terminal/developer-track/page.tsx`
+- `docs/HUMAN_ACTIONS_REQUIRED.md`
+
+### Modified Files
+- `app/api/cron/weekly-distress-digest/route.ts` — Resend wired in, error alert added
+- `app/api/cron/generate-market-briefing/route.ts` — Telegram error alert added
+- `components/terminal/sidebar.tsx` — Developer Track added to Intelligence group
+- `app/sitemap.ts` — `/terminal/developer-track` added
+
+### Founder Actions Required
+Full list in `docs/HUMAN_ACTIONS_REQUIRED.md`. Top 3 blocking actions:
+1. Create Resend account + add `RESEND_API_KEY` to Vercel env
+2. Verify sender domain `northcapitaldxb.com` in Resend (SPF/DKIM DNS records)
+3. Register weekly digest cron on cron-job.org: Monday 07:00 UTC, GET `/api/cron/weekly-distress-digest`, Bearer CRON_SECRET
+
+---
+
+## 2026-03-24 — Overnight Marketing Pipeline Build (autonomous session)
+
+### What Was Built
+
+#### Pipeline 1: Email Lead Capture + Weekly Digest
+
+**`app/api/leads/email-capture/route.ts`**
+- POST endpoint — validates email (regex, no deps), upserts `email_leads` with ON CONFLICT DO NOTHING
+- Returns `{ ok: true, already_subscribed: bool }` so the widget can show the right state
+- Fires Telegram notification to `TELEGRAM_THREAD_ID_LEADS` for every net-new lead
+- Source + area_interest stored for segmentation (e.g. "community-page" + "Dubai Marina")
+
+**`components/terminal/email-capture-widget.tsx`**
+- Client component — idle / loading / success / already / error states
+- Compact inline form, matches terminal dark aesthetic
+- Dropped into two high-intent pages: distress-deals + community detail pages
+- On community pages, `area_interest` is auto-populated with the area name the user is viewing
+
+**`app/api/cron/weekly-distress-digest/route.ts`** — GET, Bearer CRON_SECRET
+- Pulls top 5 confirmed distress deals (tier 1 priority, then tier 2, then DOM/PSF score fallback for last 7 days)
+- Distress score computed inline from available columns: `ABS(dld_psf_delta_pct) * 0.7 + price_drop_pct * 0.5 + min(DOM/3, 40)`
+- Generates 200-300 word email body via Gemini 2.5 Flash (`GEMINI_DISTRESS_API_KEY`)
+- Email sending is STUBBED — `sendEmailToLead()` logs only; wire up SendGrid/Resend to activate
+- Sends digest preview + lead count to Telegram after generation
+- Updates `last_sent_at` and increments `send_count` for all active leads in one UPDATE
+
+**`scripts/create-email-leads.mjs`** — migration: `email_leads(id, email, source, area_interest, subscribed_at, last_sent_at, unsubscribed_at, send_count)` — ran against Neon, table exists
+
+#### Pipeline 2: Reddit Intelligence Enhancement
+
+Reddit monitor already covers 13 subreddits as of prior session (DubaiExpats, dubai, AbuDhabi, UAE, expats, ExpatFinance, digitalnomad, ExpatFIRE, fatFIRE, HENRYfinance, Rich, RealEstateInvesting, PropertyInvestment). No further enhancement needed — the system already matches the spec's target subreddits and intent signals. Gemini-drafted replies sent to Telegram for copy-paste approval.
+
+#### Pipeline 3: AI Weekly Market Briefing Generator
+
+**`app/api/market-briefing/generate/route.ts`** — POST + GET, Bearer CRON_SECRET
+- Pulls top 5 areas by sales volume + PSF (current month vs prior month from `dld_transactions`)
+- Pulls distress summary: total_active, confirmed_drops, new_this_week, tier1_count
+- Feeds structured data to Gemini 2.5 Flash with institutional analyst system prompt
+- Output: MARKET SNAPSHOT / KEY SIGNALS / BEAR CASE NOTE / OPPORTUNITY (500 words max)
+- Stores to `market_briefings(id, generated_at, content, data_snapshot, week_label, telegram_sent)`
+- Sends 600-char preview to Telegram (uses `TELEGRAM_THREAD_ID_CONTENT`)
+
+**`scripts/create-market-briefings.mjs`** — migration ran, table live
+
+#### Pipeline 4: WhatsApp Intent Tracker
+
+**`app/api/leads/whatsapp-intent/route.ts`** — POST
+- Receives: `{ listing_id, title, location, price, psf, distress_score, area_benchmark_psf }`
+- Inserts to `whatsapp_intents` table (best-effort, never blocks navigation)
+- Fires Telegram alert with property details + "Someone just tapped Secure a Deal — follow up now"
+- Uses `TELEGRAM_THREAD_ID_LEADS`
+
+**`components/terminal/distress-feed-card.tsx`**
+- Added `listingId?: string` to `DistressFeedCardProps`
+- Added `fireWhatsAppIntent()` helper — fire-and-forget `fetch()` with `.catch(() => {})`
+- WhatsApp CTA `onClick` calls `fireWhatsAppIntent(deal)` BEFORE browser navigates to wa.me link
+- No await — navigation is never blocked
+
+**`scripts/create-whatsapp-intents.mjs`** — migration ran, table live
+
+### New DB Tables (all live in Neon)
+
+| Table | Key Columns |
+|---|---|
+| `email_leads` | email UNIQUE, source, area_interest, subscribed_at, last_sent_at, send_count, unsubscribed_at |
+| `market_briefings` | generated_at, content, data_snapshot JSONB, week_label, telegram_sent |
+| `whatsapp_intents` | listing_id, title, location, price, psf, distress_score, area_benchmark_psf |
+
+### Env Vars Needed to Activate Fully
+
+| Var | Purpose | Status |
+|---|---|---|
+| `TELEGRAM_THREAD_ID_LEADS` | Thread for lead + WhatsApp intent alerts | Optional — falls back to main chat |
+| `TELEGRAM_THREAD_ID_CONTENT` | Thread for market briefing previews | Optional — falls back to main chat |
+| SendGrid/Resend API key | Actual email delivery for weekly digest | NOT YET — digest is stubbed |
+
+### What the Founder Needs to Do in the Morning
+
+1. **Register weekly digest cron** — cron-job.org → `GET https://northcapitaldxb.com/api/cron/weekly-distress-digest` — Bearer CRON_SECRET — Monday 7:00 AM UTC
+2. **Register market briefing cron** — `POST https://northcapitaldxb.com/api/market-briefing/generate` — Bearer CRON_SECRET — weekly (Sunday night or Monday morning)
+3. **Set `TELEGRAM_THREAD_ID_LEADS`** in Vercel env — create a dedicated Telegram thread for leads so they don't get lost in noise
+4. **Pick email provider** — Resend is recommended (free tier 3k emails/mo). When key is available, replace `sendEmailToLead()` stub in `app/api/cron/weekly-distress-digest/route.ts` with real send call
+5. **Test manually** — `curl -X POST https://northcapitaldxb.com/api/leads/email-capture -H 'Content-Type: application/json' -d '{"email":"test@test.com","source":"manual"}'` — should get `{ ok: true, already_subscribed: false }` and a Telegram notification
+
+### Build Status
+Clean — 0 TypeScript errors. All 4 pipelines compiled and included in the production build.
+
+---
+
+## 2026-03-23 (continued) — Area name branding layer
+
+### Tasks Completed
+1. **Created `lib/area-names.ts`** — shared utility with `DLD_TO_BRAND` map (57 entries), `formatAreaName()` function (case-insensitive lookup, falls back to original), and `DLD_AREAS` export
+2. **Applied `formatAreaName()` to all terminal display surfaces**:
+   - `app/terminal/communities/page.tsx` — `name` field in `mapToCommunity()` now uses brand name; slug stays as DLD name for URL routing
+   - `app/terminal/communities/[slug]/page.tsx` — `<h1>` title and `generateMetadata` both use brand name
+   - `app/terminal/area-momentum/page.tsx` — community column and stat card description
+   - `app/terminal/yield-map/page.tsx` — stat card "Top Yield" description
+   - `components/terminal/yield-map-table.tsx` — community column in table rows
+   - `components/terminal/pricer-controls.tsx` — community column in table rows
+   - `app/terminal/transaction-pulse/page.tsx` — no area names rendered; no change needed
+3. **Build verified clean** ✅ — no TypeScript errors
+
+### Note on PF naming cross-check
+The `sample-api-return.json` is Bayut format (deprecated source). PF data arrives via `location_tree[level=1].name` into `distress_listings.area_name`, which is a separate table from the DLD terminal data. The `DLD_TO_BRAND` map targets DLD administrative names from `mv_txn_monthly`/`dld_transactions` — the correct source for all terminal pages updated.
+
+---
+
 ## 2026-03-23 (continued) — Distress Deals snapshot cron + UI overhaul
 
 ### Tasks Completed

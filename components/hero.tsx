@@ -72,6 +72,17 @@ export function Hero() {
                   <span className="ml-1.5 inline-block w-px h-3.5 bg-emerald-400 animate-[blink_1.1s_step-end_infinite] self-center" aria-hidden="true" />
                 </Link>
               </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                className="border-red-500/30 text-red-400 hover:text-red-300 hover:bg-red-500/10 bg-black/40 backdrop-blur-sm font-mono tracking-tight"
+                asChild
+              >
+                <Link href="/terminal/distress-deals">
+                  <span className="mr-2 inline-block h-2 w-2 rounded-full bg-red-500 animate-pulse" aria-hidden="true" />
+                  Live Distress Deals
+                </Link>
+              </Button>
             </div>
 
             <div className="flex items-center gap-6 pt-4 text-sm text-white/70">

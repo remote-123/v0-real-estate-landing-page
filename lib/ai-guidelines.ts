@@ -146,7 +146,30 @@ STEP 3 — UNIVERSAL WRITING RULES (apply to all types)
 - keyTakeaways: exactly 4 items. Each must be a factual assertion with a number, not an observation.
 - If source material has tables or heavy numerical data, synthesize into analytical prose — do NOT attempt a markdown table.
 
-STEP 4 — OUTPUT FORMAT
+STEP 4 — TERMINAL DEEP-LINKS (apply when relevant)
+The North Capital DXB platform has a live data terminal. When the blog post topic matches one of the pages below, include a natural in-text reference to the relevant terminal page URL. Do not force links — only include them if genuinely relevant to the post content.
+
+Available terminal pages and their matching topics:
+- /terminal/distress-deals — below-market deals, distress sales, motivated sellers, price drops, fire sales
+- /terminal/communities — area-level analysis, community price data, Dubai Marina, Downtown, JVC, JBR, any specific area
+- /terminal/transaction-pulse — transaction volumes, monthly sales data, DLD registration activity
+- /terminal/area-momentum — momentum analysis, fast-rising areas, price acceleration
+- /terminal/floor-plan-pricer — price distribution, P10/P50/P90 pricing, bedroom-type benchmarks
+- /terminal/yield-map — gross yield by area, rental yield comparison, yield map
+- /terminal/building-comparator — comparing buildings, PSF comparison, service charge comparison
+- /terminal/developer-track — developer performance, developer league table, project pipeline by developer
+- /terminal/off-plan-pipeline — off-plan supply, units under development, pipeline risk, new launches
+- /terminal/price-index — DLD price index, price-per-sqft trends, market price history
+- /terminal/supply-pipeline — supply and demand analysis, units coming to market
+- /terminal/service-charges — service charge data, annual holding cost, facility management fees
+- /terminal/roi-engine — yield calculator, ROI modelling, net yield estimation
+- /terminal/market-briefing — weekly market briefing, institutional market summary
+
+When including a terminal link in bodyBlocks, use this pattern in a normal paragraph block:
+"Run the live data on [topic] at northcapitaldxb.com[/terminal/page]"
+OR: "See the full [topic] breakdown in the North Capital terminal: northcapitaldxb.com[/terminal/page]"
+
+STEP 5 — OUTPUT FORMAT
 Return ONLY valid JSON. No markdown fences. No commentary before or after the JSON.
 
 {

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { waitUntil } from '@vercel/functions'
+import { sql } from '@/lib/db'
 
 export const maxDuration = 120
 
@@ -53,6 +54,77 @@ async function processBlog(url: string, chatId: string | number, threadId?: numb
     }
 }
 
+async function handleLeadsCommand(chatId: string | number, threadId?: number) {
+    try {
+        const [emailRows, waRows] = await Promise.all([
+            sql<{ total: string; last_5: string[] }[]>`
+                SELECT
+                    COUNT(*)::integer AS total,
+                    ARRAY(
+                        SELECT email FROM email_leads
+                        WHERE unsubscribed_at IS NULL
+                        ORDER BY created_at DESC
+                        LIMIT 5
+                    ) AS last_5
+                FROM email_leads
+                WHERE unsubscribed_at IS NULL
+            `,
+            sql<{ total: string; today: string }[]>`
+                SELECT
+                    COUNT(*)::integer AS total,
+                    COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '24 hours')::integer AS today
+                FROM whatsapp_intents
+            `,
+        ])
+
+        const emailTotal = Number(emailRows[0]?.total ?? 0)
+        const last5 = (emailRows[0]?.last_5 ?? []).join('\n  • ')
+        const waTotal = Number(waRows[0]?.total ?? 0)
+        const waToday = Number(waRows[0]?.today ?? 0)
+
+        const msg =
+            `<b>Leads Report</b>\n\n` +
+            `<b>Email Leads</b>\n` +
+            `Active subscribers: <code>${emailTotal}</code>\n` +
+            (last5 ? `Recent:\n  • ${last5}\n\n` : '\n') +
+            `<b>WhatsApp Intents</b>\n` +
+            `Total: <code>${waTotal}</code>\n` +
+            `Today: <code>${waToday}</code>`
+
+        await replyToChat(chatId, msg, threadId)
+    } catch (err: any) {
+        await replyToChat(chatId, `❌ Leads query failed: <code>${err.message}</code>`, threadId)
+    }
+}
+
+async function handleBriefingCommand(chatId: string | number, threadId?: number) {
+    try {
+        const rows = await sql<{ content: string; generated_at: string }[]>`
+            SELECT content, generated_at::text
+            FROM market_briefings
+            ORDER BY generated_at DESC
+            LIMIT 1
+        `
+
+        if (!rows[0]) {
+            await replyToChat(chatId, 'No briefing found. Run the generate-market-briefing cron to create one.', threadId)
+            return
+        }
+
+        const { content, generated_at } = rows[0]
+        const preview = content.slice(0, 800)
+        const date = new Date(generated_at).toLocaleString('en-GB', {
+            day: '2-digit', month: 'short', year: 'numeric',
+            hour: '2-digit', minute: '2-digit', timeZone: 'UTC',
+        }) + ' UTC'
+
+        const msg = `<b>Latest Market Briefing</b>\n<i>${date}</i>\n\n${preview}${content.length > 800 ? '…' : ''}`
+        await replyToChat(chatId, msg, threadId)
+    } catch (err: any) {
+        await replyToChat(chatId, `❌ Briefing query failed: <code>${err.message}</code>`, threadId)
+    }
+}
+
 export async function POST(req: Request) {
     try {
         // Verify Telegram webhook secret
@@ -79,6 +151,17 @@ export async function POST(req: Request) {
         }
 
         const text: string = message.text.trim()
+
+        // Bot commands
+        if (text === '/leads' || text.startsWith('/leads@')) {
+            waitUntil(handleLeadsCommand(chatId, threadId))
+            return NextResponse.json({ ok: true })
+        }
+
+        if (text === '/briefing' || text.startsWith('/briefing@')) {
+            waitUntil(handleBriefingCommand(chatId, threadId))
+            return NextResponse.json({ ok: true })
+        }
 
         const urlMatch = text.match(URL_REGEX)
         if (!urlMatch) {

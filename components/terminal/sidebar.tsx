@@ -12,10 +12,13 @@ import {
   Home,
   LayoutDashboard,
   Map,
+  Newspaper,
+  Percent,
   Settings,
   ShieldCheck,
   TrendingDown,
-  TrendingUp
+  TrendingUp,
+  Users
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -23,7 +26,7 @@ export const sidebarLinks = [
   {
     title: "Terminal",
     links: [
-      { label: "Market Intelligence", href: "/terminal", icon: LayoutDashboard },
+      { label: "City Intelligence", href: "/terminal", icon: LayoutDashboard },
       { label: "Distress Deals", href: "/terminal/distress-deals", icon: BarChart3 },
       // { label: "Rental Drops", href: "/terminal/rental-drops", icon: Home },
     ]
@@ -32,14 +35,24 @@ export const sidebarLinks = [
     title: "Intelligence",
     links: [
       { label: "Community Screener", href: "/terminal/communities", icon: Map },
-      { label: "ROI Engine", href: "/terminal/roi-engine", icon: Calculator },
       { label: "Price Index", href: "/terminal/price-index", icon: TrendingUp },
       { label: "Supply Pipeline", href: "/terminal/supply-pipeline", icon: BarChart3 },
       { label: "Service Charges", href: "/terminal/service-charges", icon: FileText },
       { label: "Building Comparator", href: "/terminal/building-comparator", icon: Building2 },
+      // { label: "Developer Track", href: "/terminal/developer-track", icon: Users },
+      // { label: "Off-Plan Pipeline", href: "/terminal/off-plan-pipeline", icon: Building2 },
+      // { label: "Market Briefing", href: "/terminal/market-briefing", icon: Newspaper },
       // { label: "Yield Decay", href: "/terminal/rental-yield-decay", icon: TrendingDown }, // hidden — insufficient data
       // { label: "Project Screener", href: "/investor-terminal/screener", icon: Compass },
       // { label: "Investment Theses", href: "/investor-terminal/theses", icon: FileText },
+    ]
+  },
+  {
+    title: "Tools",
+    links: [
+      { label: "ROI Engine", href: "/terminal/roi-engine", icon: Calculator },
+      { label: "Mortgage Calculator", href: "/terminal/mortgage-calculator", icon: Calculator },
+      { label: "Rental Yield", href: "/terminal/rental-yield", icon: Percent },
     ]
   },
   {

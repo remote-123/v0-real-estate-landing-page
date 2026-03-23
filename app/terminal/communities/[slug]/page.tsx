@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { sql } from '@/lib/db'
 import { CommunityCharts, type MultiPricePoint } from '@/components/terminal/community-charts'
 import { CommunityFilters } from '@/components/terminal/community-filters'
+import { EmailCaptureWidget } from '@/components/terminal/email-capture-widget'
 import { cn } from '@/lib/utils'
 import { Suspense } from 'react'
 import { formatAreaName } from '@/lib/area-names'
@@ -229,12 +230,20 @@ export default async function CommunityPage({
   return (
     <div className="flex w-full flex-col px-0 sm:px-8 xl:px-12 py-0 sm:py-6 space-y-6 max-w-7xl mx-auto pb-24 lg:pb-12">
 
-      <Link
-        href="/terminal/communities"
-        className="flex items-center gap-2 text-xs font-mono text-muted-foreground hover:text-foreground transition-colors px-4 sm:px-0"
-      >
-        <ArrowLeft className="h-3 w-3" /> Back to Community Screener
-      </Link>
+      <div className="flex items-center justify-between px-4 sm:px-0">
+        <Link
+          href="/terminal/communities"
+          className="flex items-center gap-2 text-xs font-mono text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ArrowLeft className="h-3 w-3" /> Back to Community Screener
+        </Link>
+        <Link
+          href={`/terminal/areas/${slug}`}
+          className="text-xs font-mono text-emerald-400 hover:underline transition-colors"
+        >
+          See full area analysis →
+        </Link>
+      </div>
 
       <section className="border-y sm:border border-border/50 rounded-none sm:rounded-2xl p-6 bg-card space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
@@ -335,6 +344,15 @@ export default async function CommunityPage({
             </div>
           </div>
         </section>
+      </div>
+
+      {/* Email capture — area-specific lead intent */}
+      <div className="px-0">
+        <EmailCaptureWidget
+          source="community-page"
+          areaInterest={formatAreaName(area.area_name_en)}
+          label={`Get alerts for ${formatAreaName(area.area_name_en)}`}
+        />
       </div>
 
       <p className="text-[11px] font-mono text-muted-foreground/40 px-1">

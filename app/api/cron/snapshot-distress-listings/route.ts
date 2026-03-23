@@ -14,6 +14,7 @@
 
 import { NextResponse } from "next/server"
 import { sql } from "@/lib/db"
+import { sendTelegram } from "@/lib/telegram"
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
@@ -281,6 +282,74 @@ async function run() {
       WHERE retained_until < CURRENT_DATE
         AND disappeared_at IS NOT NULL
     `
+
+    // ── Tier-1 Telegram alerts ────────────────────────────────────────────────
+    // Alert on listings that just confirmed a price drop today (became tier 1 within last 25h)
+    try {
+      const newTier1 = await sql<{
+        title: string
+        area_name: string
+        price: number
+        price_per_sqft: number | null
+        dld_area_avg_psf: number | null
+        dld_psf_delta_pct: number | null
+        price_drop_pct: number | null
+        property_type: string | null
+        bedrooms: string | null
+        external_url: string | null
+      }[]>`
+        SELECT
+          title,
+          area_name,
+          price,
+          price_per_sqft,
+          dld_area_avg_psf,
+          dld_psf_delta_pct,
+          price_drop_pct,
+          property_type,
+          bedrooms,
+          external_url
+        FROM distress_listings
+        WHERE price_drop_confirmed = true
+          AND confidence_tier = 1
+          AND disappeared_at IS NULL
+          AND last_checked_at > NOW() - INTERVAL '25 hours'
+          AND last_seen_at::date = CURRENT_DATE
+        LIMIT 5
+      `
+
+      for (const deal of newTier1) {
+        const price = Math.round(Number(deal.price)).toLocaleString("en-US")
+        const psf = deal.price_per_sqft ? Math.round(Number(deal.price_per_sqft)) : null
+        const areaAvg = deal.dld_area_avg_psf ? Math.round(Number(deal.dld_area_avg_psf)) : null
+        const dropPct = deal.price_drop_pct ? Number(deal.price_drop_pct).toFixed(1) : null
+        const deltaLabel =
+          psf && areaAvg && areaAvg > 0
+            ? ` — ${(((areaAvg - psf) / areaAvg) * 100).toFixed(1)}% below area avg`
+            : ""
+
+        const beds = deal.bedrooms ? `${deal.bedrooms}BR ` : ""
+        const type = deal.property_type ?? "Property"
+        const location = deal.area_name ?? "Dubai"
+
+        const msg = [
+          `🔴 <b>Tier-1 Distress Deal</b>`,
+          `<b>${deal.title ?? `${beds}${type}`}</b>`,
+          `📍 ${location}`,
+          `💰 AED ${price}${dropPct ? ` (↓${dropPct}% from listing)` : ""}`,
+          psf ? `📐 AED ${psf}/sqft${deltaLabel}` : null,
+          deal.external_url ? `🔗 <a href="${deal.external_url}">View listing</a>` : null,
+          `\n<a href="https://www.northcapitaldxb.com/terminal/distress-deals">All distress deals →</a>`,
+        ]
+          .filter(Boolean)
+          .join("\n")
+
+        await sendTelegram(msg, process.env.TELEGRAM_THREAD_ID_LEADS)
+      }
+    } catch (alertErr: any) {
+      // Never let alert failure break the main cron response
+      console.error("[snapshot-distress] Telegram alert error:", alertErr.message)
+    }
 
     console.log(`[snapshot-distress] inserted=${inserted} updated=${updated} confirmed_drops=${dropped}`)
     return NextResponse.json({ ok: true, inserted, updated, confirmed_drops: dropped })

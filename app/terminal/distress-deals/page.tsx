@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { MapPin } from "lucide-react"
 import { DistressTable } from "@/components/terminal/distress-table"
 import { DistressFilters } from "@/components/terminal/distress-filters"
+import { EmailCaptureWidget } from "@/components/terminal/email-capture-widget"
 import { sql } from "@/lib/db"
 
 
@@ -402,6 +403,17 @@ export default async function DistressDealsPage(props: {
                 ) : (
                     <DistressTable deals={deals} />
                 )}
+            </section>
+
+            {/* EMAIL CAPTURE — after deals list */}
+            <section className="px-4 sm:px-0 pb-6">
+                <div className="max-w-md">
+                    <EmailCaptureWidget
+                        source="distress-deals"
+                        areaInterest={areaFilter || undefined}
+                        label="Get weekly distress deal alerts"
+                    />
+                </div>
             </section>
 
         </div>

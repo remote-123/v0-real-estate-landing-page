@@ -105,6 +105,7 @@ export interface DistressFeedCardProps {
     areaBenchmarkPsf: number | null
     domTier: 'fresh' | 'aging' | 'stale' | 'overdue'
     isOffplanDrop: boolean
+    listingId?: string
 }
 
 const WA_NUMBER = "971554006230"
@@ -139,6 +140,23 @@ function ScoreMeter({ score }: { score: number }) {
             </div>
         </div>
     )
+}
+
+function fireWhatsAppIntent(deal: DistressFeedCardProps): void {
+    // Fire-and-forget — do NOT await, do NOT block navigation
+    fetch('/api/leads/whatsapp-intent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            listing_id: deal.listingId ?? deal.rank.toString(),
+            title: deal.title,
+            location: deal.location,
+            price: deal.currentPrice,
+            psf: deal.psf,
+            distress_score: deal.distressScore,
+            area_benchmark_psf: deal.areaBenchmarkPsf,
+        }),
+    }).catch(() => { /* never block navigation on failure */ })
 }
 
 export function DealModal({ deal, onClose }: { deal: DistressFeedCardProps; onClose: () => void }) {
@@ -276,6 +294,7 @@ export function DealModal({ deal, onClose }: { deal: DistressFeedCardProps; onCl
                             href={`https://wa.me/${WA_NUMBER}?text=${waMessage}`}
                             target="_blank"
                             rel="noopener noreferrer"
+                            onClick={() => fireWhatsAppIntent(deal)}
                             className="flex items-center justify-center gap-2 w-full rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-3 text-sm font-semibold transition-colors"
                         >
                             <MessageCircle className="h-4 w-4" />
