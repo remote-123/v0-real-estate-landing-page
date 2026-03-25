@@ -1,5 +1,24 @@
 # Daily Log
 
+## 2026-03-25 — Morning verification session
+
+### What was tested
+- `email-capture` ✅ working — lead inserted, Telegram notification fired
+- `snapshot-distress-listings` ✅ 33 listings inserted into `distress_listings`
+- `weekly-distress-digest` ✅ Resend live — 2 emails sent, `bedrooms::integer` bug fixed (studio was non-numeric)
+- `market-briefing/generate` ⚠️ skipped — `dld_transactions` has no rows in last 30 days (data freshness issue, not a code bug)
+- Admin dashboard — server-rendered, not curl-testable; needs browser visit at `/admin/dashboard?passcode=importer!21`
+
+### Follow-up required
+- [ ] **Market briefing** — will work once new DLD transaction data is ingested (rows with `instance_date` within last 30 days). Revisit when new DLD CSV is available.
+- [ ] **`rental_listings` 0-row issue** — founder checking cron-job.org logs (RapidAPI key may be expired/rate-limited)
+- [ ] **Admin dashboard** — verify panels in browser at `/admin/dashboard?passcode=importer!21`
+
+### Bug fixed
+- `app/api/cron/weekly-distress-digest/route.ts` — both SQL queries now use `CASE WHEN bedrooms ~ '^\d+$' THEN bedrooms::integer ELSE NULL END` to handle non-numeric values like "studio"
+
+---
+
 ## 2026-03-23 — Overnight Build Cycle 4 (autonomous)
 
 ### Summary

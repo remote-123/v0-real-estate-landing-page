@@ -35,9 +35,9 @@ export const sidebarLinks = [
     title: "Intelligence",
     links: [
       { label: "Community Screener", href: "/terminal/communities", icon: Map },
-      { label: "Price Index", href: "/terminal/price-index", icon: TrendingUp },
-      { label: "Supply Pipeline", href: "/terminal/supply-pipeline", icon: BarChart3 },
-      { label: "Service Charges", href: "/terminal/service-charges", icon: FileText },
+      // { label: "Price Index", href: "/terminal/price-index", icon: TrendingUp },
+      // { label: "Supply Pipeline", href: "/terminal/supply-pipeline", icon: BarChart3 },
+      // { label: "Service Charges", href: "/terminal/service-charges", icon: FileText },
       { label: "Building Comparator", href: "/terminal/building-comparator", icon: Building2 },
       // { label: "Developer Track", href: "/terminal/developer-track", icon: Users },
       // { label: "Off-Plan Pipeline", href: "/terminal/off-plan-pipeline", icon: Building2 },

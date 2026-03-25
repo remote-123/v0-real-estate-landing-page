@@ -123,7 +123,7 @@ export default async function RentalDropsPage() {
 
             {listings.length === 0 ? (
                 <div className="flex items-center justify-center p-12 rounded-xl border border-border/50 bg-card">
-                    <p className="text-sm text-muted-foreground">No listings yet. Trigger the cron to populate: <code className="text-xs bg-muted px-1 py-0.5 rounded">/api/cron/fetch-listings</code></p>
+                    <p className="text-sm text-muted-foreground">No listings yet. Trigger the cron to populate: <code className="text-xs bg-muted px-1 py-0.5 rounded">/api/cron/fetch-rental-listings</code></p>
                 </div>
             ) : (
                 <RentalTable listings={listings} />

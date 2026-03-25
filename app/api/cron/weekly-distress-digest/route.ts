@@ -67,7 +67,7 @@ async function fetchTopDeals(): Promise<DigestDeal[]> {
       ) AS distress_score,
       confidence_tier,
       EXTRACT(DAY FROM now() - first_seen_at)::integer AS days_on_market,
-      bedrooms::integer,
+      CASE WHEN bedrooms ~ '^\d+$' THEN bedrooms::integer ELSE NULL END AS bedrooms,
       size_sqft,
       property_type AS type
     FROM distress_listings
@@ -96,7 +96,7 @@ async function fetchTopDeals(): Promise<DigestDeal[]> {
       ) AS distress_score,
       confidence_tier,
       EXTRACT(DAY FROM now() - first_seen_at)::integer AS days_on_market,
-      bedrooms::integer,
+      CASE WHEN bedrooms ~ '^\d+$' THEN bedrooms::integer ELSE NULL END AS bedrooms,
       size_sqft,
       property_type AS type
     FROM distress_listings
