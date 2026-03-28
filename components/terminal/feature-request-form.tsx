@@ -93,7 +93,7 @@ export function FeatureRequestForm() {
                     maxLength={500}
                     rows={3}
                     required
-                    className="w-full resize-none rounded-md border border-border/50 bg-background/50 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-accent/50 transition-all"
+                    className="w-full resize-none rounded-md border border-border/50 bg-background/50 px-3 py-2 text-base sm:text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-accent/50 transition-all"
                 />
                 <p className="text-[10px] text-muted-foreground/40 text-right">{idea.length}/500</p>
             </div>
@@ -107,7 +107,7 @@ export function FeatureRequestForm() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@example.com"
-                    className="w-full rounded-md border border-border/50 bg-background/50 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-accent/50 transition-all"
+                    className="w-full rounded-md border border-border/50 bg-background/50 px-3 py-2 text-base sm:text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-accent/50 transition-all"
                 />
             </div>
 
@@ -123,7 +123,7 @@ export function FeatureRequestForm() {
                     placeholder="Answer"
                     required
                     maxLength={4}
-                    className="w-28 rounded-md border border-border/50 bg-background/50 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-accent/50 transition-all"
+                    className="w-28 rounded-md border border-border/50 bg-background/50 px-3 py-2 text-base sm:text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-accent/50 transition-all"
                 />
             </div>
 

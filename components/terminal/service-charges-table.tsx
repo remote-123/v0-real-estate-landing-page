@@ -4,6 +4,7 @@ import { useState, useMemo } from "react"
 import { ArrowUpDown, ArrowUp, ArrowDown, Search, ChevronLeft, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { ServiceChargeRow } from "@/app/terminal/service-charges/page"
+import { GatedTableOverlay } from "@/components/auth/gated-table-overlay"
 
 const PAGE_SIZE = 50
 
@@ -22,9 +23,11 @@ function formatAED(value: number): string {
 
 interface Props {
   rows: ServiceChargeRow[]
+  isAuthenticated?: boolean
+  totalRows?: number
 }
 
-export function ServiceChargesTable({ rows }: Props) {
+export function ServiceChargesTable({ rows, isAuthenticated, totalRows }: Props) {
   const [search, setSearch] = useState("")
   const [yearFilter, setYearFilter] = useState<number | null>(null)
   const [communityFilter, setCommunityFilter] = useState("")
@@ -107,7 +110,7 @@ export function ServiceChargesTable({ rows }: Props) {
   )
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="relative flex flex-col gap-4">
       {/* Filters */}
       <div className="flex flex-wrap gap-2 items-center">
         {/* Search */}
@@ -117,7 +120,7 @@ export function ServiceChargesTable({ rows }: Props) {
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1) }}
             placeholder="Search project or community..."
-            className="pl-9 pr-4 py-1.5 text-sm bg-card border border-border/50 rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20 w-64"
+            className="pl-9 pr-4 py-1.5 text-base sm:text-sm bg-card border border-border/50 rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20 w-64"
           />
         </div>
 
@@ -291,6 +294,10 @@ export function ServiceChargesTable({ rows }: Props) {
             </button>
           </div>
         </div>
+      )}
+
+      {!isAuthenticated && totalRows !== undefined && (
+        <GatedTableOverlay freeRows={rows.length} totalRows={totalRows} />
       )}
     </div>
   )

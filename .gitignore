@@ -28,6 +28,9 @@ next-env.d.ts
 
 # DLD data files
 /dld_data/
+
+# Propsearch scraped data
+/propsearch_data/
 .env*.local
 
 # Local MCP config (contains access tokens)
@@ -35,3 +38,11 @@ next-env.d.ts
 
 # Co-founder heartbeat daily backlog files (keep cofounder.json, ignore daily noise)
 state/backlog-*.md
+
+# Claude / agent runtime state (sessions, memory, metrics — not code)
+.claude-flow/sessions/
+.claude-flow/data/
+.claude-flow/metrics/
+.claude-flow/security/
+.claude/settings.local.json
+.gemini/

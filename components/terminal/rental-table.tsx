@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react"
 import { ArrowDown, ArrowUp, ArrowUpDown, ExternalLink } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { GatedTableOverlay } from "@/components/auth/gated-table-overlay"
 
 export interface RentalListing {
   id: string
@@ -81,7 +82,7 @@ function Th({ children, col, right, sortKey, sortDir, onSort }: ThProps) {
   )
 }
 
-export function RentalTable({ listings }: { listings: RentalListing[] }) {
+export function RentalTable({ listings, isAuthenticated, totalRows }: { listings: RentalListing[]; isAuthenticated?: boolean; totalRows?: number }) {
   const [sortKey, setSortKey] = useState<SortKey>("listedAt")
   const [sortDir, setSortDir] = useState<SortDir>("desc")
 
@@ -109,6 +110,7 @@ export function RentalTable({ listings }: { listings: RentalListing[] }) {
   const thProps = { sortKey, sortDir, onSort: handleSort }
 
   return (
+    <div className="relative">
     <div className="rounded-xl border border-border/50 bg-card overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-sm">
@@ -276,6 +278,11 @@ export function RentalTable({ listings }: { listings: RentalListing[] }) {
           vs RERA · ↓ Drop · Cheques — pending RERA index + DLD transaction database integration
         </span>
       </div>
+    </div>
+
+      {!isAuthenticated && totalRows !== undefined && (
+        <GatedTableOverlay freeRows={listings.length} totalRows={totalRows} />
+      )}
     </div>
   )
 }

@@ -4,6 +4,7 @@ import { useState, useMemo } from "react"
 import { cn } from "@/lib/utils"
 import type { PricerRow } from "@/app/terminal/floor-plan-pricer/page"
 import { formatAreaName } from "@/lib/area-names"
+import { GatedTableOverlay } from "@/components/auth/gated-table-overlay"
 
 const ROOM_PILLS = [
   { label: "All", value: "all" },
@@ -60,9 +61,11 @@ function DistBar({ p10, p25, p50, p75, p90 }: DistBarProps) {
 
 interface Props {
   data: PricerRow[]
+  isAuthenticated?: boolean
+  totalRows?: number
 }
 
-export function PricerControls({ data }: Props) {
+export function PricerControls({ data, isAuthenticated, totalRows }: Props) {
   const [search, setSearch] = useState("")
   const [roomFilter, setRoomFilter] = useState("all")
 
@@ -83,7 +86,7 @@ export function PricerControls({ data }: Props) {
   }, [data, search, roomFilter])
 
   return (
-    <div className="space-y-4">
+    <div className="relative space-y-4">
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
         <input
@@ -91,7 +94,7 @@ export function PricerControls({ data }: Props) {
           placeholder="Search community..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full sm:w-72 rounded-md border border-border/40 bg-card/40 px-3 py-2 text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
+          className="w-full sm:w-72 rounded-md border border-border/40 bg-card/40 px-3 py-2 text-base sm:text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
         />
         <div className="flex flex-wrap gap-1.5">
           {ROOM_PILLS.map((pill) => (
@@ -193,6 +196,10 @@ export function PricerControls({ data }: Props) {
           </tbody>
         </table>
       </div>
+
+      {!isAuthenticated && totalRows !== undefined && (
+        <GatedTableOverlay freeRows={data.length} totalRows={totalRows} />
+      )}
     </div>
   )
 }

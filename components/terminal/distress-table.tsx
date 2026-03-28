@@ -206,7 +206,7 @@ export function DistressTable({ deals }: Props) {
               value={globalFilter}
               onChange={e => setGlobalFilter(e.target.value)}
               placeholder="Filter by title or location..."
-              className="w-full pl-9 pr-4 py-2 text-sm bg-card border border-border/50 rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20"
+              className="w-full pl-9 pr-4 py-2 text-base sm:text-sm bg-card border border-border/50 rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20"
             />
           </div>
           <p className="text-xs font-mono text-muted-foreground">
@@ -217,7 +217,7 @@ export function DistressTable({ deals }: Props) {
         {/* Table */}
         <div className="w-full overflow-x-auto rounded-xl border border-border/40 bg-card/40">
           <table className="w-full text-sm border-collapse">
-            <thead>
+            <thead className="sticky top-0 z-10">
               {table.getHeaderGroups().map(hg => (
                 <tr key={hg.id} className="border-b border-border/50 bg-muted/30">
                   {hg.headers.map(header => (

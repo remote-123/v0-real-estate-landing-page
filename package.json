@@ -16,8 +16,15 @@
     "ingest:dld-buildings-registry": "npx tsx scripts/ingest/dld_buildings_registry.ts",
     "ingest:dld-units": "npx tsx scripts/ingest/dld_units.ts",
     "ingest:dld-transactions": "npx tsx scripts/ingest/dld_transactions.ts",
+    "ingest:buildings-enriched": "npx tsx --env-file=.env.local scripts/ingest/buildings_enriched.ts",
+    "ingest:propsearch": "npx tsx --env-file=.env.local scripts/ingest/propsearch_scraper.ts",
     "announce-deploy": "npx tsx scripts/announce-deploy.ts",
-    "heartbeat": "npx tsx scripts/cofounder-heartbeat.ts"
+    "heartbeat": "npx tsx scripts/cofounder-heartbeat.ts",
+    "migrate:users": "npx tsx --env-file=.env.local scripts/migrate/001_create_users.ts",
+    "scrape:propsearch": "npx tsx --env-file=.env.local scripts/ingest/propsearch_full_scraper.ts",
+    "scrape:propsearch:areas": "npx tsx --env-file=.env.local scripts/ingest/propsearch_full_scraper.ts --phase=1",
+    "scrape:propsearch:buildings": "npx tsx --env-file=.env.local scripts/ingest/propsearch_full_scraper.ts --phase=2",
+    "scrape:propsearch:details": "npx tsx --env-file=.env.local scripts/ingest/propsearch_full_scraper.ts --phase=3"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.78.0",
@@ -70,6 +77,7 @@
     "input-otp": "1.4.1",
     "lucide-react": "^0.454.0",
     "next": "16.0.10",
+    "next-auth": "^5.0.0-beta.30",
     "next-sanity": "^11.6.12",
     "next-themes": "^0.4.6",
     "postgres": "^3.4.8",

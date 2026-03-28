@@ -11,11 +11,20 @@ import {
     X,
     ChevronRight,
     Settings2,
+    Activity,
+    Users,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 
 const navItems = [
+    {
+        group: "System",
+        items: [
+            { label: "Health", href: "/admin/dashboard", icon: Activity, description: "DB stats, leads, cron activity" },
+            { label: "Users", href: "/admin/users", icon: Users, description: "Registered users & sign-in analytics" },
+        ],
+    },
     {
         group: "Content",
         items: [

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
+import { cn } from "@/lib/utils"
 import {
   LineChart,
   Line,
@@ -31,9 +32,19 @@ interface ServiceChargeRow {
   total_cost: number
 }
 
+interface RentalRow {
+  building_match: string
+  bedrooms: string
+  listings: number
+  avg_annual: number
+  avg_monthly: number
+  avg_psf: number
+}
+
 interface BuildingData {
   quarterly: QuarterlyRow[]
   serviceCharges: ServiceChargeRow[]
+  rentals: RentalRow[]
 }
 
 function useDebounce<T>(value: T, delay: number): T {
@@ -102,7 +113,7 @@ function BuildingSearch({
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder="Search building name…"
-            className={`w-full rounded-md border bg-card/60 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 ${accentBorder} border-border/40`}
+            className={`w-full rounded-md border bg-card/60 px-3 py-2 text-base sm:text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 ${accentBorder} border-border/40`}
           />
           {open && results.length > 0 && (
             <ul className="absolute z-20 mt-1 w-full rounded-md border border-border/40 bg-card shadow-lg overflow-hidden">
@@ -140,25 +151,41 @@ function StatCard({ label, value }: { label: string; value: string }) {
   )
 }
 
+const BEDROOM_TABS = [
+  { label: "All", value: "" },
+  { label: "Studio", value: "Studio" },
+  { label: "1 BR", value: "1 B/R" },
+  { label: "2 BR", value: "2 B/R" },
+  { label: "3 BR", value: "3 B/R" },
+  { label: "4 BR", value: "4 B/R" },
+]
+
 export default function BuildingComparatorPage() {
   const [buildingA, setBuildingA] = useState("")
   const [buildingB, setBuildingB] = useState("")
   const [data, setData] = useState<BuildingData | null>(null)
   const [loading, setLoading] = useState(false)
+  const [selectedBeds, setSelectedBeds] = useState("")
 
-  const compare = useCallback(async () => {
+  const compare = useCallback(async (beds = selectedBeds) => {
     if (!buildingA) return
     setLoading(true)
     try {
       const params = new URLSearchParams({ a: buildingA })
       if (buildingB) params.set("b", buildingB)
+      if (beds) params.set("beds", beds)
       const res = await fetch(`/api/building-data?${params}`)
       const json = await res.json()
       setData(json)
     } finally {
       setLoading(false)
     }
-  }, [buildingA, buildingB])
+  }, [buildingA, buildingB, selectedBeds])
+
+  const handleBedsChange = (beds: string) => {
+    setSelectedBeds(beds)
+    if (buildingA) compare(beds)
+  }
 
   // Merge quarterly rows into chart-friendly format
   const chartData = (() => {
@@ -247,7 +274,7 @@ export default function BuildingComparatorPage() {
             color="blue"
           />
           <button
-            onClick={compare}
+            onClick={() => compare()}
             disabled={!buildingA || loading}
             className="shrink-0 rounded-md bg-emerald-500 px-6 py-2 text-sm font-semibold text-black transition-opacity hover:opacity-90 disabled:opacity-40"
           >
@@ -259,10 +286,28 @@ export default function BuildingComparatorPage() {
       {/* Chart */}
       {chartData.length > 0 && (
         <div className="rounded-xl border border-border/40 bg-card/40 p-6">
-          <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground mb-4">
-            Price / sqm — Quarterly Avg (AED)
-          </p>
-          <ResponsiveContainer width="100%" height={280}>
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+              Price / sqm — Quarterly Avg (AED)
+            </p>
+            <div className="flex gap-1 overflow-x-auto pb-1">
+              {BEDROOM_TABS.map(tab => (
+                <button
+                  key={tab.value}
+                  onClick={() => handleBedsChange(tab.value)}
+                  className={cn(
+                    "px-3 py-1 rounded-md text-xs font-medium transition-colors",
+                    selectedBeds === tab.value
+                      ? "bg-emerald-500 text-black"
+                      : "bg-secondary text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <ResponsiveContainer width="100%" height={220}>
             <LineChart data={chartData} margin={{ top: 4, right: 16, bottom: 0, left: 8 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
               <XAxis dataKey="qtr" tick={{ fontSize: 10, fill: "#888" }} />
@@ -298,6 +343,7 @@ export default function BuildingComparatorPage() {
           </ResponsiveContainer>
         </div>
       )}
+
 
       {/* Stats grid */}
       {(statsA || statsB) && (
@@ -350,6 +396,72 @@ export default function BuildingComparatorPage() {
           </div>
         </div>
       )}
+
+      {/* Rental comparison */}
+      {data?.rentals && data.rentals.length > 0 && (() => {
+        const bedroomOrder = ["Studio", "1", "2", "3", "4", "5"]
+        const bedrooms = [...new Set(data.rentals.map(r => r.bedrooms))].sort(
+          (a, b) => bedroomOrder.indexOf(a) - bedroomOrder.indexOf(b)
+        )
+        const rentFor = (building: string, bed: string) =>
+          data.rentals.find(r =>
+            r.building_match.toLowerCase().includes(building.toLowerCase().slice(0, 15)) &&
+            r.bedrooms === bed
+          )
+        return (
+          <div className="rounded-xl border border-border/40 bg-card/40 p-6">
+            <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground mb-1">
+              Current Rental Listings
+            </p>
+            <p className="text-xs text-muted-foreground/60 mb-4">Avg annual rent by bedroom type — live from PropertyFinder</p>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border/40">
+                    <th className="py-2 pr-4 text-left font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Bedrooms</th>
+                    <th className="py-2 pr-4 text-right font-mono text-[10px] uppercase tracking-widest text-emerald-500">{buildingA}</th>
+                    {buildingB && (
+                      <th className="py-2 text-right font-mono text-[10px] uppercase tracking-widest text-blue-400">{buildingB}</th>
+                    )}
+                  </tr>
+                </thead>
+                <tbody>
+                  {bedrooms.map(bed => {
+                    const rA = rentFor(buildingA, bed)
+                    const rB = buildingB ? rentFor(buildingB, bed) : undefined
+                    if (!rA && !rB) return null
+                    return (
+                      <tr key={bed} className="border-b border-border/20 hover:bg-secondary/20 transition-colors">
+                        <td className="py-2 pr-4 text-muted-foreground font-mono text-xs">
+                          {bed === "Studio" ? "Studio" : `${bed} BR`}
+                        </td>
+                        <td className="py-2 pr-4 text-right text-foreground">
+                          {rA ? (
+                            <span>
+                              AED {rA.avg_annual.toLocaleString()}/yr
+                              <span className="text-muted-foreground text-xs ml-1">({rA.listings} listings)</span>
+                            </span>
+                          ) : "—"}
+                        </td>
+                        {buildingB && (
+                          <td className="py-2 text-right text-foreground">
+                            {rB ? (
+                              <span>
+                                AED {rB.avg_annual.toLocaleString()}/yr
+                                <span className="text-muted-foreground text-xs ml-1">({rB.listings} listings)</span>
+                              </span>
+                            ) : "—"}
+                          </td>
+                        )}
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Empty state */}
       {!data && !loading && (

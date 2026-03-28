@@ -3,8 +3,10 @@ import { sql } from "@/lib/db"
 import { TrendingUp, Zap, BarChart3 } from "lucide-react"
 import { StatCard } from "@/components/terminal/stat-card"
 import { formatAreaName } from "@/lib/area-names"
+import { auth } from "@/auth"
+import { GatedTableOverlay } from "@/components/auth/gated-table-overlay"
 
-export const revalidate = 3600
+export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: "Area Momentum | North Capital DXB",
@@ -84,9 +86,12 @@ function volPct(val: number | string) {
   return `${sign}${n.toFixed(1)}%`
 }
 
+const FREE_ROWS = 5
+
 export default async function AreaMomentumPage() {
-  const areas = await fetchAreas()
-  const display = areas.slice(0, 60).map((a) => ({
+  const [session, areas] = await Promise.all([auth(), fetchAreas()])
+  const isAuthenticated = !!session
+  const allDisplay = areas.slice(0, 60).map((a) => ({
     ...a,
     curr_psf: Number(a.curr_psf),
     price_mom_pct: Number(a.price_mom_pct),
@@ -94,19 +99,20 @@ export default async function AreaMomentumPage() {
     vol_mom_pct: Number(a.vol_mom_pct),
     momentum_score: Number(a.momentum_score),
   }))
+  const display = isAuthenticated ? allDisplay : allDisplay.slice(0, FREE_ROWS)
 
-  const breakouts = display.filter(
+  const breakouts = allDisplay.filter(
     (a) => a.price_mom_pct > 2 && a.vol_mom_pct > 5
   ).length
 
   const avgPriceMom =
-    display.length > 0
-      ? display.reduce((s, a) => s + a.price_mom_pct, 0) / display.length
+    allDisplay.length > 0
+      ? allDisplay.reduce((s, a) => s + a.price_mom_pct, 0) / allDisplay.length
       : 0
 
-  const topScore = display[0]?.momentum_score ?? 0
+  const topScore = allDisplay[0]?.momentum_score ?? 0
 
-  const maxScore = Math.max(...display.map((a) => a.momentum_score), 1)
+  const maxScore = Math.max(...allDisplay.map((a) => a.momentum_score), 1)
 
   return (
     <div className="flex flex-col gap-6 px-4 sm:px-8 xl:px-12 py-0 sm:py-6 max-w-[1400px] mx-auto pb-24 lg:pb-12">
@@ -136,7 +142,7 @@ export default async function AreaMomentumPage() {
           label="Avg Price MoM"
           value={`${avgPriceMom > 0 ? "+" : ""}${avgPriceMom.toFixed(2)}%`}
           icon={TrendingUp}
-          description={`Across ${display.length} active areas`}
+          description={`Across ${allDisplay.length} active areas`}
         />
         <StatCard
           label="Top Momentum Score"
@@ -147,6 +153,7 @@ export default async function AreaMomentumPage() {
       </div>
 
       {/* Table */}
+      <div className="relative">
       <div className="rounded-xl border border-border/40 bg-card/40 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -258,6 +265,11 @@ export default async function AreaMomentumPage() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {!isAuthenticated && allDisplay.length > FREE_ROWS && (
+        <GatedTableOverlay freeRows={display.length} totalRows={allDisplay.length} />
+      )}
       </div>
 
       <p className="text-[10px] text-muted-foreground/50 pb-2">

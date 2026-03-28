@@ -4,6 +4,7 @@ import { CommunitiesTable } from '@/components/terminal/communities-table'
 import { type Community } from '@/lib/types/community'
 import { sql } from '@/lib/db'
 import { formatAreaName } from '@/lib/area-names'
+import { auth } from '@/auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -151,12 +152,16 @@ async function fetchCommunities(): Promise<Community[]> {
   }
 }
 
-export default async function CommunitiesPage() {
-  const data = await fetchCommunities()
+const FREE_ROWS = 3
 
-  const totalTxns = data.reduce((s, c) => s + (c.transactions30d || 0), 0)
-  const avgPsf = data.length > 0
-    ? Math.round(data.reduce((s, c) => s + c.avgPricePerSqft, 0) / data.length)
+export default async function CommunitiesPage() {
+  const [session, allData] = await Promise.all([auth(), fetchCommunities()])
+  const isAuthenticated = !!session
+  const data = isAuthenticated ? allData : allData.slice(0, FREE_ROWS)
+
+  const totalTxns = allData.reduce((s, c) => s + (c.transactions30d || 0), 0)
+  const avgPsf = allData.length > 0
+    ? Math.round(allData.reduce((s, c) => s + c.avgPricePerSqft, 0) / allData.length)
     : 0
 
   return (
@@ -180,7 +185,7 @@ export default async function CommunitiesPage() {
         </div>
 
         {/* Macro stats */}
-        <div className="flex flex-wrap lg:flex-nowrap gap-4 lg:min-w-[440px]">
+        <div className="flex flex-wrap lg:flex-nowrap gap-4 w-full lg:w-auto">
           <div className="flex-1 rounded-xl bg-background border border-border/50 p-4">
             <p className="font-mono text-xs text-muted-foreground mb-1">Areas Tracked</p>
             <p className="font-mono text-xl md:text-2xl font-bold text-accent">{data.length}</p>
@@ -207,7 +212,7 @@ export default async function CommunitiesPage() {
 
       {/* Table */}
       <section>
-        <CommunitiesTable data={data} />
+        <CommunitiesTable data={data} isAuthenticated={isAuthenticated} totalRows={allData.length} />
       </section>
 
     </div>

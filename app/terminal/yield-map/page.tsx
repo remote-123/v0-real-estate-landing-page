@@ -5,8 +5,9 @@ import { StatCard } from "@/components/terminal/stat-card"
 import { YieldMapTable } from "@/components/terminal/yield-map-table"
 import type { YieldRow } from "@/components/terminal/yield-map-table"
 import { formatAreaName } from "@/lib/area-names"
+import { auth } from "@/auth"
 
-export const revalidate = 3600
+export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: "Dubai Yield Map | North Capital DXB",
@@ -72,15 +73,19 @@ function formatAed(val: number): string {
   return `AED ${val.toLocaleString()}`
 }
 
-export default async function YieldMapPage() {
-  const rows = await fetchYieldData()
+const FREE_ROWS = 5
 
-  const topYield = rows[0]?.gross_yield_pct ?? null
+export default async function YieldMapPage() {
+  const [session, allRows] = await Promise.all([auth(), fetchYieldData()])
+  const isAuthenticated = !!session
+  const rows = isAuthenticated ? allRows : allRows.slice(0, FREE_ROWS)
+
+  const topYield = allRows[0]?.gross_yield_pct ?? null
   const avgYield =
-    rows.length > 0
-      ? rows.reduce((acc, r) => acc + r.gross_yield_pct, 0) / rows.length
+    allRows.length > 0
+      ? allRows.reduce((acc, r) => acc + r.gross_yield_pct, 0) / allRows.length
       : null
-  const totalCombos = rows.length
+  const totalCombos = allRows.length
 
   return (
     <div className="flex w-full flex-col px-0 sm:px-8 xl:px-12 py-0 sm:py-6 space-y-6 max-w-7xl mx-auto pb-24 lg:pb-12">
@@ -131,7 +136,7 @@ export default async function YieldMapPage() {
 
       {/* Table with filters */}
       <div className="px-4 sm:px-0">
-        <YieldMapTable rows={rows} />
+        <YieldMapTable rows={rows} isAuthenticated={isAuthenticated} totalRows={allRows.length} />
       </div>
 
       {/* Source note */}

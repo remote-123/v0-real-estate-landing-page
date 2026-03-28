@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react'
 import { useRouter } from 'next/navigation'
+import { GatedTableOverlay } from '@/components/auth/gated-table-overlay'
 import { useLocalStorage } from '@/lib/hooks/use-local-storage'
 import {
   useReactTable,
@@ -85,9 +86,11 @@ function SortIcon({ sorted }: { sorted: false | 'asc' | 'desc' }) {
 
 interface Props {
   data: Community[]
+  isAuthenticated?: boolean
+  totalRows?: number
 }
 
-export function CommunitiesTable({ data }: Props) {
+export function CommunitiesTable({ data, isAuthenticated = true, totalRows }: Props) {
   const router = useRouter()
   const [sorting, setSorting] = useLocalStorage<SortingState>('terminal:communities:sort', [])
   const [globalFilter, setGlobalFilter] = useLocalStorage<string>('terminal:communities:filter', '')
@@ -299,7 +302,7 @@ export function CommunitiesTable({ data }: Props) {
             value={globalFilter}
             onChange={e => setGlobalFilter(e.target.value)}
             placeholder="Search communities..."
-            className="w-full pl-9 pr-4 py-2 text-sm bg-card border border-border/50 rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20"
+            className="w-full pl-9 pr-4 py-2 text-base sm:text-sm bg-card border border-border/50 rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20"
           />
         </div>
         <p className="text-xs font-mono text-muted-foreground">
@@ -308,45 +311,52 @@ export function CommunitiesTable({ data }: Props) {
       </div>
 
       {/* Table */}
-      <div className="w-full overflow-x-auto rounded-xl border border-border/50">
-        <table className="w-full text-sm border-collapse">
-          <thead>
-            {table.getHeaderGroups().map(hg => (
-              <tr key={hg.id} className="border-b border-border/50 bg-muted/30">
-                {hg.headers.map(header => (
-                  <th
-                    key={header.id}
-                    className="px-3 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wider text-muted-foreground first:text-left whitespace-nowrap"
-                    style={{ width: header.column.columnDef.size }}
-                  >
-                    {flexRender(header.column.columnDef.header, header.getContext())}
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody>
-            {table.getRowModel().rows.map((row, i) => (
-              <tr
-                key={row.id}
-                onClick={() => router.push(`/terminal/communities/${row.original.slug}`)}
-                className={cn(
-                  'group border-b border-border/30 cursor-pointer transition-colors hover:bg-accent/5 last:border-0',
-                  i % 2 === 0 ? 'bg-card' : 'bg-muted/10'
-                )}
-              >
-                {row.getVisibleCells().map(cell => (
-                  <td
-                    key={cell.id}
-                    className="px-3 py-3 text-right first:text-left align-middle"
-                  >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="relative">
+        <div className="w-full overflow-x-auto rounded-xl border border-border/50">
+          <table className="w-full text-sm border-collapse">
+            <thead className="sticky top-0 z-10">
+              {table.getHeaderGroups().map(hg => (
+                <tr key={hg.id} className="border-b border-border/50 bg-muted/30">
+                  {hg.headers.map(header => (
+                    <th
+                      key={header.id}
+                      className="px-3 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wider text-muted-foreground first:text-left whitespace-nowrap"
+                      style={{ width: header.column.columnDef.size }}
+                    >
+                      {flexRender(header.column.columnDef.header, header.getContext())}
+                    </th>
+                  ))}
+                </tr>
+              ))}
+            </thead>
+            <tbody>
+              {table.getRowModel().rows.map((row, i) => (
+                <tr
+                  key={row.id}
+                  onClick={() => router.push(`/terminal/communities/${row.original.slug}`)}
+                  className={cn(
+                    'group border-b border-border/30 cursor-pointer transition-colors hover:bg-accent/5 last:border-0',
+                    i % 2 === 0 ? 'bg-card' : 'bg-muted/10'
+                  )}
+                >
+                  {row.getVisibleCells().map(cell => (
+                    <td
+                      key={cell.id}
+                      className="px-3 py-3 text-right first:text-left align-middle"
+                    >
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Gated overlay sits over the bottom of the table */}
+        {!isAuthenticated && totalRows !== undefined && (
+          <GatedTableOverlay freeRows={data.length} totalRows={totalRows} />
+        )}
       </div>
     </div>
   )

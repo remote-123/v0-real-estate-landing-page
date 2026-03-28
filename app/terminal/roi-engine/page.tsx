@@ -130,7 +130,7 @@ export default async function ROIEnginePage() {
   const hasServiceCharges = serviceCharges.length > 0
 
   return (
-    <div className="space-y-8 pb-24 lg:pb-10 px-6 sm:px-0">
+    <div className="space-y-8 pb-24 lg:pb-10 px-4 sm:px-0">
       <div className="flex flex-col gap-2">
         <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Tool</p>
         <h2 className="font-serif text-3xl font-bold tracking-tight">ROI Engine</h2>

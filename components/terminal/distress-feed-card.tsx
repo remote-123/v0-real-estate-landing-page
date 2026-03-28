@@ -13,18 +13,27 @@ interface TrendPoint { month: string; avg_psf: number; txn_count: number }
 
 function PsfTrendChart({ area, type, listingPsf }: { area: string; type: string; listingPsf: number }) {
   const [data, setData] = useState<TrendPoint[]>([])
+  const [resolution, setResolution] = useState<"building" | "area" | null>(null)
+  const [matchedName, setMatchedName] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     fetch(`/api/area-psf-trend?location=${encodeURIComponent(area)}&type=${encodeURIComponent(type)}`)
       .then(r => r.json())
-      .then(j => { if (Array.isArray(j.data)) setData(j.data) })
+      .then(j => {
+        if (Array.isArray(j.data)) setData(j.data)
+        if (j.resolution) setResolution(j.resolution)
+        if (j.matched_name) setMatchedName(j.matched_name)
+      })
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [area, type])
 
   if (loading) return <div className="h-32 flex items-center justify-center text-xs text-muted-foreground">Loading trend…</div>
-  if (data.length < 2) return <div className="h-32 flex items-center justify-center text-xs text-muted-foreground">Insufficient DLD data for this area</div>
+  if (data.length < 2) return <div className="h-32 flex items-center justify-center text-xs text-muted-foreground">Insufficient DLD data for this property</div>
+
+  const trendLabel = resolution === "building" ? "Building avg" : "Area avg"
+  const trendWindow = resolution === "building" ? "36 mo" : "18 mo"
 
   const shortMonth = (m: string) => {
     const [y, mo] = m.split("-")
@@ -40,6 +49,7 @@ function PsfTrendChart({ area, type, listingPsf }: { area: string; type: string;
   const yMax = Math.ceil(Math.max(...allValues) * 1.07)
 
   return (
+    <>
     <ResponsiveContainer width="100%" height={130}>
       <LineChart data={chartData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
@@ -61,7 +71,7 @@ function PsfTrendChart({ area, type, listingPsf }: { area: string; type: string;
           contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 6, fontSize: 11 }}
           formatter={(val: number, name: string) => [
             `AED ${val.toLocaleString()}/sqft`,
-            name === "avg_psf" ? "Area avg" : name,
+            name === "avg_psf" ? trendLabel : name,
           ]}
           labelFormatter={l => l}
         />
@@ -84,6 +94,12 @@ function PsfTrendChart({ area, type, listingPsf }: { area: string; type: string;
         )}
       </LineChart>
     </ResponsiveContainer>
+    {matchedName && (
+      <p className="mt-1 text-right font-mono text-[9px] text-muted-foreground/40 uppercase tracking-wider">
+        {trendWindow} avg PSF · {matchedName}
+      </p>
+    )}
+    </>
   )
 }
 
@@ -186,9 +202,14 @@ export function DealModal({ deal, onClose }: { deal: DistressFeedCardProps; onCl
                             #{deal.rank} Distress Signal
                         </p>
                         <h2 className="font-semibold text-foreground text-sm leading-snug line-clamp-2">{deal.title}</h2>
-                        <p className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                            <MapPin className="h-3 w-3 shrink-0" /> {deal.location}
-                        </p>
+                        <a
+                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(deal.location + ', Dubai, UAE')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-xs text-muted-foreground mt-1 hover:text-foreground transition-colors group"
+                        >
+                            <MapPin className="h-3 w-3 shrink-0 group-hover:text-accent transition-colors" /> {deal.location}
+                        </a>
                     </div>
                     <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors shrink-0">
                         <X className="h-5 w-5" />

@@ -1,6 +1,9 @@
 import type { Metadata } from "next"
 import { RentalTable, type RentalListing } from "@/components/terminal/rental-table"
 import { sql } from "@/lib/db"
+import { auth } from "@/auth"
+
+export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
     title: "Rental Drops Dubai | North Capital DXB",
@@ -27,10 +30,10 @@ async function fetchListingsFromDB(): Promise<RentalListing[]> {
             area: row.area ?? "Dubai",
             type: row.type ?? "PROPERTY",
             bedrooms: row.bedrooms ?? "Studio",
-            sizeSqft: row.size_sqft ?? 0,
-            annualPrice: row.annual_price ?? 0,
-            monthlyPrice: row.monthly_price ?? 0,
-            pricePerSqft: row.price_per_sqft ?? 0,
+            sizeSqft: Number(row.size_sqft ?? 0),
+            annualPrice: Number(row.annual_price ?? 0),
+            monthlyPrice: Number(row.monthly_price ?? 0),
+            pricePerSqft: Number(row.price_per_sqft ?? 0),
             listedAt: new Date(row.listed_at).getTime(),
             source: row.source as "bayut" | "pf",
             externalUrl: row.external_url ?? "",
@@ -75,14 +78,18 @@ async function enrichWithBuildingAge(listings: RentalListing[]): Promise<RentalL
     })
 }
 
-export default async function RentalDropsPage() {
-    const raw = await fetchListingsFromDB()
-    const listings = await enrichWithBuildingAge(raw)
+const FREE_ROWS = 3
 
-    const bayutCount = listings.filter(l => l.source === "bayut").length
-    const pfCount = listings.filter(l => l.source === "pf").length
-    const avgMonthly = listings.length > 0
-        ? Math.round(listings.reduce((s, l) => s + l.monthlyPrice, 0) / listings.length)
+export default async function RentalDropsPage() {
+    const [session, raw] = await Promise.all([auth(), fetchListingsFromDB()])
+    const allListings = await enrichWithBuildingAge(raw)
+    const isAuthenticated = !!session
+    const listings = isAuthenticated ? allListings : allListings.slice(0, FREE_ROWS)
+
+    const bayutCount = allListings.filter(l => l.source === "bayut").length
+    const pfCount = allListings.filter(l => l.source === "pf").length
+    const avgMonthly = allListings.length > 0
+        ? Math.round(allListings.reduce((s, l) => s + l.monthlyPrice, 0) / allListings.length)
         : 0
 
     return (
@@ -126,7 +133,7 @@ export default async function RentalDropsPage() {
                     <p className="text-sm text-muted-foreground">No listings yet. Trigger the cron to populate: <code className="text-xs bg-muted px-1 py-0.5 rounded">/api/cron/fetch-rental-listings</code></p>
                 </div>
             ) : (
-                <RentalTable listings={listings} />
+                <RentalTable listings={listings} isAuthenticated={isAuthenticated} totalRows={allListings.length} />
             )}
         </div>
     )

@@ -28,7 +28,7 @@ export default function AdminLoginPage() {
                 return
             }
 
-            router.push("/admin/import")
+            router.push("/admin/dashboard")
         } catch {
             setError("Something went wrong. Try again.")
         } finally {

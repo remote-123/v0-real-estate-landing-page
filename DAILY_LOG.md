@@ -1,5 +1,78 @@
 # Daily Log
 
+## 2026-03-26 — propsearch.ae full CSV scraper
+
+### What was built
+Created `scripts/ingest/propsearch_full_scraper.ts` — a three-phase scraper that writes all output to local CSV files in `propsearch_data/` (gitignored).
+
+- **Phase 1**: Fetches `propsearch.ae/dubai/area-guides`, extracts all area slugs and display names dynamically (no hardcoded list), writes `propsearch_data/areas.csv`
+- **Phase 2**: For each area slug, fetches `/buildings`, reuses the `extractBuildings()` regex/span approach from `propsearch_scraper.ts` (absolute-URL card regex, NAV_SLUGS blocklist, status span parsing), writes `propsearch_data/buildings.csv`
+- **Phase 3**: For each unique building slug, fetches the detail page and extracts up to 9 fields (name, developer, completion_year, total_floors, total_units, property_types, amenities, service_charge, description) using regex against stripped text; writes `propsearch_data/building_details.csv`
+
+### Supporting changes
+- Added 4 npm scripts (`scrape:propsearch`, `scrape:propsearch:areas`, `scrape:propsearch:buildings`, `scrape:propsearch:details`) to `package.json`
+- Added `propsearch_data/` to `.gitignore`
+
+### Implementation notes
+- Native `fetch` only — no new npm packages
+- CSV written line-by-line via `fs.appendFileSync` (no memory buffering)
+- Header written once on first run; file existence check supports resume
+- 1.5s delay between all requests; HTTP 429 triggers exponential backoff (2s/4s/8s)
+- `--phase=N`, `--resume-from=<slug>`, `--limit=N` CLI flags
+- Per-item try/catch — bad rows are skipped, never crash
+- Build passed cleanly (`npm run build`)
+
+## 2026-03-26 — Auth-gating applied to five terminal pages
+
+### What was built
+Applied the same auth-gating pattern (established in `communities`) to five additional terminal pages:
+
+- `app/terminal/rental-drops/page.tsx` — added `auth()`, `force-dynamic`, FREE_ROWS=3; passes `isAuthenticated` + `totalRows` to `RentalTable`
+- `components/terminal/rental-table.tsx` — added `isAuthenticated?`, `totalRows?` props; wraps outer div with `relative`, renders `GatedTableOverlay` when locked
+- `app/terminal/yield-map/page.tsx` — added `auth()`, replaced `revalidate=3600` with `force-dynamic`, FREE_ROWS=5; stat cards use full `allRows` for accurate metrics
+- `components/terminal/yield-map-table.tsx` — added props + overlay, outer div gains `relative`
+- `app/terminal/area-momentum/page.tsx` — added `auth()`, replaced `revalidate=3600` with `force-dynamic`, FREE_ROWS=5; stat cards use `allDisplay`; inline table wrapped with `relative` div + overlay
+- `app/terminal/floor-plan-pricer/page.tsx` — added `auth()`, replaced `revalidate=3600` with `force-dynamic`, FREE_ROWS=3; summary stats use full `allRows`
+- `components/terminal/pricer-controls.tsx` — added props + overlay, outer div gains `relative`
+- `app/terminal/service-charges/page.tsx` — added `auth()`, replaced `revalidate=86400` with `force-dynamic`, FREE_ROWS=5; headline stats use full `allRows`
+- `components/terminal/service-charges-table.tsx` — added props + overlay, outer div gains `relative`
+
+### Implementation notes
+- All five pages confirmed `ƒ (Dynamic)` in build output
+- Build passed cleanly with no TypeScript errors
+- Stat card headline numbers (totals, averages) always reflect the full dataset regardless of auth state
+- `GatedTableOverlay` import: `@/components/auth/gated-table-overlay`
+- Pages NOT gated (chart-only): `transaction-pulse`, `price-index`
+
+---
+
+## 2026-03-26 — Buildings Directory terminal page
+
+### What was built
+- `app/terminal/buildings/page.tsx` — server component fetching up to 200 rows from `buildings_enriched`, stats header (total, with coordinates, off-plan count), auth-gated (5 free rows for unauthenticated users), passes data to `<BuildingsTable>`
+- `components/terminal/buildings-table.tsx` — TanStack Table client component; columns: rank, building name, area, type, status badge, developer, completion year, coordinates indicator; global search by name or area; sortable name/area/year columns; `<GatedTableOverlay>` for unauthenticated users
+- `components/terminal/sidebar.tsx` — added "Buildings" link under Intelligence group (between Community Screener and Building Comparator), reusing existing `Building2` lucide import
+
+### Implementation notes
+- Status badge colors: complete=emerald, under_construction=yellow, planned=blue, cancelled=red, unknown=gray
+- Coordinates column shows green `MapPin` when `osm_lat`/`osm_lng` are present, with tooltip showing the values
+- Build verified clean: `ƒ /terminal/buildings` appears in route table, compiled successfully
+
+---
+
+## 2026-03-26 — Admin users analytics view
+
+### What was built
+- `app/admin/(protected)/users/page.tsx` — new server component querying the `users` table in Neon; shows stats row (total, by provider, today/this week sign-ups, total sign-ins) + a sortable table of last 200 users with columns: #, Name, Email, Provider badge, Sign-ins, First seen, Last seen
+- `components/admin/admin-shell.tsx` — added "Users" nav link (under System group) pointing to `/admin/users`
+
+### Implementation notes
+- `formatRelative()` written inline — no new packages added
+- Provider badges: google=blue, linkedin=indigo, apple=gray
+- All pre-existing TypeScript errors are in unrelated files (footer.tsx, buildings.ts, etc.); zero new errors introduced
+
+---
+
 ## 2026-03-25 — Morning verification session
 
 ### What was tested

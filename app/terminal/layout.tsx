@@ -8,6 +8,7 @@ import { FeedbackModal } from "@/components/terminal/feedback-modal"
 import { MobileNav } from "@/components/terminal/mobile-nav"
 import { Button } from "@/components/ui/button"
 import { SITE_CONFIG } from "@/lib/constants"
+import { UserNav } from "@/components/auth/user-nav"
 
 export const metadata: Metadata = {
     title: 'Investor Terminal | North Capital DXB',
@@ -83,6 +84,7 @@ export default function InvestorTerminalLayout({
                                 </Link>
                             </Button>
                             <FeedbackModal />
+                            <UserNav />
                             <ThemeToggle />
                             <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/50 shrink-0">
                                 <div className="h-2 w-2 rounded-full bg-emerald-500" />

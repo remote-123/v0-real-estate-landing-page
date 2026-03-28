@@ -3,8 +3,9 @@ import { sql } from "@/lib/db"
 import { Building2, Calendar, MapPin, Layers } from "lucide-react"
 import { StatCard } from "@/components/terminal/stat-card"
 import { ServiceChargesTable } from "@/components/terminal/service-charges-table"
+import { auth } from "@/auth"
 
-export const revalidate = 86400
+export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: "Service Charge Intelligence | North Capital DXB",
@@ -48,21 +49,25 @@ async function fetchServiceCharges(): Promise<ServiceChargeRow[]> {
   }
 }
 
+const FREE_ROWS = 5
+
 export default async function ServiceChargesPage() {
-  const rows = await fetchServiceCharges()
+  const [session, allRows] = await Promise.all([auth(), fetchServiceCharges()])
+  const isAuthenticated = !!session
+  const rows = isAuthenticated ? allRows : allRows.slice(0, FREE_ROWS)
 
   // Headline stats
-  const uniqueProjects = new Set(rows.map((r) => r.project_name)).size
+  const uniqueProjects = new Set(allRows.map((r) => r.project_name)).size
   const uniqueCommunities = new Set(
-    rows.map((r) => r.master_community_name_en).filter(Boolean)
+    allRows.map((r) => r.master_community_name_en).filter(Boolean)
   ).size
-  const latestYear = rows.length
-    ? Math.max(...rows.map((r) => r.budget_year))
+  const latestYear = allRows.length
+    ? Math.max(...allRows.map((r) => r.budget_year))
     : 0
 
   // Most expensive community by average total service cost
   const communityTotals = new Map<string, { sum: number; count: number }>()
-  for (const row of rows) {
+  for (const row of allRows) {
     const c = row.master_community_name_en || "Unknown"
     const existing = communityTotals.get(c) ?? { sum: 0, count: 0 }
     communityTotals.set(c, {
@@ -129,7 +134,7 @@ export default async function ServiceChargesPage() {
       </div>
 
       {/* Table */}
-      <ServiceChargesTable rows={rows} />
+      <ServiceChargesTable rows={rows} isAuthenticated={isAuthenticated} totalRows={allRows.length} />
 
       {/* Disclaimer */}
       <p className="text-[10px] text-muted-foreground/50 leading-relaxed border-t border-border/30 pt-4">

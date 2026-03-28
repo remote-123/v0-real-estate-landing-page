@@ -28,13 +28,14 @@ export const sidebarLinks = [
     links: [
       { label: "City Intelligence", href: "/terminal", icon: LayoutDashboard },
       { label: "Distress Deals", href: "/terminal/distress-deals", icon: BarChart3 },
-      // { label: "Rental Drops", href: "/terminal/rental-drops", icon: Home },
+      { label: "Rental Drops", href: "/terminal/rental-drops", icon: Home },
     ]
   },
   {
     title: "Intelligence",
     links: [
       { label: "Community Screener", href: "/terminal/communities", icon: Map },
+      { label: "Buildings", href: "/terminal/buildings", icon: Building2 },
       // { label: "Price Index", href: "/terminal/price-index", icon: TrendingUp },
       // { label: "Supply Pipeline", href: "/terminal/supply-pipeline", icon: BarChart3 },
       // { label: "Service Charges", href: "/terminal/service-charges", icon: FileText },
@@ -122,11 +123,11 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         </div>
 
         <Link
-          href="/"
+          href="/services"
           className="flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-xs font-medium transition-colors hover:bg-secondary"
         >
           <ArrowLeft className="h-3 w-3" />
-          Exit Terminal
+          Back to Site
         </Link>
       </div>
     </div>

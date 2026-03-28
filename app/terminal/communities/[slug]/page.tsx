@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
-import { ArrowLeft, Building2, Layers } from 'lucide-react'
+import { ArrowLeft, BarChart3, Layers } from 'lucide-react'
 import Link from 'next/link'
 import { sql } from '@/lib/db'
 import { CommunityCharts, type MultiPricePoint } from '@/components/terminal/community-charts'
@@ -16,6 +16,10 @@ type TypeFilter = 'flat' | 'villa'
 
 function toSlug(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+}
+
+function formatNum(n: number): string {
+  return new Intl.NumberFormat('en-US').format(n)
 }
 
 type AreaRow = {
@@ -51,6 +55,9 @@ async function fetchAreaData(
   area: AreaRow
   history: MultiPricePoint[]
   noData: boolean
+  serviceChargeAvg: number | null
+  distressCount: number
+  topProjects: { project_name_en: string; no_of_units: number; project_status: string }[]
 } | null> {
   try {
     // Type-agnostic discovery — don't 404 just because the type has no data
@@ -62,12 +69,13 @@ async function fetchAreaData(
     if (!match) return null
 
     const areaName = match.area_name_en
+    const firstWord = areaName.split(' ')[0]
 
     const typeCond = type === 'flat'
       ? sql`AND m.property_type_en = 'Unit' AND m.property_sub_type_en = 'Flat'`
       : sql`AND m.property_type_en = 'Villa'`
 
-    const [stats, roomHistory] = await Promise.all([
+    const [stats, roomHistory, scRows, distressRows, topProjectRows] = await Promise.all([
       // KPI stats (aggregate over all rooms)
       sql<AreaRow[]>`
         WITH latest_month AS (
@@ -157,6 +165,32 @@ async function fetchAreaData(
             ORDER BY txn_month DESC
             LIMIT 24
           `,
+
+      // Service charge avg for this area
+      sql<{ avg_cost: string }[]>`
+        SELECT ROUND(AVG(service_cost)::numeric, 0) AS avg_cost
+        FROM dld_service_charges
+        WHERE service_cost > 0
+          AND LOWER(master_community_name_en) LIKE LOWER(${`%${firstWord}%`})
+      `,
+
+      // Distress listings count — graceful fallback if table doesn't exist
+      sql<{ cnt: string }[]>`
+        SELECT COUNT(*)::integer AS cnt
+        FROM distress_listings
+        WHERE LOWER(area_name) LIKE LOWER(${`%${firstWord}%`})
+          AND disappeared_at IS NULL
+      `.catch(() => [{ cnt: '0' }]),
+
+      // Top pipeline projects
+      sql<{ project_name_en: string; no_of_units: string; project_status: string }[]>`
+        SELECT project_name_en, COALESCE(no_of_units, 0) AS no_of_units, project_status
+        FROM dld_projects
+        WHERE area_name_en = ${areaName}
+          AND project_status IN ('ACTIVE','NOT_STARTED','PENDING')
+        ORDER BY no_of_units DESC
+        LIMIT 5
+      `,
     ])
 
     // Graceful no-data: area exists but no transactions for this type
@@ -180,7 +214,15 @@ async function fetchAreaData(
     }
     const history = Array.from(monthMap.values())
 
-    return { area, history, noData: !stats[0] }
+    const serviceChargeAvg = scRows[0]?.avg_cost ? Number(scRows[0].avg_cost) : null
+    const distressCount = Number(distressRows[0]?.cnt ?? 0)
+    const topProjects = topProjectRows.map(r => ({
+      project_name_en: r.project_name_en,
+      no_of_units: Number(r.no_of_units),
+      project_status: r.project_status,
+    }))
+
+    return { area, history, noData: !stats[0], serviceChargeAvg, distressCount, topProjects }
   } catch {
     return null
   }
@@ -215,7 +257,7 @@ export default async function CommunityPage({
   const result = await fetchAreaData(slug, type)
   if (!result) notFound()
 
-  const { area, history, noData } = result
+  const { area, history, noData, serviceChargeAvg, distressCount, topProjects } = result
   const momChange = Number(area.mom_change ?? 0)
   const momColor = momChange >= 0 ? 'text-emerald-400' : 'text-red-400'
 
@@ -225,23 +267,17 @@ export default async function CommunityPage({
     return `AED ${n}`
   }
 
-  const totalUnits = area.total_units
+  const displayName = formatAreaName(area.area_name_en)
 
   return (
     <div className="flex w-full flex-col px-0 sm:px-8 xl:px-12 py-0 sm:py-6 space-y-6 max-w-7xl mx-auto pb-24 lg:pb-12">
 
-      <div className="flex items-center justify-between px-4 sm:px-0">
+      <div className="flex items-center px-4 sm:px-0">
         <Link
           href="/terminal/communities"
           className="flex items-center gap-2 text-xs font-mono text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="h-3 w-3" /> Back to Community Screener
-        </Link>
-        <Link
-          href={`/terminal/areas/${slug}`}
-          className="text-xs font-mono text-emerald-400 hover:underline transition-colors"
-        >
-          See full area analysis →
         </Link>
       </div>
 
@@ -251,7 +287,7 @@ export default async function CommunityPage({
             <div className="flex items-center gap-2 mb-1">
               <span className="font-mono text-xs text-muted-foreground uppercase tracking-widest">Dubai</span>
             </div>
-            <h1 className="font-serif text-3xl sm:text-4xl font-bold text-foreground">{formatAreaName(area.area_name_en)}</h1>
+            <h1 className="font-serif text-3xl sm:text-4xl font-bold text-foreground">{displayName}</h1>
           </div>
           {!noData && (
             <div className="flex items-center gap-2">
@@ -279,9 +315,9 @@ export default async function CommunityPage({
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
-              { label: 'AED / sqft', value: new Intl.NumberFormat('en-US').format(area.avg_psf) },
+              { label: 'AED / sqft', value: formatNum(area.avg_psf) },
               { label: 'Avg Sale Price', value: formatPrice(area.avg_value) },
-              { label: 'Txns (latest month)', value: new Intl.NumberFormat('en-US').format(area.txn_count) },
+              { label: 'Txns (latest month)', value: formatNum(area.txn_count) },
               { label: 'MoM Change', value: `${momChange >= 0 ? '+' : ''}${momChange.toFixed(1)}%`, className: momColor },
             ].map(kpi => (
               <div key={kpi.label} className="rounded-lg bg-background border border-border/50 p-3">
@@ -298,27 +334,40 @@ export default async function CommunityPage({
       {history.length >= 2 && <CommunityCharts priceHistory={history} type={type} />}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Supply Pipeline — with top projects list */}
         <section className="border border-border/50 rounded-xl p-5 bg-card space-y-4">
           <div className="flex items-center gap-2">
             <Layers className="h-4 w-4 text-muted-foreground" />
             <h3 className="font-mono text-xs uppercase tracking-widest text-muted-foreground font-semibold">Supply Pipeline</h3>
           </div>
           {area.pipeline_units > 0 ? (
-            <div className="space-y-2">
-              <p className="font-mono text-2xl font-bold text-yellow-400">
-                +{new Intl.NumberFormat('en-US').format(area.pipeline_units)}
-              </p>
-              <p className="text-sm text-muted-foreground">units in active / upcoming projects</p>
-              {totalUnits > 0 && (
-                <p className="text-xs text-muted-foreground/60 font-mono">
-                  Supply ratio: {((area.pipeline_units / totalUnits) * 100).toFixed(1)}% of existing stock
+            <div className="space-y-3">
+              <div>
+                <p className="font-mono text-2xl font-bold text-yellow-400">
+                  +{formatNum(area.pipeline_units)}
                 </p>
-              )}
-              {totalUnits > 0 && area.pipeline_units / totalUnits > 0.15 && (
-                <div className="flex items-start gap-2 rounded-lg bg-yellow-400/5 border border-yellow-400/20 p-3 mt-2">
-                  <span className="text-yellow-400 text-xs font-mono">⚠</span>
-                  <p className="text-xs text-yellow-400/80">High supply incoming — monitor for yield compression risk.</p>
-                </div>
+                <p className="text-sm text-muted-foreground">units in active / upcoming projects</p>
+                {area.total_units > 0 && (
+                  <p className="text-xs text-muted-foreground/60 font-mono mt-1">
+                    Supply ratio: {((area.pipeline_units / area.total_units) * 100).toFixed(1)}% of existing stock
+                  </p>
+                )}
+                {area.total_units > 0 && area.pipeline_units / area.total_units > 0.15 && (
+                  <div className="flex items-start gap-2 rounded-lg bg-yellow-400/5 border border-yellow-400/20 p-3 mt-2">
+                    <span className="text-yellow-400 text-xs font-mono">⚠</span>
+                    <p className="text-xs text-yellow-400/80">High supply incoming — monitor for yield compression risk.</p>
+                  </div>
+                )}
+              </div>
+              {topProjects.length > 0 && (
+                <ul className="space-y-1.5 border-t border-border/30 pt-3">
+                  {topProjects.map(p => (
+                    <li key={p.project_name_en} className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground truncate max-w-[200px]">{p.project_name_en}</span>
+                      <span className="font-mono text-foreground ml-2 shrink-0">{formatNum(p.no_of_units)} units</span>
+                    </li>
+                  ))}
+                </ul>
               )}
             </div>
           ) : (
@@ -330,17 +379,35 @@ export default async function CommunityPage({
           )}
         </section>
 
+        {/* Holding Costs */}
         <section className="border border-border/50 rounded-xl p-5 bg-card space-y-4">
           <div className="flex items-center gap-2">
-            <Building2 className="h-4 w-4 text-muted-foreground" />
-            <h3 className="font-mono text-xs uppercase tracking-widest text-muted-foreground font-semibold">Project Stock</h3>
+            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+            <h3 className="font-mono text-xs uppercase tracking-widest text-muted-foreground font-semibold">Holding Costs</h3>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-4">
             <div>
-              <p className="font-mono text-2xl font-bold text-foreground">
-                {totalUnits > 0 ? new Intl.NumberFormat('en-US').format(totalUnits) : '—'}
+              <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Avg Service Charge / yr</p>
+              <p className="font-mono text-xl font-bold text-foreground">
+                {serviceChargeAvg ? `AED ${formatNum(serviceChargeAvg)}` : '—'}
               </p>
-              <p className="text-sm text-muted-foreground mt-1">total units across DLD-registered projects</p>
+              {!serviceChargeAvg && (
+                <p className="text-xs text-muted-foreground/60 font-mono mt-1">No service charge data in DLD registry.</p>
+              )}
+            </div>
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Active Distress Listings</p>
+              <p className={cn('font-mono text-xl font-bold', distressCount > 0 ? 'text-accent' : 'text-muted-foreground')}>
+                {distressCount}
+              </p>
+              {distressCount > 0 && (
+                <Link
+                  href={`/terminal/distress-deals?area=${encodeURIComponent(displayName)}`}
+                  className="text-[11px] text-emerald-400 hover:underline font-mono mt-1 block"
+                >
+                  View distress deals for {displayName} →
+                </Link>
+              )}
             </div>
           </div>
         </section>
@@ -350,8 +417,8 @@ export default async function CommunityPage({
       <div className="px-0">
         <EmailCaptureWidget
           source="community-page"
-          areaInterest={formatAreaName(area.area_name_en)}
-          label={`Get alerts for ${formatAreaName(area.area_name_en)}`}
+          areaInterest={displayName}
+          label={`Get alerts for ${displayName}`}
         />
       </div>
 

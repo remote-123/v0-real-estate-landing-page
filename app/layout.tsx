@@ -9,6 +9,7 @@ import { ExitIntentPopup } from "@/components/exit-intent-popup"
 import Script from "next/script"
 import { GoogleAnalytics } from '@next/third-parties/google'
 import { ThemeProvider } from "@/components/theme-provider"
+import { SessionProvider } from "@/components/auth/session-provider"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 
 const dmSans = DM_Sans({
@@ -76,6 +77,7 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <SpeedInsights />
+        <SessionProvider>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -93,7 +95,11 @@ export default function RootLayout({
                 c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
                 t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
                 y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-            })(window, document, "clarity", "script", "vklt96ti3i"); 
+            })(window, document, "clarity", "script", "vklt96ti3i");
+            if (typeof window !== 'undefined' && localStorage.getItem('is_internal') === 'true') {
+              window.clarity("set", "user_type", "internal");
+              window.clarity("consent");
+            }
           `}
           </Script>
 
@@ -110,6 +116,7 @@ export default function RootLayout({
           <GoogleAnalytics gaId="G-1CYNHNZQV0" />
 
         </ThemeProvider>
+        </SessionProvider>
       </body>
     </html>
   )

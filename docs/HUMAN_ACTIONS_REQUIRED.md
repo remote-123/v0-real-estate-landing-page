@@ -1,5 +1,15 @@
 # Human Actions Required — North Capital DXB
-## Updated: 2026-03-24
+## Updated: 2026-03-26
+
+---
+
+### P0 — Strategic Data Initiative (In-Person Required)
+
+- [ ] **Fresh DLD transaction data — visit DLD in person (Dubai)**
+  - Current open data CSVs are stale (latest `instance_date` is not within last 30 days, which breaks market briefing and area momentum freshness)
+  - Goal: establish a direct data feed or bulk export agreement with DLD for monthly/weekly transaction updates
+  - Also ask about: API access, `dld_building_nk` key availability (needed for exact building age matching — see architecture note), and data licensing terms for commercial use
+  - Until this is resolved: `/terminal/market-briefing` shows placeholder, area momentum scores are based on old data, and building age on rental-drops is fuzzy-matched
 
 ---
 
@@ -46,7 +56,9 @@
 
 ### P3 — Strategic Decisions
 
-- [ ] **Auth layer decision** — CEO vs CISO tension: all terminal pages are publicly accessible. Decide whether to add Clerk/NextAuth before Phase 3 features or after. Adding auth now enables a paid tier gating model. Adding it later means re-engineering existing pages.
+- [x] **Auth layer decision** — NextAuth v5 implemented with Google OAuth. Google-only for now.
+- [ ] **Add Apple Sign-In** — Requires Apple Developer account, App ID, and `Services ID` for web OAuth. Credentials needed: `AUTH_APPLE_ID`, `AUTH_APPLE_SECRET` (JWT). Add provider back in `auth.ts` and re-enable button in `components/auth/sign-in-form.tsx`.
+- [ ] **Add LinkedIn Sign-In** — Requires LinkedIn Developer app with `Sign In with LinkedIn using OpenID Connect` product enabled. Credentials needed: `AUTH_LINKEDIN_ID`, `AUTH_LINKEDIN_SECRET`. Add provider back in `auth.ts` and re-enable button in `components/auth/sign-in-form.tsx`.
 - [x] **Social post deep-links** — DONE in cycle 3: X-post route already had the deep-link. LinkedIn route sends it in the first comment. Both confirmed.
 - [ ] **Developer Track page** — New page at `/terminal/developer-track` uses `dld_projects` table. If the query returns very few results, check the `developer_name` column population in `dld_projects` — some rows may have NULL or blank developer names.
 

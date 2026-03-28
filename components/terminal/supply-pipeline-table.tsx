@@ -145,7 +145,7 @@ export function SupplyPipelineTable({ projects }: Props) {
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(0) }}
             placeholder="Search project, area, developer..."
-            className="w-full pl-9 pr-4 py-2 text-sm bg-card border border-border/50 rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20"
+            className="w-full pl-9 pr-4 py-2 text-base sm:text-sm bg-card border border-border/50 rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20"
           />
         </div>
         <div className="flex items-center gap-1.5 flex-wrap">
@@ -256,7 +256,7 @@ export function SupplyPipelineTable({ projects }: Props) {
               <button
                 onClick={() => setPage((p) => Math.max(0, p - 1))}
                 disabled={page === 0}
-                className="flex items-center gap-1 rounded px-2 py-1 text-xs text-muted-foreground hover:bg-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                className="flex items-center gap-1 rounded px-3 py-2 text-xs text-muted-foreground hover:bg-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronLeft className="h-3.5 w-3.5" />
                 Prev
@@ -267,7 +267,7 @@ export function SupplyPipelineTable({ projects }: Props) {
               <button
                 onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
                 disabled={page >= totalPages - 1}
-                className="flex items-center gap-1 rounded px-2 py-1 text-xs text-muted-foreground hover:bg-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                className="flex items-center gap-1 rounded px-3 py-2 text-xs text-muted-foreground hover:bg-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 Next
                 <ChevronRight className="h-3.5 w-3.5" />

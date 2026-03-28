@@ -1,8 +1,9 @@
 import type { Metadata } from "next"
 import { sql } from "@/lib/db"
 import { PricerControls } from "@/components/terminal/pricer-controls"
+import { auth } from "@/auth"
 
-export const revalidate = 3600
+export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: "Floor Plan Pricer | North Capital DXB",
@@ -54,12 +55,16 @@ async function fetchPricerData(): Promise<PricerRow[]> {
   }
 }
 
-export default async function FloorPlanPricerPage() {
-  const rows = await fetchPricerData()
+const FREE_ROWS = 3
 
-  const totalTxns = rows.reduce((sum, r) => sum + r.txn_count, 0)
-  const uniqueAreas = new Set(rows.map((r) => r.area_name_en)).size
-  const uniqueRoomTypes = new Set(rows.map((r) => r.rooms_en)).size
+export default async function FloorPlanPricerPage() {
+  const [session, allRows] = await Promise.all([auth(), fetchPricerData()])
+  const isAuthenticated = !!session
+  const rows = isAuthenticated ? allRows : allRows.slice(0, FREE_ROWS)
+
+  const totalTxns = allRows.reduce((sum, r) => sum + r.txn_count, 0)
+  const uniqueAreas = new Set(allRows.map((r) => r.area_name_en)).size
+  const uniqueRoomTypes = new Set(allRows.map((r) => r.rooms_en)).size
 
   return (
     <div className="flex w-full flex-col px-0 sm:px-8 xl:px-12 py-0 sm:py-6 space-y-6 max-w-7xl mx-auto pb-24 lg:pb-12">
@@ -77,7 +82,7 @@ export default async function FloorPlanPricerPage() {
       </div>
 
       {/* Summary stats */}
-      <div className="grid grid-cols-3 gap-3 px-4 sm:px-0">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 px-4 sm:px-0">
         <div className="rounded-lg border border-border/40 bg-card/40 p-4">
           <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Communities</p>
           <p className="mt-1 text-2xl font-bold">{uniqueAreas.toLocaleString()}</p>
@@ -94,7 +99,7 @@ export default async function FloorPlanPricerPage() {
 
       {/* Controls + table */}
       <div className="px-4 sm:px-0">
-        <PricerControls data={rows} />
+        <PricerControls data={rows} isAuthenticated={isAuthenticated} totalRows={allRows.length} />
       </div>
 
       {/* Source note */}

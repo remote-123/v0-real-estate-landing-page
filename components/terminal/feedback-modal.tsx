@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { createPortal } from "react-dom"
 import { Lightbulb, X, Send, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -32,12 +33,17 @@ export function FeedbackModal() {
     }
   }, [open])
 
-  // Close on Escape
+  // Lock body scroll + close on Escape
   useEffect(() => {
     if (!open) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = "hidden"
     const handler = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false) }
     window.addEventListener("keydown", handler)
-    return () => window.removeEventListener("keydown", handler)
+    return () => {
+      document.body.style.overflow = prev
+      window.removeEventListener("keydown", handler)
+    }
   }, [open])
 
   async function handleSubmit(e: React.FormEvent) {
@@ -86,8 +92,8 @@ export function FeedbackModal() {
         <Lightbulb className="h-4 w-4" />
       </Button>
 
-      {/* Backdrop + modal */}
-      {open && (
+      {/* Backdrop + modal — portalled to body to escape backdrop-filter containing block */}
+      {open && typeof document !== "undefined" && createPortal(
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
           onClick={(e) => { if (e.target === e.currentTarget) setOpen(false) }}
@@ -96,7 +102,7 @@ export function FeedbackModal() {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
 
           {/* Panel */}
-          <div className="relative w-full max-w-md rounded-xl border border-border/60 bg-card shadow-2xl">
+          <div className="relative w-full max-w-md rounded-xl border border-border/60 bg-card shadow-2xl max-h-[85dvh] overflow-y-auto overscroll-contain">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-border/40 px-5 py-4">
               <div className="flex items-center gap-2">
@@ -160,7 +166,7 @@ export function FeedbackModal() {
                     maxLength={500}
                     required
                     placeholder="e.g. Show yield by building age, or add a mortgage calculator…"
-                    className="w-full rounded-md border border-border/50 bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/50 resize-none"
+                    className="w-full rounded-md border border-border/50 bg-background px-3 py-2 text-base sm:text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/50 resize-none"
                   />
                   <p className="text-right font-mono text-[10px] text-muted-foreground/50">
                     {idea.length}/500
@@ -177,7 +183,7 @@ export function FeedbackModal() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@example.com"
-                    className="w-full rounded-md border border-border/50 bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
+                    className="w-full rounded-md border border-border/50 bg-background px-3 py-2 text-base sm:text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
                   />
                 </div>
 
@@ -193,7 +199,7 @@ export function FeedbackModal() {
                     onChange={(e) => setCaptchaAnswer(e.target.value)}
                     required
                     placeholder="Answer"
-                    className="w-28 rounded-md border border-border/50 bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
+                    className="w-28 rounded-md border border-border/50 bg-background px-3 py-2 text-base sm:text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
                   />
                 </div>
 
@@ -219,7 +225,7 @@ export function FeedbackModal() {
             )}
           </div>
         </div>
-      )}
+      , document.body)}
     </>
   )
 }

@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { sql } from "@/lib/db"
-import { Activity, Mail, MessageCircle, FileText, Database } from "lucide-react"
+import { Activity, Mail, MessageCircle, FileText, Database, Users } from "lucide-react"
 
 export const dynamic = "force-dynamic"
 
@@ -48,14 +48,23 @@ interface PanelData {
     total_rows: number
     latest_date: string | null
   } | null
+  users: {
+    total: number
+    new_7d: number
+    active_7d: number
+    last_signup: string | null
+    google: number
+    linkedin: number
+    apple: number
+  } | null
 }
 
 async function fetchPanelData(): Promise<PanelData> {
-  const [distress, email, whatsapp, briefing, dld] = await Promise.allSettled([
+  const [distress, email, whatsapp, briefing, dld, users] = await Promise.allSettled([
     sql<{ total: string; last_inserted: string | null; disappeared_24h: string }[]>`
       SELECT
         COUNT(*)::integer AS total,
-        MAX(created_at)::text AS last_inserted,
+        MAX(first_seen_at)::text AS last_inserted,
         COUNT(*) FILTER (WHERE disappeared_at >= NOW() - INTERVAL '24 hours')::integer AS disappeared_24h
       FROM distress_listings
     `,
@@ -63,7 +72,7 @@ async function fetchPanelData(): Promise<PanelData> {
       SELECT
         COUNT(*)::integer AS total,
         COUNT(*) FILTER (WHERE unsubscribed_at IS NULL)::integer AS active,
-        MAX(created_at)::text AS last_subscribed
+        MAX(subscribed_at)::text AS last_subscribed
       FROM email_leads
     `,
     sql<{ total: string; last_7d: string }[]>`
@@ -84,7 +93,25 @@ async function fetchPanelData(): Promise<PanelData> {
         MAX(instance_date)::text AS latest_date
       FROM dld_transactions
     `,
+    sql<{ total: string; new_7d: string; active_7d: string; last_signup: string | null; google: string; linkedin: string; apple: string }[]>`
+      SELECT
+        COUNT(*)::integer AS total,
+        COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '7 days')::integer AS new_7d,
+        COUNT(*) FILTER (WHERE last_seen_at >= NOW() - INTERVAL '7 days')::integer AS active_7d,
+        MAX(created_at)::text AS last_signup,
+        COUNT(*) FILTER (WHERE provider = 'google')::integer AS google,
+        COUNT(*) FILTER (WHERE provider = 'linkedin')::integer AS linkedin,
+        COUNT(*) FILTER (WHERE provider = 'apple')::integer AS apple
+      FROM users
+    `,
   ])
+
+  if (distress.status === "rejected") console.error("[admin] distress_listings:", distress.reason)
+  if (email.status === "rejected") console.error("[admin] email_leads:", email.reason)
+  if (whatsapp.status === "rejected") console.error("[admin] whatsapp_intents:", whatsapp.reason)
+  if (briefing.status === "rejected") console.error("[admin] market_briefings:", briefing.reason)
+  if (dld.status === "rejected") console.error("[admin] dld_transactions:", dld.reason)
+  if (users.status === "rejected") console.error("[admin] users:", users.reason)
 
   return {
     distress:
@@ -122,6 +149,18 @@ async function fetchPanelData(): Promise<PanelData> {
         ? {
             total_rows: Number(dld.value[0].total_rows),
             latest_date: dld.value[0].latest_date,
+          }
+        : null,
+    users:
+      users.status === "fulfilled" && users.value[0]
+        ? {
+            total: Number(users.value[0].total),
+            new_7d: Number(users.value[0].new_7d),
+            active_7d: Number(users.value[0].active_7d),
+            last_signup: users.value[0].last_signup,
+            google: Number(users.value[0].google),
+            linkedin: Number(users.value[0].linkedin),
+            apple: Number(users.value[0].apple),
           }
         : null,
   }
@@ -172,47 +211,7 @@ function Panel({
   )
 }
 
-export default async function AdminDashboardPage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string>>
-}) {
-  const sp = await searchParams
-  const passInput = sp.passcode ?? ""
-  const expectedPasscode = process.env.ADMIN_PASSCODE?.trim()
-
-  // Auth check
-  if (!expectedPasscode || passInput !== expectedPasscode) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-4">
-        <div className="w-full max-w-sm space-y-6">
-          <div className="text-center">
-            <h1 className="text-xl font-bold text-foreground">Admin Dashboard</h1>
-            <p className="text-sm text-muted-foreground mt-1">North Capital DXB — Internal only</p>
-          </div>
-          <form method="GET" className="space-y-3">
-            <input
-              name="passcode"
-              type="password"
-              placeholder="Passcode"
-              autoFocus
-              className="w-full rounded-lg border border-border bg-card px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50"
-            />
-            <button
-              type="submit"
-              className="w-full rounded-lg bg-accent text-accent-foreground px-4 py-2.5 text-sm font-semibold hover:bg-accent/90 transition-colors"
-            >
-              Enter
-            </button>
-          </form>
-          {passInput && (
-            <p className="text-center text-xs text-red-400">Incorrect passcode.</p>
-          )}
-        </div>
-      </div>
-    )
-  }
-
+export default async function AdminDashboardPage() {
   const data = await fetchPanelData()
   const now = new Date().toLocaleString("en-GB", {
     timeZone: "UTC",
@@ -334,11 +333,32 @@ export default async function AdminDashboardPage({
               <p className="text-xs text-red-400 font-mono">Table unavailable</p>
             )}
           </Panel>
+
+          {/* Registered Users */}
+          <Panel
+            title="Registered Users"
+            icon={Users}
+            status={data.users ? (data.users.total > 0 ? "ok" : "warn") : "error"}
+          >
+            {data.users ? (
+              <>
+                <StatRow label="Total" value={formatNum(data.users.total)} />
+                <StatRow label="New (7d)" value={data.users.new_7d} />
+                <StatRow label="Active (7d)" value={data.users.active_7d} />
+                <StatRow label="Last signup" value={formatDate(data.users.last_signup)} />
+                <StatRow
+                  label="By provider"
+                  value={`G:${data.users.google} · LI:${data.users.linkedin} · 🍎:${data.users.apple}`}
+                />
+              </>
+            ) : (
+              <p className="text-xs text-red-400 font-mono">Table unavailable or missing</p>
+            )}
+          </Panel>
         </div>
 
         <p className="font-mono text-[10px] text-muted-foreground/40">
-          Access this page at /admin/dashboard?passcode=YOUR_PASSCODE. Not indexed by search
-          engines.
+          Internal admin view — not indexed by search engines.
         </p>
       </div>
     </div>

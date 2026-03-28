@@ -1,5 +1,9 @@
 # Claude Code Configuration - RuFlo V3
 
+## Skills (Always Enforced)
+
+Before starting any task, check `.agent/skills/` and `.claude/agents/skills/` for a relevant skill. If one or multiple exists, use it to guide the approach.
+
 ## Behavioral Rules (Always Enforced)
 
 - Do what has been asked; nothing more, nothing less

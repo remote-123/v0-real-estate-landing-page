@@ -4,6 +4,7 @@ import { useState, useMemo } from "react"
 import { ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { formatAreaName } from "@/lib/area-names"
+import { GatedTableOverlay } from "@/components/auth/gated-table-overlay"
 
 export interface YieldRow {
   area_name_en: string
@@ -62,9 +63,11 @@ function formatAed(val: number): string {
 
 interface Props {
   rows: YieldRow[]
+  isAuthenticated?: boolean
+  totalRows?: number
 }
 
-export function YieldMapTable({ rows }: Props) {
+export function YieldMapTable({ rows, isAuthenticated, totalRows }: Props) {
   const [roomFilter, setRoomFilter] = useState("All")
   const [minTxns, setMinTxns] = useState(10)
   const [sortKey, setSortKey] = useState<SortKey>("gross_yield_pct")
@@ -110,7 +113,7 @@ export function YieldMapTable({ rows }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="relative flex flex-col gap-4">
       {/* Filters */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
         <div className="flex items-center gap-1.5 flex-wrap">
@@ -136,7 +139,7 @@ export function YieldMapTable({ rows }: Props) {
           <select
             value={minTxns}
             onChange={(e) => setMinTxns(Number(e.target.value))}
-            className="rounded-md bg-card border border-border/50 px-2 py-1 text-xs text-foreground focus:outline-none focus:border-emerald-500/50"
+            className="rounded-md bg-card border border-border/50 px-2 py-1 text-base sm:text-xs text-foreground focus:outline-none focus:border-emerald-500/50"
           >
             {MIN_TXN_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>{o.label}</option>
@@ -223,6 +226,10 @@ export function YieldMapTable({ rows }: Props) {
           </table>
         </div>
       </div>
+
+      {!isAuthenticated && totalRows !== undefined && (
+        <GatedTableOverlay freeRows={rows.length} totalRows={totalRows} />
+      )}
     </div>
   )
 }
