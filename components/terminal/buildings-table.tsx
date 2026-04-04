@@ -25,6 +25,10 @@ type BuildingRow = {
   propsearch_status: string | null
   osm_lat: string | null
   osm_lng: string | null
+  total_floors: number | null
+  total_units: number | null
+  property_types: string | null
+  amenities: string | null
 }
 
 type StatusConfig = {
@@ -146,6 +150,45 @@ export function BuildingsTable({ data, isAuthenticated = true, totalRows }: Prop
         return <span className="font-mono text-sm text-foreground tabular-nums">{val}</span>
       },
       size: 70,
+    },
+    {
+      accessorKey: 'total_floors',
+      header: ({ column }) => (
+        <button className="flex items-center justify-end w-full" onClick={() => column.toggleSorting()}>
+          Floors <SortIcon sorted={column.getIsSorted()} />
+        </button>
+      ),
+      cell: ({ getValue }) => {
+        const val = getValue<number | null>()
+        if (!val) return <span className="font-mono text-xs text-muted-foreground/30 tabular-nums">—</span>
+        return <span className="font-mono text-sm text-foreground tabular-nums">{val}</span>
+      },
+      size: 70,
+    },
+    {
+      accessorKey: 'total_units',
+      header: ({ column }) => (
+        <button className="flex items-center justify-end w-full" onClick={() => column.toggleSorting()}>
+          Units <SortIcon sorted={column.getIsSorted()} />
+        </button>
+      ),
+      cell: ({ getValue }) => {
+        const val = getValue<number | null>()
+        if (!val) return <span className="font-mono text-xs text-muted-foreground/30 tabular-nums">—</span>
+        return <span className="font-mono text-sm text-foreground tabular-nums">{val.toLocaleString()}</span>
+      },
+      size: 75,
+    },
+    {
+      accessorKey: 'property_types',
+      header: 'Beds',
+      cell: ({ getValue }) => {
+        const val = getValue<string | null>()
+        if (!val) return <span className="font-mono text-xs text-muted-foreground/30">—</span>
+        return <span className="font-mono text-xs text-muted-foreground">{val}</span>
+      },
+      enableSorting: false,
+      size: 140,
     },
     {
       id: 'coords',

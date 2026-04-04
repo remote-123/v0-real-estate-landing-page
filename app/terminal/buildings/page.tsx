@@ -20,6 +20,10 @@ type BuildingRow = {
   propsearch_status: string | null
   osm_lat: string | null
   osm_lng: string | null
+  total_floors: number | null
+  total_units: number | null
+  property_types: string | null
+  amenities: string | null
 }
 
 async function fetchBuildings(): Promise<BuildingRow[]> {
@@ -34,7 +38,11 @@ async function fetchBuildings(): Promise<BuildingRow[]> {
         completion_year,
         propsearch_status,
         osm_lat,
-        osm_lng
+        osm_lng,
+        total_floors,
+        total_units,
+        property_types,
+        amenities
       FROM buildings_enriched
       WHERE building_name_en IS NOT NULL
       ORDER BY building_name_en
@@ -57,6 +65,7 @@ export default async function BuildingsPage() {
   const offPlan = allData.filter(r =>
     r.propsearch_status === 'under_construction' || r.propsearch_status === 'planned'
   ).length
+  const withUnits = allData.filter(r => r.total_units != null).length
 
   return (
     <div className="flex w-full flex-col px-0 sm:px-8 xl:px-12 py-0 sm:py-6 space-y-6 max-w-7xl mx-auto pb-24 lg:pb-12">
@@ -96,6 +105,12 @@ export default async function BuildingsPage() {
             <p className="font-mono text-xs text-muted-foreground mb-1">Off-Plan</p>
             <p className="font-mono text-xl md:text-2xl font-bold text-foreground">
               {offPlan.toLocaleString()}
+            </p>
+          </div>
+          <div className="flex-1 rounded-xl bg-background border border-border/50 p-4">
+            <p className="font-mono text-xs text-muted-foreground mb-1">With Unit Data</p>
+            <p className="font-mono text-xl md:text-2xl font-bold text-blue-400">
+              {withUnits.toLocaleString()}
             </p>
           </div>
         </div>
