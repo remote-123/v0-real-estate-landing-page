@@ -96,15 +96,15 @@ async function fetchPanelData(): Promise<PanelData> {
     sql<{ total: string; new_7d: string; active_7d: string; last_signup: string | null; google: string; linkedin: string; apple: string }[]>`
       SELECT
         COUNT(DISTINCT u.id)::integer AS total,
-        COUNT(DISTINCT u.id) FILTER (WHERE u.created_at >= NOW() - INTERVAL '7 days')::integer AS new_7d,
-        COUNT(DISTINCT s.user_id)::integer AS active_7d,
-        MAX(u.created_at)::text AS last_signup,
-        COUNT(DISTINCT a.user_id) FILTER (WHERE a.provider_id = 'google')::integer AS google,
-        COUNT(DISTINCT a.user_id) FILTER (WHERE a.provider_id = 'linkedin')::integer AS linkedin,
-        COUNT(DISTINCT a.user_id) FILTER (WHERE a.provider_id = 'apple')::integer AS apple
+        COUNT(DISTINCT u.id) FILTER (WHERE u."createdAt" >= NOW() - INTERVAL '7 days')::integer AS new_7d,
+        COUNT(DISTINCT s."userId")::integer AS active_7d,
+        MAX(u."createdAt")::text AS last_signup,
+        COUNT(DISTINCT a."userId") FILTER (WHERE a."providerId" = 'google')::integer AS google,
+        COUNT(DISTINCT a."userId") FILTER (WHERE a."providerId" = 'linkedin')::integer AS linkedin,
+        COUNT(DISTINCT a."userId") FILTER (WHERE a."providerId" = 'apple')::integer AS apple
       FROM "user" u
-      LEFT JOIN "account" a ON a.user_id = u.id
-      LEFT JOIN "session" s ON s.user_id = u.id AND s.updated_at >= NOW() - INTERVAL '7 days'
+      LEFT JOIN "account" a ON a."userId" = u.id
+      LEFT JOIN "session" s ON s."userId" = u.id AND s."updatedAt" >= NOW() - INTERVAL '7 days'
     `,
   ])
 
