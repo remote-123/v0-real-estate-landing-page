@@ -1,21 +1,25 @@
 "use client"
 
-import { signIn } from "next-auth/react"
 import Image from "next/image"
 import Link from "next/link"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
+import { authClient } from "@/lib/auth-client"
 
 interface Props {
   callbackUrl?: string
 }
 
 export function SignInForm({ callbackUrl = "/terminal/communities" }: Props) {
-  const [loading, setLoading] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
 
-  async function handleSignIn(provider: string) {
-    setLoading(provider)
-    await signIn(provider, { callbackUrl })
+  async function handleGoogleSignIn() {
+    setLoading(true)
+    await authClient.signIn.social({
+      provider: "google",
+      callbackURL: callbackUrl,
+    })
+    setLoading(false)
   }
 
   return (
@@ -53,10 +57,10 @@ export function SignInForm({ callbackUrl = "/terminal/communities" }: Props) {
         <Button
           variant="outline"
           className="w-full gap-3 h-11"
-          disabled={loading !== null}
-          onClick={() => handleSignIn("google")}
+          disabled={loading}
+          onClick={handleGoogleSignIn}
         >
-          {loading === "google" ? (
+          {loading ? (
             <span className="h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin" />
           ) : (
             <svg className="h-4 w-4" viewBox="0 0 24 24">
@@ -69,6 +73,8 @@ export function SignInForm({ callbackUrl = "/terminal/communities" }: Props) {
           Continue with Google
         </Button>
 
+        {/* TODO: Add Apple Sign-In — needs AUTH_APPLE_ID + AUTH_APPLE_SECRET (JWT) */}
+        {/* TODO: Add LinkedIn Sign-In — needs AUTH_LINKEDIN_ID + AUTH_LINKEDIN_SECRET */}
       </div>
 
       <p className="text-center text-[11px] text-muted-foreground/60">

@@ -7,6 +7,11 @@
 > 3. **Mandatory Signature:** Every entry must explicitly state the tool name at the start (e.g., *"Built by Antigravity"*, *"Built by Claude Code"*, or *"Built by Cursor"*).
 
 
+## 05 April 2026
+*Built by Claude Code*
+- **Better Auth Migration**: Replaced `next-auth` v5 with `better-auth` v1. Auth flow: Google OAuth via `socialProviders`, Neon postgres adapter (`pg` Pool). Created Better Auth tables (`user`, `session`, `account`, `verification`) via migration script. API handler moved from `/api/auth/[...nextauth]` → `/api/auth/[...all]`. All server components continue using `await auth()` via compat wrapper. Client components now use `authClient` from `lib/auth-client.ts`.
+- **Admin Dashboard User Panel**: Updated users query to join Better Auth `user` + `account` tables (replaces old NextAuth `users` table). Provider breakdown now reads `account.provider_id`. Active-7d count derived from `session.updated_at`.
+
 ## 21 March 2026
 *Built by Antigravity*
 - **Communities Table Innovation**: Removed the static 'Yield' column and replaced it with an engaging, interactive 'Trend (1Y)' SVG sparkline. Sorts flawlessly and provides a 12-month mathematical price-per-sqft history to fuel High-Net-Worth investor clicks.
