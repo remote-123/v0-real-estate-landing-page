@@ -10,6 +10,15 @@ const _auth = betterAuth({
   }),
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:3000",
+  // Allow all localhost ports for local dev + production domain
+  trustedOrigins: [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://localhost:3002",
+    "http://localhost:3003",
+    "https://www.northcapitaldxb.com",
+    "https://northcapitaldxb.com",
+  ],
   socialProviders: {
     google: {
       clientId: process.env.AUTH_GOOGLE_ID!,
