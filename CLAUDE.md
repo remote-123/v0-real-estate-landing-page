@@ -15,7 +15,7 @@ Before starting any task, check `.agent/skills/` and `.claude/agents/skills/` fo
 - Never continuously check status after spawning a swarm — wait for results
 - ALWAYS read a file before editing it
 - NEVER commit secrets, credentials, or .env files
-- Summarize your work in the DAILY_LOG.md file after every task
+- Summarize your work in the `docs/DAILY_LOG.md` file after every task
 
 ## File Organization
 
