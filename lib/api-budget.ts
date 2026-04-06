@@ -39,7 +39,7 @@ export const CRON_SCHEDULES = {
 // ---------------------------------------------------------------------------
 
 export const RAPIDAPI_BUDGET = {
-  monthlyLimit: 700,
+  monthlyLimit: 300,
 
   /**
    * Pipelines that consume RapidAPI requests.
@@ -121,7 +121,7 @@ export const SANITY_CONFIG = {
 // BUDGET SUMMARY (for reference)
 // ---------------------------------------------------------------------------
 //
-//  RapidAPI — 700 req/month free tier
+//  RapidAPI — 300 req/month (current plan)
 //  ┌─────────────────────────┬──────────────┬──────────────┐
 //  │ Pipeline                │ Runs/month   │ Req/month    │
 //  ├─────────────────────────┼──────────────┼──────────────┤
