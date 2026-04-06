@@ -32,14 +32,44 @@ export const CRON_SCHEDULES = {
   linkedinPosts: '0 8 * * 1,3,5',
   /** Rental drops cache warm — once/day, 6AM UTC */
   rentalDrops:   '0 6 * * *',
+  /** Bayut14 transaction ingest — once/day, 6:45AM UTC */
+  bayutIngest:   '45 6 * * *',
 } as const;
+
+// ---------------------------------------------------------------------------
+// BAYUT14 RAPIDAPI BUDGET (900 requests / month)
+// ---------------------------------------------------------------------------
+
+export const BAYUT14_BUDGET = {
+  monthlyLimit: 900,
+
+  /**
+   * daily cron: 12 for-sale + 13 for-rent = 25 req/day
+   * 25 × 30 = 750/month → 150 reserve
+   */
+  pipelines: {
+    dailyIngest: {
+      description: 'Transaction freshness ingest (for-sale + for-rent pages)',
+      requestsPerRun: 25,
+      runsPerDay: 1,
+      runsPerMonth: 30,
+      monthlyTotal: 750,
+    },
+  },
+
+  estimatedMonthlyTotal: 750,
+
+  get estimatedMonthlyRemaining() {
+    return this.monthlyLimit - this.estimatedMonthlyTotal
+  },
+} as const
 
 // ---------------------------------------------------------------------------
 // RAPIDAPI BUDGET (700 requests / month on free tier)
 // ---------------------------------------------------------------------------
 
 export const RAPIDAPI_BUDGET = {
-  monthlyLimit: 300,
+  monthlyLimit: 700,
 
   /**
    * Pipelines that consume RapidAPI requests.
@@ -121,7 +151,7 @@ export const SANITY_CONFIG = {
 // BUDGET SUMMARY (for reference)
 // ---------------------------------------------------------------------------
 //
-//  RapidAPI — 300 req/month (current plan)
+//  RapidAPI — 700 req/month free tier
 //  ┌─────────────────────────┬──────────────┬──────────────┐
 //  │ Pipeline                │ Runs/month   │ Req/month    │
 //  ├─────────────────────────┼──────────────┼──────────────┤

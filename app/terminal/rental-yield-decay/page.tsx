@@ -38,7 +38,7 @@ async function fetchYieldData(): Promise<YieldRow[]> {
             NULLIF(SUM(CASE WHEN trans_group_en = 'Rent' THEN txn_count ELSE 0 END), 0) AS q_monthly_rent,
           SUM(CASE WHEN trans_group_en = 'Sales' THEN txn_count ELSE 0 END) AS sale_txns,
           SUM(CASE WHEN trans_group_en = 'Rent' THEN txn_count ELSE 0 END) AS rent_txns
-        FROM mv_txn_monthly
+        FROM mv_txn_monthly_unified
         WHERE area_name_en IS NOT NULL
           AND rooms_en IS NOT NULL
           AND property_type_en = 'Unit'
@@ -159,7 +159,7 @@ export default async function RentalYieldDecayPage() {
       </div>
 
       <p className="px-4 sm:px-0 text-[10px] text-muted-foreground/50 uppercase tracking-wider">
-        Source: Dubai Land Department — DLD transactions &amp; rental registrations via mv_txn_monthly
+        Source: Dubai Land Department — DLD transactions &amp; rental registrations via mv_txn_monthly_unified
       </p>
 
     </div>

@@ -25,7 +25,7 @@ async function fetchData(): Promise<{ monthly: MonthlyRow[]; daily: DayRow[] }> 
           SUM(txn_count)::integer AS deals,
           ROUND((SUM(total_value) / 1e9)::numeric, 2) AS value_bn,
           ROUND(AVG(avg_price_sqm)::numeric, 0) AS avg_psm
-        FROM mv_txn_monthly
+        FROM mv_txn_monthly_unified
         WHERE txn_month >= NOW() - INTERVAL '24 months'
           AND trans_group_en IN ('Sales', 'Mortgages', 'Gifts')
         GROUP BY txn_month, trans_group_en

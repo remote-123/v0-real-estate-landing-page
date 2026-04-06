@@ -62,7 +62,7 @@ async function fetchAreaData(
   try {
     // Type-agnostic discovery — don't 404 just because the type has no data
     const areas = await sql<{ area_name_en: string }[]>`
-      SELECT DISTINCT area_name_en FROM mv_txn_monthly
+      SELECT DISTINCT area_name_en FROM mv_txn_monthly_unified
       WHERE area_name_en IS NOT NULL AND trans_group_en = 'Sales'
     `
     const match = areas.find(a => toSlug(a.area_name_en) === slug)
@@ -79,7 +79,7 @@ async function fetchAreaData(
       // KPI stats (aggregate over all rooms)
       sql<AreaRow[]>`
         WITH latest_month AS (
-          SELECT MAX(txn_month) AS max_month FROM mv_txn_monthly
+          SELECT MAX(txn_month) AS max_month FROM mv_txn_monthly_unified
         ),
         curr AS (
           SELECT
@@ -87,7 +87,7 @@ async function fetchAreaData(
             SUM(m.txn_count)                                                       AS txn_count,
             SUM(m.txn_count * m.avg_price_sqm) / NULLIF(SUM(m.txn_count), 0)      AS avg_psm,
             SUM(m.txn_count * m.avg_price)     / NULLIF(SUM(m.txn_count), 0)      AS avg_val
-          FROM mv_txn_monthly m
+          FROM mv_txn_monthly_unified m
           CROSS JOIN latest_month lm
           WHERE m.txn_month = lm.max_month
             AND m.trans_group_en = 'Sales'
@@ -99,7 +99,7 @@ async function fetchAreaData(
           SELECT
             m.area_name_en,
             SUM(m.txn_count * m.avg_price_sqm) / NULLIF(SUM(m.txn_count), 0) AS avg_psm
-          FROM mv_txn_monthly m
+          FROM mv_txn_monthly_unified m
           CROSS JOIN latest_month lm
           WHERE m.txn_month = lm.max_month - INTERVAL '1 month'
             AND m.trans_group_en = 'Sales'
@@ -142,7 +142,7 @@ async function fetchAreaData(
                 WHEN rooms_en IN ('4 B/R','5 B/R','6 B/R','PENTHOUSE')         THEN '4 BR+'
               END AS room_label,
               ROUND((SUM(m.txn_count * m.avg_price_sqm) / NULLIF(SUM(m.txn_count), 0) / 10.764)::numeric, 0) AS avg_psf
-            FROM mv_txn_monthly m
+            FROM mv_txn_monthly_unified m
             WHERE m.area_name_en = ${areaName}
               AND m.trans_group_en = 'Sales'
               AND m.property_type_en = 'Unit'
@@ -157,7 +157,7 @@ async function fetchAreaData(
               txn_month,
               'Villa' AS room_label,
               ROUND((SUM(m.txn_count * m.avg_price_sqm) / NULLIF(SUM(m.txn_count), 0) / 10.764)::numeric, 0) AS avg_psf
-            FROM mv_txn_monthly m
+            FROM mv_txn_monthly_unified m
             WHERE m.area_name_en = ${areaName}
               AND m.trans_group_en = 'Sales'
               AND m.property_type_en = 'Villa'

@@ -35,14 +35,14 @@ async function fetchAreas(): Promise<AreaRow[]> {
           txn_month,
           SUM(txn_count * avg_price_sqm) / NULLIF(SUM(txn_count), 0) AS avg_psm,
           SUM(txn_count) AS vol
-        FROM mv_txn_monthly
+        FROM mv_txn_monthly_unified
         WHERE trans_group_en = 'Sales'
           AND property_type_en = 'Unit'
           AND area_name_en IS NOT NULL
           AND txn_month >= NOW() - INTERVAL '3 months'
         GROUP BY area_name_en, txn_month
       ),
-      latest AS (SELECT MAX(txn_month) AS m FROM mv_txn_monthly),
+      latest AS (SELECT MAX(txn_month) AS m FROM mv_txn_monthly_unified),
       curr AS (
         SELECT area_name_en, avg_psm AS curr_psm, vol AS curr_vol
         FROM monthly CROSS JOIN latest
@@ -273,7 +273,7 @@ export default async function AreaMomentumPage() {
       </div>
 
       <p className="text-[10px] text-muted-foreground/50 pb-2">
-        Source: Dubai Land Department — DLD transactions via mv_txn_monthly.
+        Source: Dubai Land Department — DLD transactions via mv_txn_monthly_unified.
         Momentum = ((price MoM) + (vol MoM)) &times; 50.
       </p>
     </div>

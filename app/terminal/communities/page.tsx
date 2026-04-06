@@ -72,7 +72,7 @@ async function fetchCommunities(): Promise<Community[]> {
   try {
     const rows = await sql<CommunityRow[]>`
       WITH latest_month AS (
-        SELECT MAX(txn_month) AS max_month FROM mv_txn_monthly
+        SELECT MAX(txn_month) AS max_month FROM mv_txn_monthly_unified
       ),
       curr AS (
         SELECT
@@ -80,7 +80,7 @@ async function fetchCommunities(): Promise<Community[]> {
           SUM(txn_count)                                                             AS txn_count,
           SUM(txn_count * avg_price_sqm) / NULLIF(SUM(txn_count), 0)               AS avg_psm,
           SUM(txn_count * avg_price)     / NULLIF(SUM(txn_count), 0)               AS avg_val
-        FROM mv_txn_monthly m
+        FROM mv_txn_monthly_unified m
         CROSS JOIN latest_month lm
         WHERE m.txn_month = lm.max_month
           AND m.trans_group_en = 'Sales'
@@ -92,7 +92,7 @@ async function fetchCommunities(): Promise<Community[]> {
         SELECT
           area_name_en,
           SUM(txn_count * avg_price_sqm) / NULLIF(SUM(txn_count), 0)  AS avg_psm
-        FROM mv_txn_monthly m
+        FROM mv_txn_monthly_unified m
         CROSS JOIN latest_month lm
         WHERE m.txn_month = lm.max_month - INTERVAL '1 month'
           AND m.trans_group_en = 'Sales'
@@ -118,7 +118,7 @@ async function fetchCommunities(): Promise<Community[]> {
             m.area_name_en,
             m.txn_month,
             SUM(m.txn_count * m.avg_price_sqm) / NULLIF(SUM(m.txn_count), 0) AS avg_psm
-          FROM mv_txn_monthly m
+          FROM mv_txn_monthly_unified m
           CROSS JOIN latest_month lm
           WHERE m.txn_month >= lm.max_month - INTERVAL '11 months'
             AND m.trans_group_en = 'Sales'

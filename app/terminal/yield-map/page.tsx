@@ -25,7 +25,7 @@ async function fetchYieldData(): Promise<YieldRow[]> {
         SELECT area_name_en, rooms_en,
           SUM(txn_count * avg_price) / NULLIF(SUM(txn_count), 0) AS avg_sale_price,
           SUM(txn_count) AS sale_txns
-        FROM mv_txn_monthly
+        FROM mv_txn_monthly_unified
         WHERE trans_group_en = 'Sales'
           AND property_type_en = 'Unit'
           AND txn_month >= NOW() - INTERVAL '12 months'
@@ -37,7 +37,7 @@ async function fetchYieldData(): Promise<YieldRow[]> {
         SELECT area_name_en, rooms_en,
           SUM(txn_count * avg_rent) / NULLIF(SUM(txn_count), 0) AS avg_annual_rent,
           SUM(txn_count) AS rent_txns
-        FROM mv_txn_monthly
+        FROM mv_txn_monthly_unified
         WHERE trans_group_en = 'Rent'
           AND property_type_en = 'Unit'
           AND txn_month >= NOW() - INTERVAL '12 months'

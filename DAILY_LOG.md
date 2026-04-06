@@ -990,3 +990,51 @@ Implemented distress deals v2 across 3 files to replace 100% synthetic `original
 
 ### Build Status
 Compiled successfully. Pre-existing build timeout on `/terminal/communities` and `/terminal/rental-drops` (Phase 2 pages making external API calls at static export time — unrelated to this task).
+
+---
+
+## 2026-04-07 — Bayut14 Integration (Transaction freshness bridge)
+
+### Goal
+Bridge the DLD data staleness gap (stale at Feb 17, 2026) using Bayut14 RapidAPI transactions.
+
+### New Files
+**`scripts/migrate/005_bayut_integration.ts`**
+- Creates `bayut_transactions` table (PK = `transaction_hash_id`)
+- Creates `area_name_mapping` table with 30 Bayut→DLD community name mappings
+- Creates `bayut_ingest_log` table for budget tracking
+- Creates `mv_txn_monthly_unified` materialized view: DLD historical + Bayut fresh (≥2026-03-01)
+- Includes refresh function `refresh_mv_txn_monthly_unified()`
+- Run with: `npm run migrate:bayut`
+
+**`lib/bayut14.ts`**
+- `fetchBayutPage(purpose, page)` — GET /transactions?purpose=for-sale|for-rent&page=N
+- `transformBayutHit(hit)` — normalises Bayut fields to DLD-compatible schema
+- `bedsToRoomsEn(beds)` — maps numeric bed count → DLD rooms_en format (e.g. 2 → '2 B/R')
+
+**`app/api/cron/fetch-bayut-transactions/route.ts`**
+- Daily cron at 06:45 UTC (25 pages = 750 req/month, 150 reserve)
+- Budget circuit-breaker: skips if ≥800 requests logged this month
+- Upserts with ON CONFLICT DO NOTHING
+- Triggers `refresh_mv_txn_monthly_unified()` after ingest
+
+### Modified Files
+**6 terminal pages** — `mv_txn_monthly` → `mv_txn_monthly_unified`:
+- `app/terminal/communities/page.tsx`
+- `app/terminal/communities/[slug]/page.tsx`
+- `app/terminal/yield-map/page.tsx`
+- `app/terminal/area-momentum/page.tsx`
+- `app/terminal/rental-yield-decay/page.tsx`
+- `app/terminal/transaction-pulse/page.tsx`
+
+**`lib/api-budget.ts`** — added `BAYUT14_BUDGET` (900 req/month) + `bayutIngest` cron schedule
+
+### Architecture
+- DLD side of unified view: reads from existing `mv_txn_monthly` (no re-computation)
+- Bayut side: months ≥ 2026-03-01 only → mutual-exclusive date ranges, no double-counting
+- `area_name_mapping` translates Bayut taxonomy → DLD `area_name_en` for unified querying
+
+### Next Steps
+1. Run `npm run migrate:bayut` to apply schema changes
+2. Add cron-job.org entry: GET `/api/cron/fetch-bayut-transactions` Bearer CRON_SECRET at 06:45 UTC daily
+3. When back in Dubai: refresh DLD CSV, update Bayut cutoff date in migration to match new DLD max date

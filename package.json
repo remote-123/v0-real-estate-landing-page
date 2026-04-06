@@ -21,6 +21,7 @@
     "announce-deploy": "npx tsx scripts/announce-deploy.ts",
     "heartbeat": "npx tsx scripts/cofounder-heartbeat.ts",
     "migrate:users": "npx tsx --env-file=.env.local scripts/migrate/001_create_users.ts",
+    "migrate:bayut": "npx tsx --env-file=.env.local scripts/migrate/005_bayut_integration.ts",
     "scrape:propsearch": "npx tsx --env-file=.env.local scripts/ingest/propsearch_full_scraper.ts",
     "scrape:propsearch:areas": "npx tsx --env-file=.env.local scripts/ingest/propsearch_full_scraper.ts --phase=1",
     "scrape:propsearch:buildings": "npx tsx --env-file=.env.local scripts/ingest/propsearch_full_scraper.ts --phase=2",
