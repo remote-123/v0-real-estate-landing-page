@@ -9,6 +9,7 @@ import { MobileNav } from "@/components/terminal/mobile-nav"
 import { Button } from "@/components/ui/button"
 import { SITE_CONFIG } from "@/lib/constants"
 import { UserNav } from "@/components/auth/user-nav"
+import { headers } from "next/headers"
 
 export const metadata: Metadata = {
     title: 'Investor Terminal | North Capital DXB',
@@ -52,11 +53,15 @@ const terminalSchema = {
     ]
 };
 
-export default function InvestorTerminalLayout({
+export default async function InvestorTerminalLayout({
     children,
 }: {
     children: React.ReactNode
 }) {
+    const headersList = await headers()
+    const site = headersList.get("x-site") ?? "northcapital"
+    const isCityRegistry = site === "cityregistry"
+
     return (
         <div className="min-h-screen bg-background text-foreground">
             <script
@@ -70,19 +75,30 @@ export default function InvestorTerminalLayout({
                         <div className="flex items-center gap-4">
                             <MobileNav />
                             <h1 className="text-[10px] sm:text-sm font-medium text-muted-foreground uppercase tracking-widest flex items-center gap-2">
-                                <span className="hidden sm:inline">Investor Terminal</span>
-                                <span className="sm:mx-2 opacity-30">/</span>
-                                <span className="text-foreground">v1.0.4</span>
+                                {isCityRegistry ? (
+                                    <>
+                                        <span className="hidden sm:inline text-foreground font-semibold">The City Registry</span>
+                                        <span className="sm:mx-2 opacity-30">/</span>
+                                        <span className="text-muted-foreground">Dubai</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <span className="hidden sm:inline">Investor Terminal</span>
+                                        <span className="sm:mx-2 opacity-30">/</span>
+                                        <span className="text-foreground">v1.0.4</span>
+                                    </>
+                                )}
                             </h1>
                         </div>
                         <div className="flex items-center gap-4">
-                            {/* Header actions */}
-                            <Button asChild variant="outline" size="sm" className="hidden sm:flex gap-2 border-accent/20 hover:bg-accent/10 hover:text-accent transition-colors">
-                                <Link href={SITE_CONFIG.calendarLink} target="_blank">
-                                    <Calendar className="h-3 w-3" />
-                                    Book an Appointment
-                                </Link>
-                            </Button>
+                            {!isCityRegistry && (
+                                <Button asChild variant="outline" size="sm" className="hidden sm:flex gap-2 border-accent/20 hover:bg-accent/10 hover:text-accent transition-colors">
+                                    <Link href={SITE_CONFIG.calendarLink} target="_blank">
+                                        <Calendar className="h-3 w-3" />
+                                        Book an Appointment
+                                    </Link>
+                                </Button>
+                            )}
                             <FeedbackModal />
                             <UserNav />
                             <ThemeToggle />

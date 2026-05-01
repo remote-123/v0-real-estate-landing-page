@@ -11,6 +11,7 @@ import { GoogleAnalytics } from '@next/third-parties/google'
 import { ThemeProvider } from "@/components/theme-provider"
 import { SessionProvider } from "@/components/auth/session-provider"
 import { SpeedInsights } from "@vercel/speed-insights/next"
+import { headers } from "next/headers"
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
@@ -65,11 +66,15 @@ export const viewport: Viewport = {
   userScalable: true,
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const headersList = await headers()
+  const site = headersList.get("x-site") ?? "northcapital"
+  const isNorthCapital = site === "northcapital"
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body
@@ -85,8 +90,8 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
-          <WhatsAppButton />
-          <MobileStickyBar />
+          {isNorthCapital && <WhatsAppButton />}
+          {isNorthCapital && <MobileStickyBar />}
           {/* <ExitIntentPopup /> */}
           <Analytics />
           <Script id="microsoft-clarity" strategy="afterInteractive">

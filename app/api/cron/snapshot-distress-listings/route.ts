@@ -14,7 +14,7 @@
 
 import { NextResponse } from "next/server"
 import { sql } from "@/lib/db"
-import { sendTelegram } from "@/lib/telegram"
+import { sendTelegram, sendTelegramError } from "@/lib/telegram"
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
@@ -355,6 +355,7 @@ async function run() {
     return NextResponse.json({ ok: true, inserted, updated, confirmed_drops: dropped })
   } catch (err: any) {
     console.error("[snapshot-distress] error:", err.message)
+    await sendTelegramError("cron/snapshot-distress-listings", "run", err)
     return NextResponse.json({ error: err.message }, { status: 500 })
   }
 }

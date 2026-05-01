@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { sql } from "@/lib/db"
+import { sendTelegramError } from "@/lib/telegram"
 
 async function fetchPF(): Promise<any[]> {
   const res = await fetch("https://propertyfinder-uae-data.p.rapidapi.com/search-rent?location_id=1&sort=newest&page=1", {
@@ -82,6 +83,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ ok: true, pf: rows.length })
   } catch (e: any) {
     console.error("[Cron] Error:", e.message)
+    await sendTelegramError("cron/fetch-rental-listings", "ingest", e)
     return NextResponse.json({ error: e.message }, { status: 500 })
   }
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { sql } from "@/lib/db"
 import { fetchBayutPage, transformBayutHit, type BayutPurpose } from "@/lib/bayut14"
+import { sendTelegramError } from "@/lib/telegram"
 
 // Daily: 12 pages for-sale + 13 pages for-rent = 25 requests
 // 25 req/day × 30 days = 750/month → leaves 150 in reserve
@@ -100,6 +101,11 @@ export async function GET(req: Request) {
       INSERT INTO bayut_ingest_log (purpose, pages_fetched, rows_upserted, error)
       VALUES ('daily', ${logRow.pagesForSale + logRow.pagesForRent}, ${logRow.rows}, ${e.message})
     `.catch(() => {})
+    await sendTelegramError("cron/fetch-bayut-transactions", "ingest", e, {
+      pages_sale: String(logRow.pagesForSale),
+      pages_rent: String(logRow.pagesForRent),
+      rows_so_far: String(logRow.rows),
+    })
     return NextResponse.json({ error: e.message }, { status: 500 })
   }
 }

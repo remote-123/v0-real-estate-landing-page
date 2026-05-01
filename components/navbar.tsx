@@ -44,6 +44,11 @@ export function Navbar() {
         {/* Desktop Actions */}
         <div className="hidden lg:flex items-center gap-4">
           <GoldenVisaWizard />
+          <Button asChild variant="outline" size="sm" className="border-border/60 text-muted-foreground hover:text-foreground text-xs">
+            <a href="https://thecityregistry.com" target="_blank" rel="noopener noreferrer">
+              City Registry ↗
+            </a>
+          </Button>
           <Button asChild className="bg-accent text-accent-foreground hover:bg-accent/90">
             <Link href="/terminal">Terminal</Link>
           </Button>
@@ -93,6 +98,11 @@ export function Navbar() {
             {/* Added Mobile CTAs so they don't miss out on these features */}
             <li className="flex flex-col gap-3 mt-4">
               <GoldenVisaWizard />
+              <Button asChild variant="outline" className="w-full border-border/60 text-muted-foreground text-xs">
+                <a href="https://thecityregistry.com" target="_blank" rel="noopener noreferrer">
+                  City Registry ↗
+                </a>
+              </Button>
               <Button asChild className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
                 <Link href="/terminal" onClick={() => setMobileOpen(false)}>Terminal</Link>
               </Button>
