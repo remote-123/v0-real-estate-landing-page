@@ -7,6 +7,13 @@
 > 3. **Mandatory Signature:** Every entry must explicitly state the tool name at the start (e.g., *"Built by Antigravity"*, *"Built by Claude Code"*, or *"Built by Cursor"*).
 
 
+## 01 May 2026
+*Built by Claude Code*
+- **thecityregistry.com launch**: Purchased domain via Vercel, wired to same project. `middleware.ts` detects host + sets `x-site` header. Terminal shows "The City Registry / Dubai" branding on new domain, strips agency CTAs (Book Appointment, WhatsApp, MobileStickyBar). Root `/` redirects to `/terminal`. NorthCapital navbar gets "City Registry ↗" external link.
+- **Bayut cron fix**: Wrong API key in Vercel (stale) + pagination bug (page was 0-indexed, API requires 1-indexed). Updated `BAYUT_RAPIDAPI_KEY` in Vercel, fixed loop in `fetch-bayut-transactions/route.ts` to start at page=1.
+- **thecityregistry.com SEO + sidebar branding**: Sidebar title swaps "NORTH CAPITAL" → "THE CITY REGISTRY" on cityregistry domain (client-side hostname detection); "Back to Site" hidden. Terminal layout `metadata` converted to `generateMetadata()` — dynamic titles/descriptions/OG/Twitter per domain. `DataCatalog` schema.org for cityregistry (5 dataset entries). `app/robots.ts` created (domain-aware sitemap pointer). `app/sitemap.ts` made domain-aware — cityregistry returns terminal-only URLs.
+- **Cron error alerting**: Added `sendTelegramError` to `fetch-bayut-transactions`, `fetch-rental-listings`, and `snapshot-distress-listings` — all three now fire structured Telegram alerts on failure instead of silently logging to console.
+
 ## 05 April 2026
 *Built by Claude Code*
 - **Better Auth Migration**: Replaced `next-auth` v5 with `better-auth` v1. Auth flow: Google OAuth via `socialProviders`, Neon postgres adapter (`pg` Pool). Created Better Auth tables (`user`, `session`, `account`, `verification`) via migration script. API handler moved from `/api/auth/[...nextauth]` → `/api/auth/[...all]`. All server components continue using `await auth()` via compat wrapper. Client components now use `authClient` from `lib/auth-client.ts`.

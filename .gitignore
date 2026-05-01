@@ -46,3 +46,8 @@ state/backlog-*.md
 .claude-flow/security/
 .claude/settings.local.json
 .gemini/
+
+# Obsidian vault — ignore runtime files, keep notes
+vault/.obsidian/workspace.json
+vault/.obsidian/workspace-mobile.json
+vault/.obsidian/cache

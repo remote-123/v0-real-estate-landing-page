@@ -32,20 +32,20 @@ export async function GET(req: Request) {
   try {
     const allRows = []
 
-    // Fetch for-sale pages
-    for (let page = 0; page < PAGES_PER_PURPOSE; page++) {
+    // Fetch for-sale pages (API is 1-indexed)
+    for (let page = 1; page <= PAGES_PER_PURPOSE; page++) {
       const result = await fetchBayutPage("for-sale", page)
       allRows.push(...result.hits)
       logRow.pagesForSale++
-      if (page >= result.nbPages - 1) break
+      if (page >= result.nbPages) break
     }
 
-    // Fetch for-rent pages
-    for (let page = 0; page < PAGES_FOR_RENT; page++) {
+    // Fetch for-rent pages (API is 1-indexed)
+    for (let page = 1; page <= PAGES_FOR_RENT; page++) {
       const result = await fetchBayutPage("for-rent", page)
       allRows.push(...result.hits)
       logRow.pagesForRent++
-      if (page >= result.nbPages - 1) break
+      if (page >= result.nbPages) break
     }
 
     console.log(`[Bayut] Fetched ${allRows.length} raw hits`)

@@ -1,4 +1,5 @@
 import { MetadataRoute } from 'next'
+import { headers } from 'next/headers'
 import { client } from '@/sanity/lib/client'
 import { sql } from '@/lib/db'
 
@@ -6,8 +7,56 @@ function toSlug(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 }
 
+const CITY_REGISTRY_HOSTS = ['thecityregistry.com', 'www.thecityregistry.com']
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://www.northcapitaldxb.com'
+  const headersList = await headers()
+  const host = headersList.get('host') ?? ''
+  const isCityRegistry = CITY_REGISTRY_HOSTS.some((h) => host.includes(h))
+  const baseUrl = isCityRegistry ? 'https://thecityregistry.com' : 'https://www.northcapitaldxb.com'
+
+  // cityregistry.com only indexes terminal pages — no agency/blog/project content
+  if (isCityRegistry) {
+    const terminalRoutes = [
+      '/terminal',
+      '/terminal/transaction-pulse',
+      '/terminal/communities',
+      '/terminal/area-momentum',
+      '/terminal/yield-map',
+      '/terminal/floor-plan-pricer',
+      '/terminal/building-comparator',
+      '/terminal/distress-deals',
+      '/terminal/rental-drops',
+      '/terminal/buildings',
+      '/terminal/price-index',
+      '/terminal/supply-pipeline',
+      '/terminal/service-charges',
+      '/terminal/roi-engine',
+      '/terminal/mortgage-calculator',
+      '/terminal/rental-yield',
+    ].map((route) => ({
+      url: `${baseUrl}${route}`,
+      lastModified: new Date(),
+      changeFrequency: 'hourly' as const,
+      priority: route === '/terminal' ? 1.0 : 0.85,
+    }))
+
+    let communityUrls: MetadataRoute.Sitemap = []
+    try {
+      const areaRows = await sql<{ area_name_en: string }[]>`
+        SELECT DISTINCT area_name_en FROM mv_txn_monthly
+        WHERE area_name_en IS NOT NULL ORDER BY area_name_en
+      `
+      communityUrls = areaRows.map((row) => ({
+        url: `${baseUrl}/terminal/communities/${toSlug(row.area_name_en)}`,
+        lastModified: new Date(),
+        changeFrequency: 'daily' as const,
+        priority: 0.75,
+      }))
+    } catch { /* skip if DB unavailable */ }
+
+    return [...terminalRoutes, ...communityUrls]
+  }
 
   // 1. Fetch live projects directly from Sanity
   const projects = await client.fetch(`*[_type == "project" && defined(slug.current)]{

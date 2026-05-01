@@ -11,47 +11,82 @@ import { SITE_CONFIG } from "@/lib/constants"
 import { UserNav } from "@/components/auth/user-nav"
 import { headers } from "next/headers"
 
-export const metadata: Metadata = {
-    title: 'Investor Terminal | North Capital DXB',
-    description: 'Institutional-grade real estate metrics, market intelligence, and distress deal scanning for the Dubai market.',
-    openGraph: {
-        title: 'Investor Terminal | North Capital DXB',
-        description: 'Institutional-grade real estate metrics, market intelligence, and distress deal scanning for the Dubai market.',
-        images: [
-            {
-                url: '/images/terminal-social.png',
-                width: 1200,
-                height: 630,
-                alt: 'North Capital Investor Terminal',
+export async function generateMetadata(): Promise<Metadata> {
+    const headersList = await headers()
+    const site = headersList.get("x-site") ?? "northcapital"
+    const isCityRegistry = site === "cityregistry"
+
+    if (isCityRegistry) {
+        return {
+            title: 'Dubai Real Estate Intelligence | The City Registry',
+            description: 'Institutional-grade Dubai property data. Transaction analytics, price indices, yield maps, community screener, and distress deal scanner — powered by DLD and Bayut data.',
+            metadataBase: new URL('https://thecityregistry.com'),
+            alternates: { canonical: 'https://thecityregistry.com/terminal' },
+            verification: { google: 'mgQDqmDOOITUVlJEizKp0OHxHj44AwCgOX0EPWf9cf4' },
+            openGraph: {
+                title: 'Dubai Real Estate Intelligence | The City Registry',
+                description: 'Institutional-grade Dubai property data. Transaction analytics, price indices, yield maps, and distress deal scanner.',
+                url: 'https://thecityregistry.com/terminal',
+                siteName: 'The City Registry',
+                images: [{ url: '/images/terminal-social.png', width: 1200, height: 630, alt: 'The City Registry — Dubai Data Platform' }],
             },
-        ],
-    },
-    twitter: {
-        card: 'summary_large_image',
+            twitter: {
+                card: 'summary_large_image',
+                title: 'Dubai Real Estate Intelligence | The City Registry',
+                description: 'Institutional-grade Dubai property data. Powered by DLD and Bayut.',
+                images: ['/images/terminal-social.png'],
+            },
+        }
+    }
+
+    return {
         title: 'Investor Terminal | North Capital DXB',
         description: 'Institutional-grade real estate metrics, market intelligence, and distress deal scanning for the Dubai market.',
-        images: ['/images/terminal-social.png'],
-    },
+        openGraph: {
+            title: 'Investor Terminal | North Capital DXB',
+            description: 'Institutional-grade real estate metrics, market intelligence, and distress deal scanning for the Dubai market.',
+            images: [{ url: '/images/terminal-social.png', width: 1200, height: 630, alt: 'North Capital Investor Terminal' }],
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title: 'Investor Terminal | North Capital DXB',
+            description: 'Institutional-grade real estate metrics, market intelligence, and distress deal scanning for the Dubai market.',
+            images: ['/images/terminal-social.png'],
+        },
+    }
 }
 
-const terminalSchema = {
-    "@context": "https://schema.org",
-    "@type": "Dataset",
-    "name": "North Capital Dubai Investor Terminal",
-    "description": "Institutional-grade real estate metrics, market intelligence, and distress deal scanning for the Dubai market. Aggregated macro-economic datasets from data.dubai and DLD.",
-    "url": "https://www.northcapitaldxb.com/terminal",
-    "creator": {
-        "@type": "Organization",
-        "name": "North Capital DXB"
-    },
-    "variableMeasured": [
-        "Rental Yields",
-        "Price per Square Foot",
-        "Market Occupancy",
-        "Transaction Volume",
-        "Distress Sale Discounts"
-    ]
-};
+function getTerminalSchema(isCityRegistry: boolean) {
+    if (isCityRegistry) {
+        return {
+            "@context": "https://schema.org",
+            "@type": "DataCatalog",
+            "name": "The City Registry — Dubai Real Estate Data Platform",
+            "description": "Comprehensive Dubai property market intelligence. Aggregated from Dubai Land Department (DLD) and Bayut transaction records covering sales, mortgages, rental yields, and supply pipeline.",
+            "url": "https://thecityregistry.com/terminal",
+            "creator": { "@type": "Organization", "name": "The City Registry", "url": "https://thecityregistry.com" },
+            "dataset": [
+                { "@type": "Dataset", "name": "Dubai Transaction Pulse", "description": "Monthly sales, mortgage, and gift transaction volumes by community", "url": "https://thecityregistry.com/terminal/transaction-pulse" },
+                { "@type": "Dataset", "name": "Dubai Community Screener", "description": "Area-level price per sq ft, yield, and transaction count metrics", "url": "https://thecityregistry.com/terminal/communities" },
+                { "@type": "Dataset", "name": "Dubai Yield Map", "description": "Gross rental yield by area and bedroom type", "url": "https://thecityregistry.com/terminal/yield-map" },
+                { "@type": "Dataset", "name": "Dubai Distress Deals", "description": "Below-market listings with discount percentage and days-on-market", "url": "https://thecityregistry.com/terminal/distress-deals" },
+                { "@type": "Dataset", "name": "Dubai Area Momentum", "description": "Momentum scoring combining price delta and transaction volume delta", "url": "https://thecityregistry.com/terminal/area-momentum" },
+            ],
+            "spatialCoverage": { "@type": "Place", "name": "Dubai, United Arab Emirates" },
+            "temporalCoverage": "2020/..",
+            "license": "https://thecityregistry.com/terms",
+        }
+    }
+    return {
+        "@context": "https://schema.org",
+        "@type": "Dataset",
+        "name": "North Capital Dubai Investor Terminal",
+        "description": "Institutional-grade real estate metrics, market intelligence, and distress deal scanning for the Dubai market. Aggregated macro-economic datasets from data.dubai and DLD.",
+        "url": "https://www.northcapitaldxb.com/terminal",
+        "creator": { "@type": "Organization", "name": "North Capital DXB" },
+        "variableMeasured": ["Rental Yields", "Price per Square Foot", "Market Occupancy", "Transaction Volume", "Distress Sale Discounts"],
+    }
+}
 
 export default async function InvestorTerminalLayout({
     children,
@@ -66,7 +101,7 @@ export default async function InvestorTerminalLayout({
         <div className="min-h-screen bg-background text-foreground">
             <script
                 type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(terminalSchema) }}
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(getTerminalSchema(isCityRegistry)) }}
             />
             <InvestorSidebar />
             <main className="lg:pl-64 flex flex-col min-h-screen">

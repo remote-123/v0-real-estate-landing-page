@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useEffect, useState } from "react"
 import {
   ArrowLeft,
   BarChart3,
@@ -67,13 +68,17 @@ export const sidebarLinks = [
 
 export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname()
+  const [isCityRegistry, setIsCityRegistry] = useState(false)
+  useEffect(() => {
+    setIsCityRegistry(window.location.hostname.includes("cityregistry"))
+  }, [])
 
   return (
     <div className="flex flex-col h-full">
       <div className="flex h-16 items-center px-6 border-b border-border/50">
         <Link href="/" className="flex items-center gap-2" onClick={onNavigate}>
           <span className="font-serif text-lg font-bold tracking-tight text-foreground">
-            NORTH CAPITAL
+            {isCityRegistry ? "THE CITY REGISTRY" : "NORTH CAPITAL"}
           </span>
         </Link>
       </div>
@@ -122,13 +127,15 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           </div>
         </div>
 
-        <Link
-          href="/services"
-          className="flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-xs font-medium transition-colors hover:bg-secondary"
-        >
-          <ArrowLeft className="h-3 w-3" />
-          Back to Site
-        </Link>
+        {!isCityRegistry && (
+          <Link
+            href="/services"
+            className="flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-xs font-medium transition-colors hover:bg-secondary"
+          >
+            <ArrowLeft className="h-3 w-3" />
+            Back to Site
+          </Link>
+        )}
       </div>
     </div>
   )
