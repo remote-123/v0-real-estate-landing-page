@@ -226,8 +226,252 @@ export default function DesignPreviewPage() {
         </div>
       </section>
 
+      {/* ── CITY REGISTRY — 5 NEW CONCEPTS ─────────────────────────────── */}
+      <section className="space-y-4">
+        <h2 className="text-xs font-mono uppercase tracking-widest text-muted-foreground border-b border-border/40 pb-2">
+          The City Registry — 5 New Concepts (researched from CoStar, Bloomberg, MSCI, Hex, FactSet)
+        </h2>
+
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+
+          {/* C1 — Registry Dark */}
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-foreground">C1 · Registry Dark</p>
+            <p className="text-[11px] text-muted-foreground">Bloomberg meets Dubai. Near-black with emerald green data signals + amber highlights. IBM Plex Mono.</p>
+            <div className="rounded-xl overflow-hidden border shadow-lg" style={{ background: '#0A0A0F', borderColor: '#1a1a2e' }}>
+              <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: '#1a1a2e', background: '#111118' }}>
+                <div className="flex items-center gap-3">
+                  <div className="h-2 w-2 rounded-full animate-pulse" style={{ background: '#00C47A' }} />
+                  <span className="font-mono text-xs font-bold tracking-widest" style={{ color: '#00C47A' }}>CITY REGISTRY</span>
+                </div>
+                <div className="flex gap-3 font-mono text-[10px]" style={{ color: '#333355' }}>
+                  <span style={{ color: '#00C47A' }}>TERMINAL</span><span>DATA</span><span>ALERTS</span>
+                </div>
+              </div>
+              <div className="p-4 space-y-3">
+                <div className="grid grid-cols-3 gap-2">
+                  {[['TXN VOLUME', '1.66M', '#00C47A'], ['AVG PSF', 'AED 1,247', '#F0B429'], ['DISTRESS', '847', '#ff4444']].map(([l, v, c]) => (
+                    <div key={l} className="rounded border p-2" style={{ borderColor: '#1a1a2e', background: '#111118' }}>
+                      <p className="font-mono text-[9px] mb-1.5" style={{ color: '#333355' }}>{l}</p>
+                      <p className="font-mono text-base font-bold" style={{ color: c as string }}>{v}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="rounded border p-3 font-mono text-[10px]" style={{ borderColor: '#1a1a2e', background: '#111118' }}>
+                  <div className="flex justify-between mb-2" style={{ color: '#F0B429' }}>
+                    <span>TOP AREAS BY MOMENTUM</span><span>LIVE</span>
+                  </div>
+                  {[['DUBAI MARINA', '+12.3%', true], ['JVC', '+8.1%', true], ['DOWNTOWN', '-2.4%', false]].map(([a, d, up]) => (
+                    <div key={a as string} className="flex justify-between py-0.5 border-t" style={{ borderColor: '#1a1a2e' }}>
+                      <span style={{ color: '#666688' }}>{a}</span>
+                      <span style={{ color: up ? '#00C47A' : '#ff4444' }}>{d}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-1.5 text-[10px]">
+              {['#0A0A0F bg', '#00C47A green', '#F0B429 amber', 'IBM Plex Mono', 'Dense tables'].map(t => (
+                <span key={t} className="rounded border border-border/40 px-2 py-0.5 text-muted-foreground">{t}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* C2 — Capital Navy */}
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-foreground">C2 · Capital Navy</p>
+            <p className="text-[11px] text-muted-foreground">MSCI/FactSet institutional. Deep navy, gold accents, teal charts. Feels like a GCC fund's internal dashboard.</p>
+            <div className="rounded-xl overflow-hidden border shadow-lg" style={{ background: '#0D1B2A', borderColor: '#1c3050' }}>
+              <div className="flex items-center justify-between px-5 py-3 border-b" style={{ borderColor: '#1c3050', background: '#162640' }}>
+                <span className="text-sm font-bold tracking-wide" style={{ color: '#C9A84C', fontFamily: 'serif' }}>The City Registry</span>
+                <div className="flex gap-4 text-[11px]" style={{ color: '#4a6fa5' }}>
+                  <span>Terminal</span><span>Research</span><span>API</span>
+                </div>
+              </div>
+              <div className="p-4 space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  {[['Transactions YTD', '142,847', '+18.3%'], ['Distress Index', '4.2 / 10', '+0.3']].map(([l, v, d]) => (
+                    <div key={l} className="rounded border p-3" style={{ borderColor: '#1c3050', background: '#162640' }}>
+                      <p className="text-[10px] mb-1" style={{ color: '#4a6fa5' }}>{l}</p>
+                      <p className="text-lg font-bold" style={{ color: '#e8d5a3' }}>{v}</p>
+                      <p className="text-[10px] mt-0.5" style={{ color: '#4FC3C3' }}>{d} vs last qtr</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="rounded border p-3" style={{ borderColor: '#1c3050', background: '#162640' }}>
+                  <p className="text-[10px] mb-2" style={{ color: '#C9A84C' }}>YIELD MAP — Q1 2026</p>
+                  <div className="space-y-1.5">
+                    {[['Business Bay', '7.8%', 85], ['Dubai Marina', '6.9%', 75], ['JVC', '8.2%', 90]].map(([a, y, w]) => (
+                      <div key={a} className="space-y-0.5">
+                        <div className="flex justify-between text-[10px]">
+                          <span style={{ color: '#7a9cc4' }}>{a}</span>
+                          <span style={{ color: '#4FC3C3' }}>{y}</span>
+                        </div>
+                        <div className="h-1 rounded-full" style={{ background: '#1c3050' }}>
+                          <div className="h-1 rounded-full" style={{ background: '#4FC3C3', width: `${w}%` }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-1.5 text-[10px]">
+              {['#0D1B2A navy', '#C9A84C gold', '#4FC3C3 teal', 'Inter + DM Mono', 'Yield bars'].map(t => (
+                <span key={t} className="rounded border border-border/40 px-2 py-0.5 text-muted-foreground">{t}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* C3 — Sand & Steel */}
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-foreground">C3 · Sand & Steel</p>
+            <p className="text-[11px] text-muted-foreground">Dubai geography-coded. Desert sand warm whites, slate blue precision. Regional identity without consumer clichés. Editorial feel.</p>
+            <div className="rounded-xl overflow-hidden border shadow-lg" style={{ background: '#F5F0E8', borderColor: '#ddd5c5' }}>
+              <div className="flex items-center justify-between px-5 py-3.5 border-b" style={{ borderColor: '#ddd5c5', background: '#FFFFFF' }}>
+                <div>
+                  <span className="text-sm font-bold" style={{ color: '#1C3A5E', fontFamily: 'serif', letterSpacing: '-0.02em' }}>The City Registry</span>
+                  <span className="ml-2 text-[10px] font-mono uppercase tracking-widest" style={{ color: '#B8860B' }}>Dubai</span>
+                </div>
+                <div className="flex gap-4 text-xs" style={{ color: '#8a9db5' }}>
+                  <span>Data</span><span>Terminal</span><span>Research</span>
+                </div>
+              </div>
+              <div className="p-5 space-y-4">
+                <div>
+                  <p className="text-[10px] uppercase tracking-widest mb-1" style={{ color: '#B8860B' }}>Market Snapshot · May 2026</p>
+                  <h3 className="text-lg font-bold leading-tight" style={{ color: '#1C3A5E', fontFamily: 'serif' }}>
+                    Transaction volumes up 18%<br />quarter-on-quarter
+                  </h3>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  {[['Deals', '4,284', '#1C3A5E'], ['Avg PSF', '1,247', '#1C3A5E'], ['Yield', '7.4%', '#B8860B']].map(([l, v, c]) => (
+                    <div key={l} className="rounded border p-3 text-center" style={{ borderColor: '#ddd5c5', background: '#FFFFFF' }}>
+                      <p className="text-[10px] mb-1" style={{ color: '#8a9db5' }}>{l}</p>
+                      <p className="text-base font-bold" style={{ color: c as string }}>{v}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="rounded border p-3" style={{ borderColor: '#ddd5c5', background: '#FFFFFF' }}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="h-1 flex-1 rounded" style={{ background: '#1C3A5E' }} />
+                    <p className="text-[10px] uppercase tracking-widest" style={{ color: '#8a9db5' }}>Top Communities</p>
+                    <div className="h-1 flex-1 rounded" style={{ background: '#1C3A5E' }} />
+                  </div>
+                  {[['Dubai Marina', 'AED 1,890/sqft'], ['JVC', 'AED 980/sqft'], ['Business Bay', 'AED 1,420/sqft']].map(([a, p]) => (
+                    <div key={a} className="flex justify-between py-1.5 border-b text-xs last:border-0" style={{ borderColor: '#f0e8dc' }}>
+                      <span style={{ color: '#1C3A5E' }}>{a}</span>
+                      <span style={{ color: '#B8860B' }}>{p}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-1.5 text-[10px]">
+              {['#F5F0E8 sand', '#1C3A5E slate', '#B8860B gold', 'Serif headings', 'Editorial layout'].map(t => (
+                <span key={t} className="rounded border border-border/40 px-2 py-0.5 text-muted-foreground">{t}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* C4 — Intelligence Layer */}
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-foreground">C4 · Intelligence Layer</p>
+            <p className="text-[11px] text-muted-foreground">Hex/Vercel design language meets institutional data. Slate-900, sky blue + violet. Modern analyst/quant aesthetic.</p>
+            <div className="rounded-xl overflow-hidden border shadow-lg" style={{ background: '#0F172A', borderColor: '#1e293b' }}>
+              <div className="flex items-center justify-between px-5 py-3 border-b" style={{ borderColor: '#1e293b', background: '#0F172A' }}>
+                <div className="flex items-center gap-2">
+                  <div className="h-5 w-5 rounded-md flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #38BDF8, #A78BFA)' }}>
+                    <span className="text-[8px] font-bold text-white">CR</span>
+                  </div>
+                  <span className="text-sm font-semibold" style={{ color: '#e2e8f0' }}>City Registry</span>
+                </div>
+                <div className="flex gap-3 text-[11px]" style={{ color: '#475569' }}>
+                  <span>Explore</span><span>Alerts</span><span>API</span>
+                </div>
+              </div>
+              <div className="p-4 space-y-3">
+                <div className="rounded-lg border p-3" style={{ borderColor: '#1e293b', background: '#1E293B' }}>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs font-semibold" style={{ color: '#e2e8f0' }}>Area Momentum</p>
+                    <span className="text-[10px] rounded-full px-2 py-0.5" style={{ background: '#0c2340', color: '#38BDF8' }}>Updated 2h ago</span>
+                  </div>
+                  <div className="space-y-2">
+                    {[['JVC', 92, '#38BDF8'], ['Dubai Marina', 78, '#A78BFA'], ['Downtown', 61, '#38BDF8']].map(([a, s, c]) => (
+                      <div key={a} className="flex items-center gap-3">
+                        <span className="text-[10px] w-24" style={{ color: '#94a3b8' }}>{a}</span>
+                        <div className="flex-1 h-1.5 rounded-full" style={{ background: '#0f172a' }}>
+                          <div className="h-1.5 rounded-full" style={{ background: c as string, width: `${s}%` }} />
+                        </div>
+                        <span className="text-[10px] font-mono w-6 text-right" style={{ color: c as string }}>{s}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {[['Distress Deals', '847 active', '#A78BFA'], ['Yield Alert', 'JVC > 8%', '#38BDF8']].map(([l, v, c]) => (
+                    <div key={l} className="rounded-lg border p-2.5" style={{ borderColor: '#1e293b', background: '#1E293B' }}>
+                      <p className="text-[9px] mb-1" style={{ color: '#475569' }}>{l}</p>
+                      <p className="text-xs font-semibold" style={{ color: c as string }}>{v}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-1.5 text-[10px]">
+              {['#0F172A slate', '#38BDF8 sky', '#A78BFA violet', 'Geist Sans', 'Card-based'].map(t => (
+                <span key={t} className="rounded border border-border/40 px-2 py-0.5 text-muted-foreground">{t}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* C5 — Registry White */}
+          <div className="space-y-2 xl:col-span-2 xl:max-w-lg">
+            <p className="text-xs font-semibold text-foreground">C5 · Registry White</p>
+            <p className="text-[11px] text-muted-foreground">Deliberate whitespace signals confidence. Anti-terminal. Deep sky blue authority, emerald growth signals. Financial Times digital aesthetic.</p>
+            <div className="rounded-xl overflow-hidden border shadow-lg" style={{ background: '#FAFAFA', borderColor: '#e2e8f0' }}>
+              <div className="flex items-center justify-between px-5 py-3.5 border-b" style={{ borderColor: '#e2e8f0', background: '#FFFFFF' }}>
+                <span className="text-sm font-bold" style={{ color: '#0C4A6E' }}>The City Registry</span>
+                <div className="flex gap-4 text-xs" style={{ color: '#94a3b8' }}>
+                  <span>Terminal</span><span>Data</span><span>Research</span>
+                </div>
+              </div>
+              <div className="p-6 space-y-5">
+                <div>
+                  <p className="text-[10px] uppercase tracking-widest mb-2" style={{ color: '#0C4A6E', opacity: 0.5 }}>Dubai Real Estate Intelligence</p>
+                  <h3 className="text-xl font-bold leading-tight" style={{ color: '#0C4A6E' }}>Transaction volumes<br />at 3-year high.</h3>
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                  {[['Deals Q1', '14,284', '#059669'], ['Avg PSF', '1,247', '#0C4A6E'], ['Distress', '847', '#dc2626']].map(([l, v, c]) => (
+                    <div key={l} className="border-l-2 pl-3" style={{ borderColor: c as string }}>
+                      <p className="text-[10px] mb-0.5" style={{ color: '#94a3b8' }}>{l}</p>
+                      <p className="text-lg font-bold" style={{ color: c as string }}>{v}</p>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '1rem' }}>
+                  {[['Dubai Marina', '6.9% yield', 'AED 1,890/sqft'], ['JVC', '8.2% yield', 'AED 980/sqft']].map(([a, y, p]) => (
+                    <div key={a} className="flex justify-between py-2 text-xs border-b" style={{ borderColor: '#f0f4f8' }}>
+                      <span style={{ color: '#0C4A6E' }}>{a}</span>
+                      <span style={{ color: '#059669' }}>{y}</span>
+                      <span style={{ color: '#94a3b8' }}>{p}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-1.5 text-[10px]">
+              {['#FAFAFA white', '#0C4A6E deep sky', '#059669 emerald', 'Instrument Sans', 'Generous spacing', 'Border-left accents'].map(t => (
+                <span key={t} className="rounded border border-border/40 px-2 py-0.5 text-muted-foreground">{t}</span>
+              ))}
+            </div>
+          </div>
+
+        </div>
+      </section>
+
       <div className="rounded-lg border border-border/40 bg-muted/20 p-4 text-xs text-muted-foreground">
-        These are inline mockups showing the design direction. Pick one for each brand and I'll implement it across all pages.
+        Pick one City Registry concept (C1–C5) and one North Capital concept (A or B) — I'll implement across all pages.
       </div>
     </div>
   )
