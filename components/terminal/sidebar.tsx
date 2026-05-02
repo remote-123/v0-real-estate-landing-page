@@ -58,6 +58,7 @@ export const sidebarLinks = [
     title: "Buildings & Developers",
     links: [
       { label: "Building Comparator", href: "/terminal/building-comparator", icon: Building2 },
+      { label: "Unit Registry", href: "/terminal/unit-registry", icon: Layers },
       { label: "Buildings", href: "/terminal/buildings", icon: Building2 },
       { label: "Developer Track Record", href: "/terminal/developer-track", icon: Users },
       { label: "Area Comparison", href: "/terminal/compare", icon: GitCompare },
