@@ -7,6 +7,10 @@
 > 3. **Mandatory Signature:** Every entry must explicitly state the tool name at the start (e.g., *"Built by Antigravity"*, *"Built by Claude Code"*, or *"Built by Cursor"*).
 
 
+## 02 May 2026 — Cycle 15
+*Built by Claude Code*
+- **Area pages SEO improvements (e09aa84)**: Updated all area metadata "2025" → "2026". Improved service charge query on `/areas/[slug]` — exact match (LOWER=LOWER) first, then LIKE fallback — prevents false positives from the previous first-word-only fuzzy match. Added BreadcrumbList schema to all 50+ area deep-dive pages. Enriched Dataset schema with `spatialCoverage` (Place node) and `variableMeasured` (avg PSF + 12m txn count PropertyValue nodes).
+
 ## 02 May 2026 — Cycle 14
 *Built by Claude Code*
 - **Building comparator cookie unlock + CityRegistry feature grid (6da930f)**: Building comparator (client component) now reads `terminal_email_unlocked=1` cookie via `useEffect` — users who submitted email on any terminal page bypass the sign-in gate without re-authenticating. CityRegistryLanding feature grid expanded from 5 → 12 cards: added Yield Map, Floor Plan Pricer, Off-Plan Pipeline, Service Charges, Mortgage & Liquidity, Building Comparator, Yield Calculator, Service Charge Estimator.
