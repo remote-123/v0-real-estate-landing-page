@@ -15,6 +15,7 @@ import {
   Map,
   Newspaper,
   Percent,
+  Search,
   TrendingDown,
   TrendingUp,
   Users,
@@ -35,6 +36,7 @@ export const sidebarLinks = [
       { label: "Rental Drops", href: "/terminal/rental-drops", icon: Home },
       { label: "Market Pulse", href: "/terminal/market-pulse", icon: Activity },
       { label: "Transaction Pulse", href: "/terminal/transaction-pulse", icon: Activity },
+      { label: "Comparable Sales", href: "/terminal/transaction-search", icon: Search },
       { label: "Market Briefing", href: "/terminal/market-briefing", icon: Newspaper },
     ]
   },

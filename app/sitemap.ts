@@ -129,6 +129,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     '/terminal/bear-cases',
     '/terminal/bull-cases',
     '/terminal/market-pulse',
+    '/terminal/transaction-search',
   ]
 
   const staticRoutes = [
