@@ -7,6 +7,13 @@
 > 3. **Mandatory Signature:** Every entry must explicitly state the tool name at the start (e.g., *"Built by Antigravity"*, *"Built by Claude Code"*, or *"Built by Cursor"*).
 
 
+## 02 May 2026 — Cycle 33
+
+*Built by Claude Code*
+
+- **Lib utility tests** — added `tests/lib/terminal-gate.test.ts` (13 tests) and `tests/lib/telegram.test.ts` (17 tests): session check, cookie exact-value guard, cookies() throw resilience, Telegram payload shape, thread routing, error formatting, network failure swallowing. Total: **140 tests passing** (+30).
+- Covered `GATE_COOKIE` constant guard, `sendTelegramError` truncation, `TELEGRAM_THREAD_ID_ERRORS` routing, missing-config no-fetch guard.
+
 ## 02 May 2026 — Cycle 32
 *Built by Claude Code*
 - **Telegram bot extended commands (2fb353e)**: Three new ops-monitoring commands added to `/api/telegram-webhook`. `/area [name]` — 5-CTE SQL (curr/year_ago/rolling_12m) → PSF + YoY% + 12m txn count; ILIKE search. `/distress` — top 5 from `distress_listings WHERE price_drop_confirmed = true`, distress_score DESC; PSF % vs area avg. `/price [area] [beds]` — rolling 12m weighted avg PSF + price from `mv_txn_monthly_unified`, beds normalized via `toBedLabel()` (0=Studio, 1-4=N B/R, 5+=5+ B/R). All: `waitUntil()` non-blocking, silent ignore for non-allowed users, error reply on SQL fail. 12 new tests + 3 source-code regression sentinels. 110 total tests passing.
