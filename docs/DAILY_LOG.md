@@ -7,6 +7,10 @@
 > 3. **Mandatory Signature:** Every entry must explicitly state the tool name at the start (e.g., *"Built by Antigravity"*, *"Built by Claude Code"*, or *"Built by Cursor"*).
 
 
+## 02 May 2026 — Cycle 29
+*Built by Claude Code*
+- **Market Pulse dashboard /terminal/market-pulse (e0017ae)**: Consolidated "week in review" page. 5 parallel SQL queries via `Promise.all`: market KPIs, top 5 bull signals, top 5 bear signals, volume leaders, pipeline risk. KPI grid: Dubai avg PSF + YoY%, 12m deal count, active distress count, data-as-of month. Top bull/bear signal sections free (uses same score formulas as screener pages). Volume leaders + pipeline risk sections gated (CSS opacity blur + `GatedTableOverlay`). Inline `scoreBar()` renders colored progress bars. Cross-links to Market Briefing, Area Momentum, Distress Deals, Building Comparator. Schema.org via `terminalPageMeta()`. Added to sidebar Terminal group + sitemap. 73 tests still passing.
+
 ## 02 May 2026 — Cycle 28
 *Built by Claude Code*
 - **Cron route tests — 29 new tests (2e5236c)**: `tests/api/cron/` directory with 3 new test files. `generate-market-briefing` (7): auth guard, proxy behavior, Telegram error on failure. `fetch-bayut-transactions` (11): auth, budget circuit breaker, transform+filter pipeline, mat view refresh, Telegram error. `weekly-distress-digest` (15): auth, no-deals skip path, email with/without RESEND_API_KEY, lead stats UPDATE, Telegram preview. Source code regression sentinels: `esc()` escapes &/</>/", confidence_tier badge labels, unsubscribe token in HTML, UPDATE uses `unsubscribed_at`. Total test count: 73 passing. Key learning: `vi.fn().mockImplementation(() => ({}))` fails for `new` calls (arrow fn not constructor) — fix is class syntax; mock-prefixed vars are hoisted by vitest alongside `vi.mock`.
