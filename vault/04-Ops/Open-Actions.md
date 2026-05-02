@@ -40,5 +40,5 @@
 - Pascal Editor (3D floor plan viewer) — integrate on building comparator
 - [x] **Rental yield calculator** `/tools/rental-yield-calculator` — BUILT 2026-05-02 (live benchmarks, JSON-LD, FAQ schema, sitemap)
 - [ ] Service charge estimator `/tools/service-charge-estimator` — still to build
-- Email gate on Phase 2 terminal pages
-- Weekly distress deal email alert system
+- [x] **Email gate on Phase 2 terminal pages** — BUILT 2026-05-02 (Cycle 11): inline email form overlay, cookie unlock, router.refresh() re-render
+- [x] **Weekly distress deal email alert system** — BUILT (already existed at /api/cron/weekly-distress-digest)

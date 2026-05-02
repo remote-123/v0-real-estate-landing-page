@@ -7,6 +7,10 @@
 > 3. **Mandatory Signature:** Every entry must explicitly state the tool name at the start (e.g., *"Built by Antigravity"*, *"Built by Claude Code"*, or *"Built by Cursor"*).
 
 
+## 02 May 2026 — Cycle 11
+*Built by Claude Code*
+- **Email soft gate for Phase 2 terminal pages (115d893)**: Replaced hard "Sign in" auth requirement with inline email capture overlay across all 8 gated terminal pages. New `lib/terminal-gate.ts` — `isTerminalUnlocked(session)` returns true if Better Auth session OR `terminal_email_unlocked=1` cookie set. New `components/auth/email-gate-overlay.tsx` — inline email form with idle/loading/success/error state machine; on success sets cookie client-side then calls `router.refresh()` to re-render server component with full rows. `gated-table-overlay.tsx` now 1-line re-export (zero downstream client component changes). Pages updated: area-momentum, yield-map, floor-plan-pricer, communities, distress-deals, service-charges, rental-drops, off-plan-pipeline.
+
 ## 02 May 2026 — Cycle 10
 *Built by Claude Code*
 - **Complete NOW() staleness audit — final sweep (1984d9b, 1a32a74)**: Fixed remaining `NOW() - INTERVAL` instances on `mv_txn_monthly_unified` queries. `app/areas/page.tsx` vol CTE now uses existing `latest` CTE anchor. `app/areas/[slug]/page.tsx` price history + 12m metrics queries use `MAX(txn_month)`. `app/api/admin/researcher/route.ts` fixed 5 remaining NOW() instances (momentum CTE, distress fallback, transactions, mortgage, communities queries). `app/page.tsx` homepage live stats yield query. All NOW() rolling-window usages on `mv_txn_monthly_unified` now anchored to `MAX(txn_month)` — complete across the entire codebase.
