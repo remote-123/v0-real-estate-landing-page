@@ -7,18 +7,18 @@ import { formatAreaName } from "@/lib/area-names"
 export const revalidate = 3600 // 1-hour ISR
 
 export const metadata: Metadata = {
-  title: "Dubai Area Property Prices 2025 | All Areas | North Capital DXB",
+  title: "Dubai Area Property Prices 2026 | All Areas | North Capital DXB",
   description:
     "Track property prices per square foot, MoM trends, and off-plan pipeline across all major Dubai areas. Live DLD transaction data — Business Bay, Dubai Marina, JVC, Downtown, and more.",
   openGraph: {
-    title: "Dubai Area Property Prices 2025 | North Capital DXB",
+    title: "Dubai Area Property Prices 2026 | North Capital DXB",
     description:
       "PSF data, 12-month trends, and off-plan pipeline for every major Dubai community. Institutional-grade DLD transaction data.",
     url: "https://www.northcapitaldxb.com/areas",
   },
   twitter: {
     card: "summary",
-    title: "Dubai Area Property Prices 2025 | North Capital DXB",
+    title: "Dubai Area Property Prices 2026 | North Capital DXB",
     description: "PSF data, 12-month trends, and off-plan pipeline for every major Dubai community.",
   },
   alternates: {
@@ -112,7 +112,7 @@ export default async function AreasPage() {
   const pageSchema = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: "Dubai Area Property Prices 2025",
+    name: "Dubai Area Property Prices 2026",
     description: "Property price per sqft and market trends for all major Dubai areas",
     url: "https://www.northcapitaldxb.com/areas",
     numberOfItems: areas.length,

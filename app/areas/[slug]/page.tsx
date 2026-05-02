@@ -120,12 +120,21 @@ async function fetchAreaPageData(slug: string): Promise<AreaPageData | null> {
           AND project_status IN ('Under Construction', 'Pre-Sale', 'Sold Out')
       `,
 
-      // Service charge
+      // Service charge — try exact match first, fall back to first-word fuzzy
       sql<{ avg_sc: string | null }[]>`
-        SELECT ROUND(AVG(service_cost)::numeric, 0) AS avg_sc
-        FROM dld_service_charges
-        WHERE LOWER(master_community_name_en) LIKE LOWER(${`%${areaName.split(" ")[0]}%`})
-          AND service_cost > 0
+        WITH exact AS (
+          SELECT ROUND(AVG(service_cost)::numeric, 0) AS avg_sc
+          FROM dld_service_charges
+          WHERE LOWER(master_community_name_en) = LOWER(${areaName})
+            AND service_cost > 0
+        ),
+        fuzzy AS (
+          SELECT ROUND(AVG(service_cost)::numeric, 0) AS avg_sc
+          FROM dld_service_charges
+          WHERE LOWER(master_community_name_en) LIKE LOWER(${`%${areaName}%`})
+            AND service_cost > 0
+        )
+        SELECT COALESCE((SELECT avg_sc FROM exact), (SELECT avg_sc FROM fuzzy)) AS avg_sc
       `,
 
       // Distress count
@@ -184,7 +193,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const data = await fetchAreaPageData(slug)
   if (!data) return { title: "Area Not Found | North Capital DXB" }
 
-  const title = `${data.displayName} Property Prices & PSF Data 2025 | North Capital DXB`
+  const title = `${data.displayName} Property Prices & PSF Data 2026 | North Capital DXB`
   const desc = data.avg_psf > 0
     ? `${data.displayName} current average PSF: AED ${Math.round(data.avg_psf).toLocaleString()}/sqft. ${data.mom_change !== null ? `${data.mom_change > 0 ? "+" : ""}${data.mom_change}% MoM. ` : ""}${data.pipeline_count} off-plan projects tracked. Live DLD transaction data.`
     : `Track ${data.displayName} real estate prices, PSF trends, off-plan pipeline and distress deals. Institutional-grade DLD data by North Capital DXB.`
@@ -251,10 +260,31 @@ export default async function AreaPage({ params }: { params: Promise<{ slug: str
   const pageSchema = {
     "@context": "https://schema.org",
     "@type": "Dataset",
-    name: `${data.displayName} Property Market Data`,
+    name: `${data.displayName} Property Market Data 2026`,
     description: `DLD transaction data, PSF trends, off-plan pipeline and distress listings for ${data.displayName}, Dubai.`,
     url: `https://www.northcapitaldxb.com/areas/${slug}`,
     creator: { "@type": "Organization", name: "North Capital DXB" },
+    spatialCoverage: {
+      "@type": "Place",
+      name: `${data.displayName}, Dubai, UAE`,
+      address: { "@type": "PostalAddress", addressLocality: data.displayName, addressCountry: "AE" },
+    },
+    ...(data.avg_psf > 0 && {
+      variableMeasured: [
+        { "@type": "PropertyValue", name: "Average Price Per Sqft", value: `AED ${Math.round(data.avg_psf)}`, unitCode: "AED" },
+        { "@type": "PropertyValue", name: "12-Month Transaction Count", value: data.txn_count_12m },
+      ],
+    }),
+  }
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: "https://www.northcapitaldxb.com" },
+      { "@type": "ListItem", position: 2, name: "Dubai Areas", item: "https://www.northcapitaldxb.com/areas" },
+      { "@type": "ListItem", position: 3, name: `${data.displayName} Property Prices`, item: `https://www.northcapitaldxb.com/areas/${slug}` },
+    ],
   }
 
   return (
@@ -262,6 +292,10 @@ export default async function AreaPage({ params }: { params: Promise<{ slug: str
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(pageSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
 
       {/* Nav */}
