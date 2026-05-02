@@ -165,7 +165,11 @@ const BEDROOM_TABS = [
 
 export default function BuildingComparatorPage() {
   const { data: session, isPending } = authClient.useSession()
-  const isAuthenticated = !!session
+  const [emailUnlocked, setEmailUnlocked] = useState(false)
+  useEffect(() => {
+    setEmailUnlocked(document.cookie.split(";").some(c => c.trim() === "terminal_email_unlocked=1"))
+  }, [])
+  const isAuthenticated = !!session || emailUnlocked
 
   const [buildingA, setBuildingA] = useState("")
   const [buildingB, setBuildingB] = useState("")
@@ -279,7 +283,7 @@ export default function BuildingComparatorPage() {
           >
             Sign in free to unlock
           </Link>
-          <p className="text-[11px] text-muted-foreground/60">Google sign-in · 10 seconds · no credit card</p>
+          <p className="text-[11px] text-muted-foreground/60">Google sign-in · 10 seconds · no credit card — or submit your email on any other terminal page</p>
         </div>
       )}
 

@@ -1,15 +1,15 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowRight, BarChart3, Building2, Map, TrendingUp, Zap } from "lucide-react"
+import { ArrowRight, BarChart3, Building2, Map, TrendingUp, Zap, Percent, Layers, FileText, Calculator, Landmark } from "lucide-react"
 import { EmailCaptureWidget } from "@/components/terminal/email-capture-widget"
 
 const FEATURES = [
   {
-    icon: TrendingUp,
-    label: "Transaction Pulse",
-    description: "Monthly sales, mortgages & gifts by community",
-    href: "/terminal/transaction-pulse",
+    icon: BarChart3,
+    label: "Distress Deals",
+    description: "Below-market listings with discount % and days on market",
+    href: "/terminal/distress-deals",
   },
   {
     icon: Map,
@@ -18,22 +18,64 @@ const FEATURES = [
     href: "/terminal/communities",
   },
   {
-    icon: BarChart3,
-    label: "Distress Deals",
-    description: "Below-market listings with discount % and days on market",
-    href: "/terminal/distress-deals",
-  },
-  {
-    icon: Building2,
-    label: "Building Intelligence",
-    description: "Per-building PSF trends, service charges, rental comps",
-    href: "/terminal/buildings",
+    icon: Percent,
+    label: "Yield Map",
+    description: "Gross rental yield by community and bedroom type",
+    href: "/terminal/yield-map",
   },
   {
     icon: Zap,
     label: "Area Momentum",
-    description: "Momentum scores combining price delta and volume delta",
+    description: "Price + volume acceleration signals — spots breakouts early",
     href: "/terminal/area-momentum",
+  },
+  {
+    icon: TrendingUp,
+    label: "Transaction Pulse",
+    description: "Monthly sales, mortgages & gifts by community",
+    href: "/terminal/transaction-pulse",
+  },
+  {
+    icon: Layers,
+    label: "Floor Plan Pricer",
+    description: "P10–P90 price distribution by area and bedroom type",
+    href: "/terminal/floor-plan-pricer",
+  },
+  {
+    icon: Building2,
+    label: "Off-Plan Pipeline",
+    description: "Active development units by area — supply risk analysis",
+    href: "/terminal/off-plan-pipeline",
+  },
+  {
+    icon: FileText,
+    label: "Service Charges",
+    description: "Annual RERA service charge budgets by project",
+    href: "/terminal/service-charges",
+  },
+  {
+    icon: Landmark,
+    label: "Mortgage & Liquidity",
+    description: "Leverage ratios and mortgage activity by community",
+    href: "/terminal/liquidity",
+  },
+  {
+    icon: Building2,
+    label: "Building Comparator",
+    description: "Side-by-side PSF trend, yield, and service charge comparison",
+    href: "/terminal/building-comparator",
+  },
+  {
+    icon: Calculator,
+    label: "Yield Calculator",
+    description: "Free tool: gross yield, net yield, cashflow — live benchmarks",
+    href: "/tools/rental-yield-calculator",
+  },
+  {
+    icon: FileText,
+    label: "Service Charge Est.",
+    description: "Estimate annual fees for any building — 45K+ DLD records",
+    href: "/tools/service-charge-estimator",
   },
 ]
 

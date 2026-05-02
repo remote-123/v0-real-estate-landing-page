@@ -7,6 +7,14 @@
 > 3. **Mandatory Signature:** Every entry must explicitly state the tool name at the start (e.g., *"Built by Antigravity"*, *"Built by Claude Code"*, or *"Built by Cursor"*).
 
 
+## 02 May 2026 — Cycle 13
+*Built by Claude Code*
+- **Sidebar expansion — expose all 9 hidden built pages (34b363e)**: Reorganised terminal sidebar from 3 groups to 4. New "Market Screeners" group: Yield Map, Area Momentum, Floor Plan Pricer, Off-Plan Pipeline, Service Charges, Mortgage & Liquidity. New "Buildings & Developers" group: Building Comparator, Buildings, Developer Track Record. Transaction Pulse added to Terminal group. Tools group now includes: Yield Calculator + Service Charge Estimator (new tools). Removed empty Support group. Total sidebar links: 18 (was 9).
+
+## 02 May 2026 — Cycle 12
+*Built by Claude Code*
+- **Free SEO tool: /tools/service-charge-estimator (aac0bf6)**: Public no-auth page targeting "Dubai service charge calculator" keyword. Server component (`revalidate=86400`) fetches 5,000+ projects from `dld_service_charges` joined with `dld_projects` for unit count. Client component: typeahead search, YoY budget trend table, per-unit estimate (total_cost ÷ no_of_units), AED/sqft calc from user-entered size, net yield impact from annual rent input, category breakdown, market reference benchmarks. JSON-LD WebApplication + FAQPage schema. Added to both sitemaps.
+
 ## 02 May 2026 — Cycle 11
 *Built by Claude Code*
 - **Email soft gate for Phase 2 terminal pages (115d893)**: Replaced hard "Sign in" auth requirement with inline email capture overlay across all 8 gated terminal pages. New `lib/terminal-gate.ts` — `isTerminalUnlocked(session)` returns true if Better Auth session OR `terminal_email_unlocked=1` cookie set. New `components/auth/email-gate-overlay.tsx` — inline email form with idle/loading/success/error state machine; on success sets cookie client-side then calls `router.refresh()` to re-render server component with full rows. `gated-table-overlay.tsx` now 1-line re-export (zero downstream client component changes). Pages updated: area-momentum, yield-map, floor-plan-pricer, communities, distress-deals, service-charges, rental-drops, off-plan-pipeline.
