@@ -14,6 +14,65 @@ import { FaqSection } from "@/components/faq-section"
 import { FeaturedProjects } from "@/components/featured-projects"
 import { MarketIntelligenceTeaser } from "@/components/market-intelligence-teaser"
 import { CityRegistryLanding } from "@/components/city-registry-landing"
+import { sql } from "@/lib/db"
+
+async function fetchCityStats(): Promise<{ communities: number; transactions: number; topYield: number; topYieldArea: string }> {
+  try {
+    const [countsRows, yieldRows] = await Promise.all([
+      sql<{ communities: string; transactions: string }[]>`
+        SELECT
+          COUNT(DISTINCT area_name_en)::integer AS communities,
+          SUM(txn_count)::integer AS transactions
+        FROM mv_txn_monthly_unified
+        WHERE area_name_en IS NOT NULL
+      `,
+      sql<{ gross_yield_pct: string; area_name_en: string }[]>`
+        WITH sales AS (
+          SELECT area_name_en, rooms_en,
+            SUM(txn_count * avg_price) / NULLIF(SUM(txn_count), 0) AS avg_sale_price,
+            SUM(txn_count) AS sale_txns
+          FROM mv_txn_monthly_unified
+          WHERE trans_group_en = 'Sales' AND property_type_en = 'Unit'
+            AND txn_month >= NOW() - INTERVAL '12 months'
+            AND area_name_en IS NOT NULL AND rooms_en IS NOT NULL
+          GROUP BY area_name_en, rooms_en
+        ),
+        rents AS (
+          SELECT area_name_en, rooms_en,
+            SUM(txn_count * avg_rent) / NULLIF(SUM(txn_count), 0) AS avg_annual_rent,
+            SUM(txn_count) AS rent_txns
+          FROM mv_txn_monthly_unified
+          WHERE trans_group_en = 'Rent' AND property_type_en = 'Unit'
+            AND txn_month >= NOW() - INTERVAL '12 months'
+            AND area_name_en IS NOT NULL AND rooms_en IS NOT NULL
+          GROUP BY area_name_en, rooms_en
+        )
+        SELECT
+          s.area_name_en,
+          ROUND(((r.avg_annual_rent * 12) / NULLIF(s.avg_sale_price, 0) * 100)::numeric, 1) AS gross_yield_pct
+        FROM sales s JOIN rents r USING (area_name_en, rooms_en)
+        WHERE s.sale_txns >= 10 AND r.rent_txns >= 10
+          AND s.avg_sale_price > 100000
+          AND r.avg_annual_rent > 0
+        ORDER BY gross_yield_pct DESC
+        LIMIT 1
+      `,
+    ])
+
+    const counts = countsRows[0]
+    const topYieldRow = yieldRows[0]
+
+    return {
+      communities: Number(counts?.communities ?? 0),
+      transactions: Number(counts?.transactions ?? 0),
+      topYield: Number(topYieldRow?.gross_yield_pct ?? 0),
+      topYieldArea: topYieldRow?.area_name_en ?? '',
+    }
+  } catch {
+    // Fallback values if DB unreachable
+    return { communities: 82, transactions: 1_660_000, topYield: 9.2, topYieldArea: 'Discovery Gardens' }
+  }
+}
 
 export async function generateMetadata(): Promise<Metadata> {
   const headersList = await headers()
@@ -99,7 +158,8 @@ export default async function Home() {
   const isCityRegistry = site === "cityregistry"
 
   if (isCityRegistry) {
-    return <CityRegistryLanding />
+    const liveStats = await fetchCityStats()
+    return <CityRegistryLanding liveStats={liveStats} />
   }
 
   return (

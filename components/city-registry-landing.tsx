@@ -37,7 +37,35 @@ const FEATURES = [
   },
 ]
 
-export function CityRegistryLanding() {
+interface LiveStats {
+  communities: number
+  transactions: number
+  topYield: number
+  topYieldArea: string
+}
+
+interface Props {
+  liveStats?: LiveStats
+}
+
+function formatNum(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M+`
+  if (n >= 1_000) return `${Math.round(n / 1_000)}K+`
+  return n.toLocaleString()
+}
+
+function formatAreaLabel(name: string): string {
+  if (!name) return '—'
+  const formatted = name
+    .split(' ')
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(' ')
+    .replace(/\bDubai\b/g, 'Dubai')
+    .replace(/\bAl\b/g, 'Al')
+  return formatted.length > 22 ? formatted.slice(0, 22) + '…' : formatted
+}
+
+export function CityRegistryLanding({ liveStats }: Props) {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       {/* Header */}
@@ -65,6 +93,22 @@ export function CityRegistryLanding() {
         <p className="text-lg text-muted-foreground max-w-xl mb-10 leading-relaxed">
           Transaction analytics, yield maps, distress deal scanner, and community screener — aggregated from DLD and Bayut data, updated daily.
         </p>
+
+        {liveStats && (
+          <div className="flex flex-wrap justify-center gap-x-8 gap-y-4 mb-10">
+            {[
+              { label: "Communities Tracked", value: liveStats.communities.toString() },
+              { label: "Transactions Analyzed", value: formatNum(liveStats.transactions) },
+              { label: "Top Gross Yield", value: `${liveStats.topYield.toFixed(1)}%` },
+              { label: "Highest Yield Area", value: formatAreaLabel(liveStats.topYieldArea) },
+            ].map(({ label, value }) => (
+              <div key={label} className="text-center">
+                <p className="font-mono text-2xl font-bold text-foreground">{value}</p>
+                <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mt-0.5">{label}</p>
+              </div>
+            ))}
+          </div>
+        )}
 
         <div className="flex flex-col sm:flex-row gap-3 mb-16">
           <Link
