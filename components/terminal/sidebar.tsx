@@ -4,6 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
 import {
+  AlertTriangle,
   ArrowLeft,
   BarChart3,
   Building2,
@@ -46,6 +47,7 @@ export const sidebarLinks = [
       { label: "Off-Plan Pipeline", href: "/terminal/off-plan-pipeline", icon: Building2 },
       { label: "Service Charges", href: "/terminal/service-charges", icon: FileText },
       { label: "Mortgage & Liquidity", href: "/terminal/liquidity", icon: Landmark },
+      { label: "Bear Case Screener", href: "/terminal/bear-cases", icon: AlertTriangle },
     ]
   },
   {
