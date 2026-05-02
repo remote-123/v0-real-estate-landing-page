@@ -27,6 +27,7 @@
 - [ ] **LinkedIn Sign-In** — needs LinkedIn Developer app
 
 ## P3 — Terminal Features
+- [x] **Bull Case Screener** `/terminal/bull-cases` — BUILT + gated (Cycle 27 2026-05-02): Bull Score (appreciation + volume + scarcity), cross-linked with bear-cases
 - [x] **Bear Case Screener** `/terminal/bear-cases` — BUILT + gated (Cycle 26 2026-05-02): Bear Score formula, 5-CTE SQL, signal badges, row-gated 5 free rows
 - [x] **Liquidity Scanner** `/terminal/liquidity` — BUILT + gated (as of 2026-05)
 - [x] **Researcher automation** `/admin/automations/researcher` — BUILT with Gemini 2.5 Flash, 8 query types (as of 2026-05-02)

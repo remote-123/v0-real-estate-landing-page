@@ -7,6 +7,10 @@
 > 3. **Mandatory Signature:** Every entry must explicitly state the tool name at the start (e.g., *"Built by Antigravity"*, *"Built by Claude Code"*, or *"Built by Cursor"*).
 
 
+## 02 May 2026 — Cycle 27
+*Built by Claude Code*
+- **Bull Case Screener /terminal/bull-cases (ffd3264)**: Counterpart to bear-cases screener. Bull Score (0–100) = price appreciation YoY (0–35 pts, +5% → 8.75 pts, +20% → 35 pts) + volume strength via sqrt scaling (0–35 pts) + supply scarcity (0–30 pts, 0 pipeline → full 30 pts). Min 20 txns. Signal badges: YoY growth %, MoM growth %, supply months, high volume. STRONG/POSITIVE/MILD/NEUTRAL tiers. Cross-linked with bear-cases: both pages have "See the other side" block + header link. Added to Market Screeners sidebar + sitemap.
+
 ## 02 May 2026 — Cycle 26
 *Built by Claude Code*
 - **Bear Case Screener /terminal/bear-cases (008a391)**: New terminal page ranking Dubai areas by negative signal density. Bear Score (0–100) = price decline vs prior year (0–40 pts) + off-plan pipeline supply pressure (0–35 pts) + confirmed distress listing density per txn volume (0–25 pts). 5-CTE SQL over `mv_txn_monthly_unified`, `dld_projects`, `distress_listings`. 5 free rows, row-gated with `GatedTableOverlay`. Signal badges (DECLINING PRICE, OVERSUPPLY RISK, DISTRESS ACTIVE), score badge (EXTREME/HIGH/MODERATE/CAUTION), area links to `/terminal/areas/[slug]`. Added to Market Screeners sidebar group + sitemap.
