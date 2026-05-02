@@ -4,6 +4,7 @@ import { DistressTable } from "@/components/terminal/distress-table"
 import { DistressFilters } from "@/components/terminal/distress-filters"
 import { EmailCaptureWidget } from "@/components/terminal/email-capture-widget"
 import { sql } from "@/lib/db"
+import { auth } from "@/auth"
 
 
 async function fetchPropertyFinderDeals() {
@@ -240,15 +241,19 @@ export const metadata: Metadata = {
 export default async function DistressDealsPage(props: {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
+    const FREE_ROWS = 3
+
     const searchParams = await props.searchParams
     const typeFilter = typeof searchParams.type === 'string' ? searchParams.type : 'All'
     const sortFilter = typeof searchParams.sort === 'string' ? searchParams.sort : 'biggest-drop'
     const areaFilter = typeof searchParams.area === 'string' ? searchParams.area : ''
 
-    const [rawFetched, benchmarks] = await Promise.all([
+    const [rawFetched, benchmarks, session] = await Promise.all([
         fetchPropertyFinderDeals(),
         fetchAreaBenchmarks(),
+        auth(),
     ])
+    const isAuthenticated = !!session
 
     let rawDeals = rawFetched.map((deal: any) => {
         const psf = deal.sizeSqft > 0 ? Math.round(deal.currentPrice / deal.sizeSqft) : 0
@@ -285,6 +290,8 @@ export default async function DistressDealsPage(props: {
         ...deal,
         rank: index + 1
     }))
+    const allDeals = deals
+    const displayDeals = isAuthenticated ? allDeals : allDeals.slice(0, FREE_ROWS)
 
     const areaStats = Object.entries(
         deals.reduce((acc: Record<string, { count: number; totalDom: number; topScore: number }>, d: any) => {
@@ -393,7 +400,7 @@ export default async function DistressDealsPage(props: {
             <section className="space-y-4 px-0 sm:px-0 pb-20">
                 <h3 className="font-mono text-sm tracking-widest text-muted-foreground uppercase pb-2 px-4 sm:px-0 border-b border-border/50 flex items-center justify-between">
                     <span>Active Distress Deals</span>
-                    <span className="text-xs">Showing {deals.length} records</span>
+                    <span className="text-xs">Showing {displayDeals.length} records</span>
                 </h3>
 
                 {deals.length === 0 ? (
@@ -401,7 +408,7 @@ export default async function DistressDealsPage(props: {
                         <p className="text-muted-foreground text-sm">No distress deals found matching the current criteria or connection dropped.</p>
                     </div>
                 ) : (
-                    <DistressTable deals={deals} />
+                    <DistressTable deals={displayDeals} isAuthenticated={isAuthenticated} totalRows={allDeals.length} />
                 )}
             </section>
 

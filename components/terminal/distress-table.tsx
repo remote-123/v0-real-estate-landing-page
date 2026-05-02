@@ -13,6 +13,7 @@ import {
 import { ArrowUpDown, ArrowUp, ArrowDown, Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { DealModal, type DistressFeedCardProps } from '@/components/terminal/distress-feed-card'
+import { GatedTableOverlay } from '@/components/auth/gated-table-overlay'
 
 function SortIcon({ sorted }: { sorted: false | 'asc' | 'desc' }) {
   if (!sorted) return <ArrowUpDown className="ml-1 h-3 w-3 opacity-40" />
@@ -22,9 +23,11 @@ function SortIcon({ sorted }: { sorted: false | 'asc' | 'desc' }) {
 
 interface Props {
   deals: DistressFeedCardProps[]
+  isAuthenticated?: boolean
+  totalRows?: number
 }
 
-export function DistressTable({ deals }: Props) {
+export function DistressTable({ deals, isAuthenticated = true, totalRows }: Props) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [globalFilter, setGlobalFilter] = useState('')
   const [openDeal, setOpenDeal] = useState<DistressFeedCardProps | null>(null)
@@ -197,6 +200,7 @@ export function DistressTable({ deals }: Props) {
 
   return (
     <>
+      <div className="relative">
       <div className="flex flex-col gap-4">
         {/* Search + count bar */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
@@ -262,6 +266,15 @@ export function DistressTable({ deals }: Props) {
           </table>
         </div>
 
+      </div>
+      {!isAuthenticated && totalRows !== undefined && totalRows > deals.length && (
+        <GatedTableOverlay
+          freeRows={deals.length}
+          totalRows={totalRows}
+          noun="distress deals"
+          callbackUrl="/terminal/distress-deals"
+        />
+      )}
       </div>
 
       {openDeal && (

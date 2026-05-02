@@ -2,6 +2,9 @@
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import { cn } from "@/lib/utils"
+import { authClient } from "@/lib/auth-client"
+import Link from "next/link"
+import { Lock } from "lucide-react"
 import {
   LineChart,
   Line,
@@ -161,6 +164,9 @@ const BEDROOM_TABS = [
 ]
 
 export default function BuildingComparatorPage() {
+  const { data: session, isPending } = authClient.useSession()
+  const isAuthenticated = !!session
+
   const [buildingA, setBuildingA] = useState("")
   const [buildingB, setBuildingB] = useState("")
   const [data, setData] = useState<BuildingData | null>(null)
@@ -256,6 +262,29 @@ export default function BuildingComparatorPage() {
         </p>
       </div>
 
+      {!isPending && !isAuthenticated && (
+        <div className="rounded-xl border border-border/50 bg-card/40 p-10 text-center space-y-4">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-accent/10 mb-2">
+            <Lock className="h-5 w-5 text-accent" />
+          </div>
+          <div className="space-y-2">
+            <p className="font-semibold text-foreground">Sign in to compare buildings</p>
+            <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+              Compare price trajectory, service charges, and rental yields between any two DLD-registered buildings. Free access.
+            </p>
+          </div>
+          <Link
+            href="/sign-in?callbackUrl=/terminal/building-comparator"
+            className="inline-flex items-center gap-2 rounded-md bg-accent text-accent-foreground px-5 py-2.5 text-sm font-semibold hover:bg-accent/90 transition-colors"
+          >
+            Sign in free to unlock
+          </Link>
+          <p className="text-[11px] text-muted-foreground/60">Google sign-in · 10 seconds · no credit card</p>
+        </div>
+      )}
+
+      {(isPending || isAuthenticated) && (
+      <>
       {/* Search UI */}
       <div className="rounded-xl border border-border/40 bg-card/40 p-6">
         <div className="flex flex-col sm:flex-row gap-4 items-end">
@@ -468,6 +497,8 @@ export default function BuildingComparatorPage() {
         <div className="rounded-xl border border-border/40 bg-card/40 p-12 text-center">
           <p className="text-muted-foreground text-sm">Search for a building above and click Compare to load data.</p>
         </div>
+      )}
+      </>
       )}
     </div>
   )
