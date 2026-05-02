@@ -40,7 +40,7 @@ async function fetchPricerData(): Promise<PricerRow[]> {
       WHERE trans_group_en = 'Sales'
         AND meter_sale_price > 200
         AND meter_sale_price < 15000
-        AND instance_date >= NOW() - INTERVAL '24 months'
+        AND instance_date >= '2020-01-01'
         AND area_name_en IS NOT NULL
         AND rooms_en IS NOT NULL
       GROUP BY area_name_en, rooms_en

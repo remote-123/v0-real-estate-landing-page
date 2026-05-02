@@ -36,8 +36,8 @@ async function fetchData(): Promise<{ monthly: MonthlyRow[]; daily: DayRow[] }> 
       sql<DayRow[]>`
         SELECT instance_date::text AS day, COUNT(*)::integer AS daily_txns
         FROM dld_transactions
-        WHERE instance_date >= DATE_TRUNC('year', NOW())
-          AND instance_date < NOW()
+        WHERE instance_date >= (SELECT MAX(instance_date) FROM dld_transactions) - INTERVAL '364 days'
+          AND instance_date <= (SELECT MAX(instance_date) FROM dld_transactions)
         GROUP BY instance_date
         ORDER BY instance_date ASC
       `,

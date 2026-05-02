@@ -29,21 +29,30 @@ interface ServiceChargeRow {
 async function fetchAreaBenchmarks(): Promise<AreaBenchmark[]> {
   try {
     const rows = await sql<{ area_name_en: string; rooms_en: string; avg_psf: string; tx_count: string }[]>`
+      WITH latest AS (
+        SELECT MAX(txn_month) AS max_month
+        FROM mv_txn_monthly_unified
+        WHERE trans_group_en = 'Sales' AND property_type_en = 'Unit'
+      )
       SELECT
         area_name_en,
         rooms_en,
-        ROUND(AVG(meter_sale_price / 10.764)::numeric, 0) AS avg_psf,
-        COUNT(*)::integer AS tx_count
-      FROM dld_transactions
+        ROUND(
+          (SUM(txn_count * avg_price_sqm) / NULLIF(SUM(txn_count), 0) / 10.764)::numeric,
+          0
+        ) AS avg_psf,
+        SUM(txn_count)::integer AS tx_count
+      FROM mv_txn_monthly_unified
+      CROSS JOIN latest
       WHERE trans_group_en = 'Sales'
-        AND instance_date >= NOW() - INTERVAL '12 months'
-        AND meter_sale_price BETWEEN 500 AND 150000
+        AND property_type_en = 'Unit'
+        AND property_sub_type_en IN ('Flat', 'Hotel Apartments')
+        AND txn_month >= latest.max_month - INTERVAL '11 months'
         AND area_name_en IS NOT NULL
         AND rooms_en IN ('1 B/R', '2 B/R', '3 B/R', 'Studio')
-        AND property_sub_type_en IN ('Flat', 'Hotel Apartments')
       GROUP BY area_name_en, rooms_en
-      HAVING COUNT(*) >= 10
-      ORDER BY COUNT(*) DESC
+      HAVING SUM(txn_count) >= 10
+      ORDER BY SUM(txn_count) DESC
       LIMIT 80
     `
     return rows.map(r => ({

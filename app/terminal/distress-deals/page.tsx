@@ -125,23 +125,31 @@ function translateBrandToDld(token: string): string {
 async function fetchAreaBenchmarks(): Promise<Map<string, number>> {
     try {
         const rows = await sql<{ area_name_en: string; property_type: string; avg_psf: number }[]>`
+      WITH latest AS (
+        SELECT MAX(txn_month) AS max_month
+        FROM mv_txn_monthly_unified
+        WHERE trans_group_en = 'Sales' AND property_type_en = 'Unit'
+      )
       SELECT
         area_name_en,
         CASE
-          WHEN property_sub_type_en IN ('Flat','Hotel Apartment','Penthouse') THEN 'APARTMENT'
-          WHEN property_sub_type_en IN ('Villa','Villa Compound') THEN 'VILLA'
-          WHEN property_sub_type_en = 'Townhouse' THEN 'TOWNHOUSE'
+          WHEN property_sub_type_en IN ('Flat','Hotel Apartments','Penthouse') THEN 'APARTMENT'
+          WHEN property_sub_type_en = 'Villa'                                  THEN 'VILLA'
+          WHEN property_sub_type_en = 'Townhouse'                              THEN 'TOWNHOUSE'
           ELSE 'OTHER'
         END AS property_type,
-        ROUND(AVG(meter_sale_price / 10.764)::numeric, 0)::integer AS avg_psf
-      FROM dld_transactions
+        ROUND(
+          (SUM(txn_count * avg_price_sqm) / NULLIF(SUM(txn_count), 0) / 10.764)::numeric,
+          0
+        )::integer AS avg_psf
+      FROM mv_txn_monthly_unified
+      CROSS JOIN latest
       WHERE trans_group_en = 'Sales'
-        AND meter_sale_price > 500
-        AND meter_sale_price < 150000
-        AND instance_date >= NOW() - INTERVAL '18 months'
+        AND property_type_en = 'Unit'
+        AND txn_month >= latest.max_month - INTERVAL '11 months'
         AND area_name_en IS NOT NULL
       GROUP BY area_name_en, property_type
-      HAVING COUNT(*) >= 5
+      HAVING SUM(txn_count) >= 5
     `
         const map = new Map<string, number>()
         for (const r of rows) {
