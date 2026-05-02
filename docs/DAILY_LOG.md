@@ -7,6 +7,10 @@
 > 3. **Mandatory Signature:** Every entry must explicitly state the tool name at the start (e.g., *"Built by Antigravity"*, *"Built by Claude Code"*, or *"Built by Cursor"*).
 
 
+## 02 May 2026 — Cycle 9
+*Built by Claude Code*
+- **Fix remaining NOW() rolling-window staleness — 7 pages (0a78ef3)**: Completed the `mv_txn_monthly_unified` staleness audit started in Cycle 7. `area-momentum` was CRITICAL (returning zero results) — `monthly` CTE filtered `txn_month >= NOW()-3mo` but prev month `latest.m - 1mo` fell outside that window. Fixed by moving `latest` CTE before `monthly` and using `latest.m - 2mo` as lower bound. All other `NOW()` usages replaced with `MAX(txn_month)` anchor across `transaction-pulse` monthly chart, `yield-map` (sales+rent CTEs), `areas/[slug]` (price history + YoY metrics), `communities/[slug]` (YoY metrics), `rental-yield-decay` (3-year window), `liquidity` (24-month chart). All windows now relative to last available data, not calendar time.
+
 ## 02 May 2026 — Cycle 8
 *Built by Claude Code*
 - **Free SEO tool: /tools/rental-yield-calculator (d53a0d4)**: Public no-auth page targeting "Dubai rental yield calculator" keywords. Server component (`revalidate=86400`) fetches live benchmarks — sales PSF from `mv_txn_monthly_unified` (last 12 months, `MAX(txn_month)` anchor), rental rates from `rental_listings` (1,168 active PF listings). Outputs gross yield, net yield after service charge, annual mortgage payment, monthly cashflow, and cash-on-cash return. Interactive client component (`components/tools/rental-yield-calculator.tsx`) with sortable benchmark table (up to 80 area+bedroom combos, filterable by bed type). JSON-LD `WebApplication` + `FAQPage` schema for SEO. Lead CTA at bottom routes to /contact. Added to both northcapitaldxb.com and thecityregistry.com sitemaps.
