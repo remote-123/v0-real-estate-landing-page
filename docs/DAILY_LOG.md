@@ -7,6 +7,13 @@
 > 3. **Mandatory Signature:** Every entry must explicitly state the tool name at the start (e.g., *"Built by Antigravity"*, *"Built by Claude Code"*, or *"Built by Cursor"*).
 
 
+## 02 May 2026 — Cycle 37
+
+*Built by Claude Code*
+
+- **DLD Transfer Fee Calculator** at `/tools/dld-transfer-fee-calculator` — fourth public SEO tool. Full Dubai property acquisition cost breakdown: mandatory 4% DLD transfer fee, flat DLD registration fee (AED 2K <500K / AED 4K ≥500K), configurable agent commission (0–5%, default 2%), optional mortgage registration fee (0.25% of loan) + valuation fee. Cash/Mortgage toggle, real-time useMemo calc, total acquisition cost hero number.
+- Architecture fix: `"use client"` + `export const metadata` conflict resolved — extracted `DldFeeCalculator` to `components/tools/dld-fee-calculator.tsx` (client), page is Server Component with `generateMetadata()` (multi-domain). `WebApplication` + `FAQPage` JSON-LD, 7 DLD FAQ Q&As. Added to sitemap both domain branches. 209 tests still passing.
+
 ## 02 May 2026 — Cycle 36
 
 *Built by Claude Code*
