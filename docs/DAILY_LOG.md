@@ -7,6 +7,10 @@
 > 3. **Mandatory Signature:** Every entry must explicitly state the tool name at the start (e.g., *"Built by Antigravity"*, *"Built by Claude Code"*, or *"Built by Cursor"*).
 
 
+## 02 May 2026 — Cycle 30
+*Built by Claude Code*
+- **Comparable Sales Search /terminal/transaction-search (bdd42ca)**: New terminal tool — search 1.66M+ DLD transactions for comparable sales. API route (`/api/terminal/transaction-search`): parallel COUNT + data SQL with filters (area exact-match, building ILIKE, rooms, reg_type, price range, date range), auth gating (5 rows free / 50 authenticated). Critical: uses `new URL(req.url).searchParams` not `req.nextUrl.searchParams` for test compatibility. Client component: 8-field filter form, paginated table (Date / Area / Building / Beds / Type / Reg / Price / AED/sqft / sqft / Metro), GatedTableOverlay, CSV export (authenticated only). Server page pre-fetches distinct areas from dld_transactions. Data coverage notice (DLD through Feb 2026) with cross-link to Transaction Pulse for fresh data. Cross-links: Floor Plan Pricer, Area Momentum, Building Comparator. 12 new tests (content-dispatch mock for parallel SQL); 85 total passing.
+
 ## 02 May 2026 — Cycle 29
 *Built by Claude Code*
 - **Market Pulse dashboard /terminal/market-pulse (e0017ae)**: Consolidated "week in review" page. 5 parallel SQL queries via `Promise.all`: market KPIs, top 5 bull signals, top 5 bear signals, volume leaders, pipeline risk. KPI grid: Dubai avg PSF + YoY%, 12m deal count, active distress count, data-as-of month. Top bull/bear signal sections free (uses same score formulas as screener pages). Volume leaders + pipeline risk sections gated (CSS opacity blur + `GatedTableOverlay`). Inline `scoreBar()` renders colored progress bars. Cross-links to Market Briefing, Area Momentum, Distress Deals, Building Comparator. Schema.org via `terminalPageMeta()`. Added to sidebar Terminal group + sitemap. 73 tests still passing.

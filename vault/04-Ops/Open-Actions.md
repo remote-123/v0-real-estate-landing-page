@@ -27,6 +27,7 @@
 - [ ] **LinkedIn Sign-In** — needs LinkedIn Developer app
 
 ## P3 — Terminal Features
+- [x] **Comparable Sales Search** `/terminal/transaction-search` — BUILT + gated (Cycle 30 2026-05-02): 8-filter form, 1.66M DLD rows, 5 free / 50 auth, CSV export, 12 tests. Uses `new URL(req.url)` not `req.nextUrl` for test compat.
 - [x] **Market Pulse** `/terminal/market-pulse` — BUILT + gated (Cycle 29 2026-05-02): Consolidated dashboard — KPIs, top 5 bull signals, top 5 bear signals (free), volume leaders + pipeline risk (gated). 5 parallel SQL queries, scoreBar progress bars, cross-links.
 - [x] **Bull Case Screener** `/terminal/bull-cases` — BUILT + gated (Cycle 27 2026-05-02): Bull Score (appreciation + volume + scarcity), cross-linked with bear-cases
 - [x] **Bear Case Screener** `/terminal/bear-cases` — BUILT + gated (Cycle 26 2026-05-02): Bear Score formula, 5-CTE SQL, signal badges, row-gated 5 free rows
