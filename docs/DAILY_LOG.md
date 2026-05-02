@@ -7,6 +7,10 @@
 > 3. **Mandatory Signature:** Every entry must explicitly state the tool name at the start (e.g., *"Built by Antigravity"*, *"Built by Claude Code"*, or *"Built by Cursor"*).
 
 
+## 02 May 2026 — Cycle 14
+*Built by Claude Code*
+- **Building comparator cookie unlock + CityRegistry feature grid (6da930f)**: Building comparator (client component) now reads `terminal_email_unlocked=1` cookie via `useEffect` — users who submitted email on any terminal page bypass the sign-in gate without re-authenticating. CityRegistryLanding feature grid expanded from 5 → 12 cards: added Yield Map, Floor Plan Pricer, Off-Plan Pipeline, Service Charges, Mortgage & Liquidity, Building Comparator, Yield Calculator, Service Charge Estimator.
+
 ## 02 May 2026 — Cycle 13
 *Built by Claude Code*
 - **Sidebar expansion — expose all 9 hidden built pages (34b363e)**: Reorganised terminal sidebar from 3 groups to 4. New "Market Screeners" group: Yield Map, Area Momentum, Floor Plan Pricer, Off-Plan Pipeline, Service Charges, Mortgage & Liquidity. New "Buildings & Developers" group: Building Comparator, Buildings, Developer Track Record. Transaction Pulse added to Terminal group. Tools group now includes: Yield Calculator + Service Charge Estimator (new tools). Removed empty Support group. Total sidebar links: 18 (was 9).
