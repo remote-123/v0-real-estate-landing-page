@@ -7,6 +7,10 @@
 > 3. **Mandatory Signature:** Every entry must explicitly state the tool name at the start (e.g., *"Built by Antigravity"*, *"Built by Claude Code"*, or *"Built by Cursor"*).
 
 
+## 02 May 2026 — Cycle 18
+*Built by Claude Code*
+- **Area Comparison: dynamic area list from DB (d4454f6)**: Created `/api/area-list` endpoint (top 100 DLD areas by 12m sales volume, `revalidate=86400`). `CompareClient` now fetches on mount and replaces the hardcoded 40-item list. Fixes: `Al Barsha South Fourth` (#1 area, 749 sales) and `Madinat Al Mataar` (#2, 582 sales) were missing from the old static list. Also fixed pre-existing Recharts Tooltip TS error.
+
 ## 02 May 2026 — Cycle 17
 *Built by Claude Code*
 - **`market_briefings` table created + initial seed**: Table was referenced in code but never created. Created `market_briefings (id, content, data_snapshot jsonb, week_label, generated_at)` with DESC index on `generated_at`. Seeded first briefing (id=1, May 2 2026) using live Neon data (top 5 areas by volume from `mv_txn_monthly_unified`) + Gemini 2.5 Flash institutional analyst prompt. `/terminal/market-briefing` page now shows real content instead of empty state. Cron wrapper at `/api/cron/generate-market-briefing` already exists — schedule Monday 06:00 UTC on cron-job.org with Bearer CRON_SECRET to automate going forward.
