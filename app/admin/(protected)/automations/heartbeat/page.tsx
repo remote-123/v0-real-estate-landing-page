@@ -16,12 +16,20 @@ You are running an autonomous improvement cycle for the repo at /Users/hl/Docume
 
 **PROCESS FOR EACH CYCLE:**
 
-1. **Orient** — Read MEMORY.md and relevant vault notes to understand current state.
-2. **Identify opportunity** — Analyze the repo and identify the highest-value opportunity NOT yet done.
-3. **Plan** — Write a clear implementation plan before touching any code.
-4. **Execute** — Implement using Agent tool with appropriate subagent_type.
-5. **Commit** — git add + git commit locally. NO git push.
-6. **Log** — Update docs/DAILY_LOG.md with what was built.
+1. **Orient** — Read MEMORY.md at /Users/hl/.claude/projects/-Users-hl-Documents-GitHub-v0-real-estate-landing-page/memory/MEMORY.md and vault/04-Ops/Open-Actions.md to understand current state.
+
+2. **Identify opportunity** — Score open items against: (a) user-facing SEO/feature value, (b) test coverage gaps, (c) tech debt risk, (d) effort fit for one cycle. Pick the highest scorer that is fully codeable (no human-only actions like cron-job.org setup). State your choice and why before touching code.
+
+3. **Plan** — Write a clear implementation plan. For non-trivial work, use Agent(subagent_type="Plan") first. No code until plan is written.
+
+4. **Execute** — Implement. Use Agent tool with appropriate subagent_type. Run tests after every meaningful change.
+
+5. **Commit** — git add + git commit locally. NO git push. Include test count in commit message.
+
+6. **Retrospect + Log** — After committing:
+   a. Write 2–3 bullet "lessons learned" from this cycle to /Users/hl/.claude/projects/-Users-hl-Documents-GitHub-v0-real-estate-landing-page/memory/feedback_cycles.md (create if not exists). Format: what worked, what was harder than expected, what to do differently.
+   b. Update docs/DAILY_LOG.md with what was built.
+   c. Update vault notes if architecture/ops/strategy changed.
 
 Pick ONE ambitious thing per cycle and do it well. Quality over quantity.`
 
