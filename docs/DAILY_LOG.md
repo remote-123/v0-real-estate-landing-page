@@ -7,6 +7,10 @@
 > 3. **Mandatory Signature:** Every entry must explicitly state the tool name at the start (e.g., *"Built by Antigravity"*, *"Built by Claude Code"*, or *"Built by Cursor"*).
 
 
+## 02 May 2026 — Cycle 26
+*Built by Claude Code*
+- **Bear Case Screener /terminal/bear-cases (008a391)**: New terminal page ranking Dubai areas by negative signal density. Bear Score (0–100) = price decline vs prior year (0–40 pts) + off-plan pipeline supply pressure (0–35 pts) + confirmed distress listing density per txn volume (0–25 pts). 5-CTE SQL over `mv_txn_monthly_unified`, `dld_projects`, `distress_listings`. 5 free rows, row-gated with `GatedTableOverlay`. Signal badges (DECLINING PRICE, OVERSUPPLY RISK, DISTRESS ACTIVE), score badge (EXTREME/HIGH/MODERATE/CAUTION), area links to `/terminal/areas/[slug]`. Added to Market Screeners sidebar group + sitemap.
+
 ## 02 May 2026 — Cycle 25
 *Built by Claude Code*
 - **Vitest test infrastructure + 44 tests (4f1dbac)**: First test coverage in the entire codebase. Installed vitest + @vitest/coverage-v8. Configured vitest.config.ts with @ alias + node environment. 5 test files: `lib/area-names.test.ts` (8), `lib/rate-limit.test.ts` (11), `api/unsubscribe.test.ts` (7), `api/email-capture.test.ts` (12), `api/telegram-webhook.test.ts` (6). Key regression guard: test explicitly verifies `handleLeadsCommand` uses `subscribed_at` not `created_at` — would have caught the Cycle 24 bug before deploy. Test exposed that `waitUntil` from `@vercel/functions` needs mocking in tests (added to `vi.mock`). `npm test` runs all 44 in ~770ms.
