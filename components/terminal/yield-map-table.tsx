@@ -34,7 +34,20 @@ function matchesRoomFilter(rooms: string, filter: string): boolean {
   return rooms === filter
 }
 
-function YieldBadge({ pct }: { pct: number }) {
+function YieldBadge({ pct, e3 }: { pct: number; e3?: boolean }) {
+  if (e3) {
+    const color = pct >= 8 ? '#0F2550' : pct >= 6 ? '#B8860B' : '#64748b'
+    const bg = pct >= 8 ? 'rgba(15,37,80,0.07)' : pct >= 6 ? 'rgba(184,134,11,0.08)' : 'rgba(100,116,139,0.06)'
+    const border = pct >= 8 ? 'rgba(15,37,80,0.2)' : pct >= 6 ? 'rgba(184,134,11,0.25)' : 'rgba(100,116,139,0.2)'
+    return (
+      <span
+        className="rounded-sm px-2 py-0.5 text-xs font-mono font-semibold tabular-nums border"
+        style={{ color, background: bg, borderColor: border }}
+      >
+        {pct.toFixed(2)}%
+      </span>
+    )
+  }
   const cls =
     pct >= 8
       ? "bg-emerald-500/15 text-emerald-400 ring-emerald-500/30"
@@ -48,11 +61,13 @@ function YieldBadge({ pct }: { pct: number }) {
   )
 }
 
-function SortIcon({ col, sortKey, sortDir }: { col: SortKey; sortKey: SortKey; sortDir: SortDir }) {
+function SortIcon({ col, sortKey, sortDir, e3 }: { col: SortKey; sortKey: SortKey; sortDir: SortDir; e3?: boolean }) {
   if (col !== sortKey) return <ArrowUpDown className="ml-1 h-3 w-3 opacity-40" />
+  const cls = e3 ? "ml-1 h-3 w-3" : "ml-1 h-3 w-3 text-emerald-500"
+  const style = e3 ? { color: '#0F2550' } : undefined
   return sortDir === "asc"
-    ? <ArrowUp className="ml-1 h-3 w-3 text-emerald-500" />
-    : <ArrowDown className="ml-1 h-3 w-3 text-emerald-500" />
+    ? <ArrowUp className={cls} style={style} />
+    : <ArrowDown className={cls} style={style} />
 }
 
 function formatAed(val: number): string {
@@ -65,9 +80,11 @@ interface Props {
   rows: YieldRow[]
   isAuthenticated?: boolean
   totalRows?: number
+  variant?: 'default' | 'e3'
 }
 
-export function YieldMapTable({ rows, isAuthenticated, totalRows }: Props) {
+export function YieldMapTable({ rows, isAuthenticated, totalRows, variant = 'default' }: Props) {
+  const e3 = variant === 'e3'
   const [roomFilter, setRoomFilter] = useState("All")
   const [minTxns, setMinTxns] = useState(10)
   const [sortKey, setSortKey] = useState<SortKey>("gross_yield_pct")
@@ -106,9 +123,138 @@ export function YieldMapTable({ rows, isAuthenticated, totalRows }: Props) {
   const display = sorted.slice(0, 100)
 
   function thCls(key: SortKey) {
+    if (e3) {
+      return cn(
+        "px-3 py-2.5 text-left text-[10px] font-mono uppercase tracking-wider cursor-pointer select-none whitespace-nowrap transition-colors",
+        sortKey === key ? "text-[#0F2550] font-bold" : "text-[#94a3b8] hover:text-[#0F2550]"
+      )
+    }
     return cn(
       "px-3 py-2.5 text-left text-[10px] font-mono uppercase tracking-wider text-muted-foreground/70 cursor-pointer select-none whitespace-nowrap hover:text-muted-foreground transition-colors",
       sortKey === key && "text-emerald-500"
+    )
+  }
+
+  if (e3) {
+    return (
+      <div className="relative flex flex-col gap-4">
+        {/* E3 Filters */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {ROOM_OPTIONS.map((r) => (
+              <button
+                key={r}
+                onClick={() => setRoomFilter(r)}
+                className="rounded-sm px-3 py-1 text-xs font-medium transition-colors border"
+                style={
+                  roomFilter === r
+                    ? { background: '#0F2550', color: '#FFFFFF', borderColor: '#0F2550' }
+                    : { background: '#FFFFFF', color: '#64748b', borderColor: '#dde6f0' }
+                }
+              >
+                {r}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-2 sm:ml-auto">
+            <span className="text-[10px] font-mono uppercase tracking-wider whitespace-nowrap" style={{ color: '#94a3b8' }}>
+              Min txns
+            </span>
+            <select
+              value={minTxns}
+              onChange={(e) => setMinTxns(Number(e.target.value))}
+              className="rounded-sm border px-2 py-1 text-base sm:text-xs focus:outline-none"
+              style={{ background: '#FFFFFF', borderColor: '#dde6f0', color: '#0F2550' }}
+            >
+              {MIN_TXN_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <p className="text-[10px] font-mono uppercase tracking-wider" style={{ color: '#94a3b8' }}>
+          {display.length} of {filtered.length} combinations shown
+        </p>
+
+        {/* E3 Table */}
+        <div className="rounded-xl overflow-hidden border" style={{ borderColor: '#dde6f0', background: '#FFFFFF' }}>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm border-collapse">
+              <thead>
+                <tr style={{ borderBottom: '1px solid #dde6f0', background: '#F8FAFF' }}>
+                  <th className={cn(thCls("area_name_en"), "sticky left-0 z-10")} style={{ background: '#F8FAFF' }} onClick={() => handleSort("area_name_en")}>
+                    <span className="flex items-center">Community <SortIcon col="area_name_en" sortKey={sortKey} sortDir={sortDir} e3 /></span>
+                  </th>
+                  <th className={thCls("rooms_en")} onClick={() => handleSort("rooms_en")}>
+                    <span className="flex items-center">Bedrooms <SortIcon col="rooms_en" sortKey={sortKey} sortDir={sortDir} e3 /></span>
+                  </th>
+                  <th className={thCls("gross_yield_pct")} onClick={() => handleSort("gross_yield_pct")}>
+                    <span className="flex items-center">Gross Yield <SortIcon col="gross_yield_pct" sortKey={sortKey} sortDir={sortDir} e3 /></span>
+                  </th>
+                  <th className={cn(thCls("avg_sale_price"), "text-right")} onClick={() => handleSort("avg_sale_price")}>
+                    <span className="flex items-center justify-end">Avg Sale Price <SortIcon col="avg_sale_price" sortKey={sortKey} sortDir={sortDir} e3 /></span>
+                  </th>
+                  <th className={cn(thCls("avg_annual_rent"), "text-right")} onClick={() => handleSort("avg_annual_rent")}>
+                    <span className="flex items-center justify-end">Avg Annual Rent <SortIcon col="avg_annual_rent" sortKey={sortKey} sortDir={sortDir} e3 /></span>
+                  </th>
+                  <th className={cn(thCls("sale_txns"), "text-right")} onClick={() => handleSort("sale_txns")}>
+                    <span className="flex items-center justify-end">Sale Txns <SortIcon col="sale_txns" sortKey={sortKey} sortDir={sortDir} e3 /></span>
+                  </th>
+                  <th className={cn(thCls("rent_txns"), "text-right")} onClick={() => handleSort("rent_txns")}>
+                    <span className="flex items-center justify-end">Rent Txns <SortIcon col="rent_txns" sortKey={sortKey} sortDir={sortDir} e3 /></span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {display.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="px-4 py-10 text-center text-sm" style={{ color: '#94a3b8' }}>
+                      No data matches the current filters.
+                    </td>
+                  </tr>
+                ) : (
+                  display.map((r, i) => (
+                    <tr
+                      key={`${r.area_name_en}-${r.rooms_en}`}
+                      style={{
+                        borderTop: '1px solid #f1f5f9',
+                        background: i % 2 === 0 ? '#FFFFFF' : '#F8FAFF',
+                      }}
+                    >
+                      <td className="px-3 py-2.5 sticky left-0 z-10 font-medium whitespace-nowrap" style={{ color: '#0F2550', background: i % 2 === 0 ? '#FFFFFF' : '#F8FAFF' }}>
+                        {formatAreaName(r.area_name_en)}
+                      </td>
+                      <td className="px-3 py-2.5 whitespace-nowrap text-xs" style={{ color: '#94a3b8' }}>
+                        {r.rooms_en}
+                      </td>
+                      <td className="px-3 py-2.5">
+                        <YieldBadge pct={r.gross_yield_pct} e3 />
+                      </td>
+                      <td className="px-3 py-2.5 text-right font-mono text-xs tabular-nums" style={{ color: '#475569' }}>
+                        AED {formatAed(r.avg_sale_price)}
+                      </td>
+                      <td className="px-3 py-2.5 text-right font-mono text-xs tabular-nums" style={{ color: '#475569' }}>
+                        AED {formatAed(r.avg_annual_rent)}
+                      </td>
+                      <td className="px-3 py-2.5 text-right font-mono text-xs tabular-nums" style={{ color: '#94a3b8' }}>
+                        {r.sale_txns.toLocaleString()}
+                      </td>
+                      <td className="px-3 py-2.5 text-right font-mono text-xs tabular-nums" style={{ color: '#94a3b8' }}>
+                        {r.rent_txns.toLocaleString()}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {!isAuthenticated && totalRows !== undefined && (
+          <GatedTableOverlay freeRows={rows.length} totalRows={totalRows} />
+        )}
+      </div>
     )
   }
 
