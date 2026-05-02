@@ -470,8 +470,175 @@ export default function DesignPreviewPage() {
         </div>
       </section>
 
-      <div className="rounded-lg border border-border/40 bg-muted/20 p-4 text-xs text-muted-foreground">
-        Pick one City Registry concept (C1–C5) and one North Capital concept (A or B) — I'll implement across all pages.
+      {/* ── CITY REGISTRY — VC-OPTIMISED DIRECTIONS ────────────────────── */}
+      <section className="space-y-4">
+        <h2 className="text-xs font-mono uppercase tracking-widest text-muted-foreground border-b border-border/40 pb-2">
+          The City Registry — 3 VC-Optimised Directions (Dune Analytics · Palantir · Refinitiv)
+        </h2>
+        <p className="text-[11px] text-muted-foreground">
+          Best for acquisition positioning: signal "data moat + institutional infrastructure" in 3 seconds.
+        </p>
+
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+
+          {/* D1 — Dune Analytics */}
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-foreground">D1 · Dune Analytics</p>
+            <p className="text-[11px] text-muted-foreground">On-chain data aesthetic applied to real estate. Dark background, orange/amber signal, dot-matrix grid. Attracts crypto-PropTech acquirers + DeFi-adjacent VC.</p>
+            <div className="rounded-xl overflow-hidden border shadow-lg" style={{ background: '#13111C', borderColor: '#2a2540' }}>
+              {/* Header */}
+              <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: '#2a2540', background: '#1A1726' }}>
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-4 rounded-sm" style={{ background: '#E36B00' }} />
+                  <span className="text-sm font-bold" style={{ color: '#F1EDE8' }}>City Registry</span>
+                </div>
+                <div className="flex gap-3 text-[11px]" style={{ color: '#4a4265' }}>
+                  <span style={{ color: '#E36B00' }}>Explore</span><span>Charts</span><span>Queries</span>
+                </div>
+              </div>
+              {/* Dot grid bg + content */}
+              <div className="p-4 space-y-3" style={{
+                backgroundImage: 'radial-gradient(circle, #2a2540 1px, transparent 1px)',
+                backgroundSize: '20px 20px',
+              }}>
+                <div className="grid grid-cols-3 gap-2">
+                  {[['TRANSACTIONS', '1.66M', '#E36B00'], ['AVG PSF', '1,247', '#F1EDE8'], ['YIELD', '7.4%', '#4FC47A']].map(([l, v, c]) => (
+                    <div key={l} className="rounded-lg border p-2.5 backdrop-blur-sm" style={{ borderColor: '#2a2540', background: 'rgba(26,23,38,0.85)' }}>
+                      <p className="text-[9px] mb-1 font-mono uppercase tracking-wide" style={{ color: '#4a4265' }}>{l}</p>
+                      <p className="text-base font-bold font-mono" style={{ color: c as string }}>{v}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="rounded-lg border p-3 backdrop-blur-sm" style={{ borderColor: '#2a2540', background: 'rgba(26,23,38,0.85)' }}>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[10px] font-semibold" style={{ color: '#E36B00' }}>Momentum by Area</span>
+                    <span className="text-[9px] font-mono" style={{ color: '#4a4265' }}>Q1 2026</span>
+                  </div>
+                  {[['JVC', 92, '#E36B00'], ['Dubai Marina', 78, '#F0B429'], ['Downtown', 51, '#4FC47A']].map(([a, s, c]) => (
+                    <div key={a} className="flex items-center gap-3 py-0.5">
+                      <span className="text-[10px] w-24" style={{ color: '#8a84a0' }}>{a}</span>
+                      <div className="flex-1 h-1 rounded-full" style={{ background: '#2a2540' }}>
+                        <div className="h-1 rounded-full" style={{ background: c as string, width: `${s}%` }} />
+                      </div>
+                      <span className="text-[9px] font-mono" style={{ color: c as string }}>{s}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-1.5 text-[10px]">
+              {['#13111C bg', '#E36B00 orange', 'Dot-matrix grid', 'Mono font', 'Crypto-data signal'].map(t => (
+                <span key={t} className="rounded border border-border/40 px-2 py-0.5 text-muted-foreground">{t}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* D2 — Palantir / Intelligence */}
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-foreground">D2 · Intelligence Layer</p>
+            <p className="text-[11px] text-muted-foreground">Palantir / Anduril aesthetic. Government-grade data infrastructure feel. Matte black + electric blue. Signals "serious proprietary data" to strategic acquirers.</p>
+            <div className="rounded-xl overflow-hidden border shadow-lg" style={{ background: '#080C10', borderColor: '#0f1f2e' }}>
+              {/* Header */}
+              <div className="flex items-center gap-3 px-4 py-3 border-b" style={{ borderColor: '#0f1f2e', background: '#0D141C' }}>
+                <div className="flex items-center gap-1.5">
+                  <div className="h-1.5 w-1.5 rounded-full" style={{ background: '#00D4FF' }} />
+                  <div className="h-1.5 w-1.5 rounded-full" style={{ background: '#00D4FF', opacity: 0.5 }} />
+                  <div className="h-1.5 w-1.5 rounded-full" style={{ background: '#00D4FF', opacity: 0.25 }} />
+                </div>
+                <span className="font-mono text-[11px] font-bold tracking-[0.2em] uppercase" style={{ color: '#00D4FF' }}>City Registry</span>
+                <span className="ml-auto font-mono text-[9px]" style={{ color: '#1a4060' }}>SECURE · VERIFIED · DLD-INDEXED</span>
+              </div>
+              {/* Content */}
+              <div className="p-4 space-y-3">
+                <div className="rounded border p-3 font-mono text-[10px]" style={{ borderColor: '#0f1f2e', background: '#0D141C' }}>
+                  <div className="flex justify-between mb-2">
+                    <span style={{ color: '#00D4FF' }}>SYSTEM STATUS</span>
+                    <span style={{ color: '#1e5a30' }}>■ NOMINAL</span>
+                  </div>
+                  <div className="space-y-1" style={{ color: '#1a4060' }}>
+                    {['DLD TRANSACTION INDEX........LIVE', 'DISTRESS SIGNAL ENGINE.......LIVE', 'YIELD COMPUTATION LAYER......LIVE', 'BAYUT INGESTION CRON.........WARN'].map(l => (
+                      <div key={l} className="flex justify-between">
+                        <span>{l.split('.')[0]}</span>
+                        <span style={{ color: l.includes('WARN') ? '#f59e0b' : '#00D4FF' }}>{l.split('.').pop()}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {[['DATA POINTS', '3.2M+', '#00D4FF'], ['COVERAGE', '301 AREAS', '#00D4FF'], ['LATENCY', '<2s', '#4FC47A']].map(([l, v, c]) => (
+                    <div key={l} className="rounded border p-2 text-center" style={{ borderColor: '#0f1f2e', background: '#0D141C' }}>
+                      <p className="font-mono text-[8px] mb-1" style={{ color: '#1a4060' }}>{l}</p>
+                      <p className="font-mono text-sm font-bold" style={{ color: c as string }}>{v}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-1.5 text-[10px]">
+              {['#080C10 matte black', '#00D4FF electric blue', 'System status UI', 'Mono font', 'Infrastructure signal'].map(t => (
+                <span key={t} className="rounded border border-border/40 px-2 py-0.5 text-muted-foreground">{t}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* D3 — Refinitiv / Reuters Eikon */}
+          <div className="space-y-2 xl:col-span-2 xl:max-w-lg">
+            <p className="text-xs font-semibold text-foreground">D3 · Refinitiv / Eikon</p>
+            <p className="text-[11px] text-muted-foreground">Reuters Eikon / Refinitiv Workspace aesthetic. Charcoal dark, sharp white type, teal highlights. Maximum acquirer legibility — looks like infrastructure a fund already uses.</p>
+            <div className="rounded-xl overflow-hidden border shadow-lg" style={{ background: '#1C1C1E', borderColor: '#2c2c2e' }}>
+              {/* Header bar */}
+              <div className="flex items-center justify-between px-4 py-2.5 border-b" style={{ borderColor: '#2c2c2e', background: '#252527' }}>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-bold tracking-wider uppercase" style={{ color: '#FFFFFF' }}>City Registry</span>
+                  <div className="h-3 w-px" style={{ background: '#3c3c3e' }} />
+                  <span className="text-[10px] font-mono" style={{ color: '#00BFA5' }}>UAE Real Estate Intelligence</span>
+                </div>
+                <div className="flex items-center gap-3 text-[10px] font-mono" style={{ color: '#666668' }}>
+                  <span>Markets</span><span>Screener</span><span>Alerts</span>
+                  <div className="rounded px-2 py-0.5 text-[9px]" style={{ background: '#00BFA5', color: '#000' }}>PRO</div>
+                </div>
+              </div>
+              {/* Content */}
+              <div className="p-4 space-y-3">
+                <div className="grid grid-cols-4 gap-2">
+                  {[['DXB DEALS', '4,284', '+12.3%', true], ['AVG PSF', '1,247', '+4.1%', true], ['DISTRESS IDX', '4.2', '+0.3', true], ['ACTIVE ALERTS', '12', '', null]].map(([l, v, d, up]) => (
+                    <div key={l} className="rounded border p-2" style={{ borderColor: '#2c2c2e', background: '#252527' }}>
+                      <p className="text-[9px] font-mono mb-1 uppercase" style={{ color: '#555558' }}>{l}</p>
+                      <p className="text-base font-bold font-mono" style={{ color: '#FFFFFF' }}>{v}</p>
+                      {d && <p className="text-[9px] font-mono" style={{ color: up ? '#00BFA5' : '#FF453A' }}>{d}</p>}
+                    </div>
+                  ))}
+                </div>
+                <div className="rounded border p-3" style={{ borderColor: '#2c2c2e', background: '#252527' }}>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[10px] font-mono font-semibold" style={{ color: '#FFFFFF' }}>TOP AREAS — MAY 2026</span>
+                    <span className="text-[9px] font-mono" style={{ color: '#00BFA5' }}>↻ LIVE</span>
+                  </div>
+                  <div className="space-y-1">
+                    {[['DUBAI MARINA', '1,890', '6.9%', true], ['JVC', '980', '8.2%', true], ['BUSINESS BAY', '1,420', '7.1%', false]].map(([a, p, y, up]) => (
+                      <div key={a} className="flex justify-between font-mono text-[10px] py-0.5 border-t" style={{ borderColor: '#2c2c2e' }}>
+                        <span style={{ color: '#aeaeb2' }}>{a}</span>
+                        <span style={{ color: '#FFFFFF' }}>AED {p}/sqft</span>
+                        <span style={{ color: up ? '#00BFA5' : '#FF453A' }}>{y} yield</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-1.5 text-[10px]">
+              {['#1C1C1E charcoal', '#00BFA5 teal', '#FFFFFF white type', 'Mono throughout', 'PRO badge', 'Eikon-legible'].map(t => (
+                <span key={t} className="rounded border border-border/40 px-2 py-0.5 text-muted-foreground">{t}</span>
+              ))}
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <div className="rounded-lg border border-border/40 bg-muted/20 p-4 text-xs text-muted-foreground space-y-1">
+        <p className="font-semibold text-foreground text-[11px]">VC/acquisition picks: C2 Capital Navy or C1 Registry Dark (institutional signal) · D2 Intelligence Layer (Palantir feel) · D3 Refinitiv (most acquirer-legible)</p>
+        <p>Pick one City Registry concept (C1–C5, D1–D3) and one North Capital concept (A or B) — I'll implement across all pages.</p>
       </div>
     </div>
   )
