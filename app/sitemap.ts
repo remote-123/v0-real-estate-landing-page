@@ -35,6 +35,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       '/terminal/roi-engine',
       '/terminal/mortgage-calculator',
       '/terminal/rental-yield',
+      '/tools/rental-yield-calculator',
     ].map((route) => ({
       url: `${baseUrl}${route}`,
       lastModified: new Date(),
@@ -126,6 +127,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const staticRoutes = [
     '', '/projects', '/blog', '/about', '/contact', '/calculator', '/areas',
+    '/tools/rental-yield-calculator',
     ...terminalStaticRoutes,
   ].map((route) => ({
     url: `${baseUrl}${route}`,
