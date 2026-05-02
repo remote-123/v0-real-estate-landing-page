@@ -1,8 +1,11 @@
 import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { sql } from '@/lib/db'
 import { BuildingsTable } from '@/components/terminal/buildings-table'
+import { auth } from "@/auth"
+import { GatedTableOverlay } from "@/components/auth/gated-table-overlay"
+import { isTerminalUnlocked } from "@/lib/terminal-gate"
 
-export const revalidate = 3600
+export const dynamic = "force-dynamic"
 
 export async function generateMetadata() {
   return terminalPageMeta({
@@ -60,8 +63,12 @@ async function fetchBuildings(): Promise<BuildingRow[]> {
   }
 }
 
+const FREE_ROWS = 5
+
 export default async function BuildingsPage() {
-  const allData = await fetchBuildings()
+  const [session, allData] = await Promise.all([auth(), fetchBuildings()])
+  const isAuthenticated = await isTerminalUnlocked(session)
+  const display = isAuthenticated ? allData : allData.slice(0, FREE_ROWS)
 
   const withCoords = allData.filter(r => r.osm_lat != null && r.osm_lng != null).length
   const offPlan = allData.filter(r =>
@@ -124,8 +131,16 @@ export default async function BuildingsPage() {
       </p>
 
       {/* Table */}
-      <section>
-        <BuildingsTable data={allData} />
+      <section className="relative">
+        <BuildingsTable data={display} />
+        {!isAuthenticated && allData.length > FREE_ROWS && (
+          <GatedTableOverlay
+            freeRows={display.length}
+            totalRows={allData.length}
+            noun="buildings"
+            callbackUrl="/terminal/buildings"
+          />
+        )}
       </section>
 
     </div>

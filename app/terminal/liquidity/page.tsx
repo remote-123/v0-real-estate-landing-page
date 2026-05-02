@@ -5,8 +5,11 @@ import { StatCard } from "@/components/terminal/stat-card"
 import { LiquidityChart, type LiquidityPoint } from "@/components/terminal/liquidity-chart"
 import { formatAreaName } from "@/lib/area-names"
 import { cn } from "@/lib/utils"
+import { auth } from "@/auth"
+import { GatedTableOverlay } from "@/components/auth/gated-table-overlay"
+import { isTerminalUnlocked } from "@/lib/terminal-gate"
 
-export const revalidate = 3600
+export const dynamic = "force-dynamic"
 
 export async function generateMetadata() {
   return terminalPageMeta({
@@ -110,8 +113,12 @@ function riskLabel(ratio: number): { label: string; color: string } {
   return { label: "Low", color: "text-accent" }
 }
 
+const FREE_ROWS = 5
+
 export default async function LiquidityPage() {
-  const { monthly, areas } = await fetchData()
+  const [session, { monthly, areas }] = await Promise.all([auth(), fetchData()])
+  const isAuthenticated = await isTerminalUnlocked(session)
+  const displayAreas = isAuthenticated ? areas : areas.slice(0, FREE_ROWS)
   const pivoted = pivotMonthly(monthly)
   const kpis = deriveKpis(pivoted)
   const momSign = kpis.mom !== null ? (kpis.mom >= 0 ? "+" : "") : ""
@@ -173,13 +180,23 @@ export default async function LiquidityPage() {
         />
       </div>
 
-      {/* Chart */}
-      <div className="px-4 sm:px-0">
-        <LiquidityChart data={pivoted} />
+      {/* Chart — blurred for unauthenticated */}
+      <div className="relative px-4 sm:px-0">
+        <div className={!isAuthenticated ? "blur-sm pointer-events-none select-none" : ""}>
+          <LiquidityChart data={pivoted} />
+        </div>
+        {!isAuthenticated && (
+          <GatedTableOverlay
+            freeRows={0}
+            totalRows={pivoted.length}
+            noun="months of mortgage data"
+            callbackUrl="/terminal/liquidity"
+          />
+        )}
       </div>
 
       {/* Area table */}
-      <div className="px-4 sm:px-0 rounded-md border border-border/40 bg-card/40 overflow-hidden">
+      <div className="relative px-4 sm:px-0 rounded-md border border-border/40 bg-card/40 overflow-hidden">
         <div className="p-4 border-b border-border/40">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
             Top Mortgage Markets — Latest Month
@@ -198,7 +215,7 @@ export default async function LiquidityPage() {
               </tr>
             </thead>
             <tbody>
-              {areas.map((row) => {
+              {displayAreas.map((row) => {
                 const mort = Number(row.mortgage_deals)
                 const sales = Number(row.sales_deals)
                 const ratio = sales > 0 ? Math.round((mort / sales) * 100) : 0
@@ -251,6 +268,14 @@ export default async function LiquidityPage() {
             </tbody>
           </table>
         </div>
+        {!isAuthenticated && areas.length > FREE_ROWS && (
+          <GatedTableOverlay
+            freeRows={displayAreas.length}
+            totalRows={areas.length}
+            noun="mortgage markets"
+            callbackUrl="/terminal/liquidity"
+          />
+        )}
       </div>
 
       <p className="px-4 sm:px-0 text-[10px] text-muted-foreground/50 uppercase tracking-wider">
