@@ -125,7 +125,7 @@ async function getDldAvgPsf(
         AND property_sub_type_en = ${typeFilter}
         AND rooms_en = ${bedsNum}
         AND meter_sale_price BETWEEN 500 AND 150000
-        AND instance_date >= NOW() - INTERVAL '12 months'
+        AND instance_date >= (SELECT MAX(instance_date) FROM dld_transactions) - INTERVAL '12 months'
       HAVING COUNT(*) >= 5
     `
     if (!rows[0]) return null

@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
           AND meter_sale_price > 200
           AND meter_sale_price < 15000
           AND rooms_en = ${beds}
-          AND instance_date >= NOW() - INTERVAL '3 years'
+          AND instance_date >= (SELECT MAX(instance_date) FROM dld_transactions) - INTERVAL '3 years'
         GROUP BY building_name_en, DATE_TRUNC('quarter', instance_date)
         ORDER BY building_name_en, qtr
       `
@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
           AND trans_group_en = 'Sales'
           AND meter_sale_price > 200
           AND meter_sale_price < 15000
-          AND instance_date >= NOW() - INTERVAL '3 years'
+          AND instance_date >= (SELECT MAX(instance_date) FROM dld_transactions) - INTERVAL '3 years'
         GROUP BY building_name_en, DATE_TRUNC('quarter', instance_date)
         ORDER BY building_name_en, qtr
       `

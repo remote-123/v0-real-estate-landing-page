@@ -140,7 +140,7 @@ export async function GET(req: Request) {
           AND building_name_en ILIKE ${`%${buildingCandidate}%`}
           AND property_sub_type_en = ANY(${typeFilter})
           AND meter_sale_price BETWEEN 500 AND 150000
-          AND instance_date >= NOW() - INTERVAL '36 months'
+          AND instance_date >= (SELECT MAX(instance_date) FROM dld_transactions) - INTERVAL '36 months'
         GROUP BY DATE_TRUNC('month', instance_date)
         ORDER BY DATE_TRUNC('month', instance_date)
       `
@@ -167,7 +167,7 @@ export async function GET(req: Request) {
           AND area_name_en ILIKE ${`%${token}%`}
           AND property_sub_type_en = ANY(${typeFilter})
           AND meter_sale_price BETWEEN 500 AND 150000
-          AND instance_date >= NOW() - INTERVAL '18 months'
+          AND instance_date >= (SELECT MAX(instance_date) FROM dld_transactions) - INTERVAL '18 months'
         GROUP BY DATE_TRUNC('month', instance_date)
         ORDER BY DATE_TRUNC('month', instance_date)
       `
