@@ -4,8 +4,11 @@ import { sql } from "@/lib/db"
 import { StatCard } from "@/components/terminal/stat-card"
 import { TransactionPulseChart, type MonthlyRow } from "@/components/terminal/transaction-pulse-chart"
 import { TransactionHeatmap } from "@/components/terminal/transaction-heatmap"
+import { auth } from "@/auth"
+import { GatedTableOverlay } from "@/components/auth/gated-table-overlay"
+import { isTerminalUnlocked } from "@/lib/terminal-gate"
 
-export const revalidate = 3600
+export const dynamic = "force-dynamic"
 
 export async function generateMetadata() {
   return terminalPageMeta({
@@ -89,7 +92,8 @@ function fmtPct(v: number | null): { label: string; dir: "up" | "down" | "neutra
 }
 
 export default async function TransactionPulsePage() {
-  const { monthly, daily } = await fetchData()
+  const [session, { monthly, daily }] = await Promise.all([auth(), fetchData()])
+  const isAuthenticated = await isTerminalUnlocked(session)
   const stats = deriveStats(monthly)
   const mom = fmtPct(stats.mom)
   const yoy = fmtPct(stats.yoy)
@@ -146,15 +150,27 @@ export default async function TransactionPulsePage() {
         />
       </div>
 
-      {/* Charts */}
-      <div className="px-4 sm:px-0">
-        <TransactionPulseChart data={monthly} />
+      {/* Charts — blurred for unauthenticated, overlay prompts email unlock */}
+      <div className="relative px-4 sm:px-0">
+        <div className={!isAuthenticated ? "blur-sm pointer-events-none select-none" : ""}>
+          <TransactionPulseChart data={monthly} />
+        </div>
+        {!isAuthenticated && (
+          <GatedTableOverlay
+            freeRows={0}
+            totalRows={monthly.length}
+            noun="months of transaction history"
+            callbackUrl="/terminal/transaction-pulse"
+          />
+        )}
       </div>
 
-      {/* Daily heatmap */}
-      <div className="px-4 sm:px-0">
-        <TransactionHeatmap rows={daily} year={currentYear} />
-      </div>
+      {/* Daily heatmap — only for authenticated */}
+      {isAuthenticated && (
+        <div className="px-4 sm:px-0">
+          <TransactionHeatmap rows={daily} year={currentYear} />
+        </div>
+      )}
 
       {/* Source note */}
       <p className="px-4 sm:px-0 text-[10px] text-muted-foreground/50 uppercase tracking-wider">

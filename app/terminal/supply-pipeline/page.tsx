@@ -3,8 +3,11 @@ import { sql } from "@/lib/db"
 import { Building2, CalendarClock, Layers, MapPin } from "lucide-react"
 import { StatCard } from "@/components/terminal/stat-card"
 import { SupplyPipelineTable } from "@/components/terminal/supply-pipeline-table"
+import { auth } from "@/auth"
+import { GatedTableOverlay } from "@/components/auth/gated-table-overlay"
+import { isTerminalUnlocked } from "@/lib/terminal-gate"
 
-export const revalidate = 3600
+export const dynamic = "force-dynamic"
 
 export async function generateMetadata() {
   return terminalPageMeta({
@@ -77,9 +80,13 @@ function computeStats(projects: Project[]) {
   return { totalUnits, due12m, topArea }
 }
 
+const FREE_ROWS = 5
+
 export default async function SupplyPipelinePage() {
-  const { active, completedCount } = await fetchProjects()
+  const [session, { active, completedCount }] = await Promise.all([auth(), fetchProjects()])
+  const isAuthenticated = await isTerminalUnlocked(session)
   const { totalUnits, due12m, topArea } = computeStats(active)
+  const display = isAuthenticated ? active : active.slice(0, FREE_ROWS)
 
   const formatUnits = (n: number) =>
     n >= 1000 ? `${(n / 1000).toFixed(1)}K` : n.toLocaleString()
@@ -129,7 +136,17 @@ export default async function SupplyPipelinePage() {
       </div>
 
       {/* Table */}
-      <SupplyPipelineTable projects={active} />
+      <div className="relative">
+        <SupplyPipelineTable projects={display} />
+        {!isAuthenticated && active.length > FREE_ROWS && (
+          <GatedTableOverlay
+            freeRows={display.length}
+            totalRows={active.length}
+            noun="projects"
+            callbackUrl="/terminal/supply-pipeline"
+          />
+        )}
+      </div>
 
       {/* Source note */}
       <p className="text-[10px] text-muted-foreground/50 pb-2">

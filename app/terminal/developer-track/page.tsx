@@ -3,8 +3,11 @@ import { sql } from "@/lib/db"
 import { Building2, TrendingUp, BarChart3 } from "lucide-react"
 import { StatCard } from "@/components/terminal/stat-card"
 import { formatAreaName } from "@/lib/area-names"
+import { auth } from "@/auth"
+import { GatedTableOverlay } from "@/components/auth/gated-table-overlay"
+import { isTerminalUnlocked } from "@/lib/terminal-gate"
 
-export const revalidate = 3600
+export const dynamic = "force-dynamic"
 
 export async function generateMetadata() {
   return terminalPageMeta({
@@ -72,9 +75,13 @@ function pipelineBar(pipeline: number, total: number): string {
   return `${Math.round((pipeline / total) * 100)}%`
 }
 
+const FREE_ROWS = 5
+
 export default async function DeveloperTrackPage() {
-  const { developers, totalDevelopers, topDeveloper, avgProjectUnits } =
-    await fetchDeveloperData()
+  const [session, { developers, totalDevelopers, topDeveloper, avgProjectUnits }] =
+    await Promise.all([auth(), fetchDeveloperData()])
+  const isAuthenticated = await isTerminalUnlocked(session)
+  const display = isAuthenticated ? developers : developers.slice(0, FREE_ROWS)
 
   const topDevUnits = developers[0]?.total_units ?? 0
 
@@ -134,7 +141,8 @@ export default async function DeveloperTrackPage() {
             <p className="text-muted-foreground text-sm">No developer data available.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-xl border border-border/40">
+          <div className="relative">
+            <div className="overflow-x-auto rounded-xl border border-border/40">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border/40 bg-muted/20">
@@ -148,7 +156,7 @@ export default async function DeveloperTrackPage() {
                 </tr>
               </thead>
               <tbody>
-                {developers.map((dev, i) => {
+                {display.map((dev, i) => {
                   const pipelinePct = pipelineBar(
                     Number(dev.pipeline_units),
                     Number(dev.total_units)
@@ -204,6 +212,15 @@ export default async function DeveloperTrackPage() {
                 })}
               </tbody>
             </table>
+          </div>
+            {!isAuthenticated && developers.length > FREE_ROWS && (
+              <GatedTableOverlay
+                freeRows={display.length}
+                totalRows={developers.length}
+                noun="developers"
+                callbackUrl="/terminal/developer-track"
+              />
+            )}
           </div>
         )}
       </section>
