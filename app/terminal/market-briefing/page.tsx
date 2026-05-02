@@ -65,7 +65,7 @@ export default async function MarketBriefingPage() {
         <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Intelligence</p>
         <h1 className="font-serif text-3xl font-bold tracking-tight">Weekly Market Briefing</h1>
         <p className="text-muted-foreground">
-          AI-generated institutional analysis from live DLD transaction data. Published every Monday 06:00 UTC.
+          AI-generated institutional analysis from live DLD and Bayut transaction data. Published every Monday 06:00 UTC.
         </p>
       </div>
 
@@ -141,7 +141,7 @@ export default async function MarketBriefingPage() {
           <div>
             <h2 className="text-lg font-semibold text-foreground mb-2">Briefing Generates Monday 06:00 UTC</h2>
             <p className="text-sm text-muted-foreground max-w-md">
-              The weekly market briefing is generated automatically every Monday morning from live DLD transaction data. Check back after the next scheduled run.
+              The weekly market briefing is generated automatically every Monday morning from live DLD and Bayut transaction data. Check back after the next scheduled run.
             </p>
           </div>
           <div className="mt-2 rounded-lg border border-border/40 bg-secondary/30 px-4 py-3 text-xs text-muted-foreground">

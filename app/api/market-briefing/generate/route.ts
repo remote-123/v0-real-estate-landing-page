@@ -45,6 +45,10 @@ interface AreaVolume {
   txn_count: number
   avg_psf: number
   prev_avg_psf: number | null
+  avg_psf_yoy: number | null
+  txn_count_yoy: number | null
+  total_market_txns: number
+  data_month: string
 }
 
 interface DistressSummary {
@@ -56,38 +60,81 @@ interface DistressSummary {
 
 async function fetchTopAreasByVolume(): Promise<AreaVolume[]> {
   const rows = await sql`
-    WITH current_month AS (
+    WITH latest AS (
+      SELECT MAX(txn_month) AS max_month
+      FROM mv_txn_monthly_unified
+      WHERE trans_group_en = 'Sales' AND property_type_en = 'Unit'
+    ),
+    current_month AS (
       SELECT
-        area_name_en AS area,
-        COUNT(*)::int AS txn_count,
-        ROUND(AVG(meter_sale_price / 10.764)::numeric, 0) AS avg_psf
-      FROM dld_transactions
-      WHERE
-        instance_date >= NOW() - INTERVAL '30 days'
+        area_name_en                                                              AS area,
+        SUM(txn_count)::int                                                       AS txn_count,
+        ROUND(
+          (SUM(txn_count * avg_price_sqm) / NULLIF(SUM(txn_count), 0) / 10.764)::numeric,
+          0
+        )                                                                         AS avg_psf
+      FROM mv_txn_monthly_unified
+      CROSS JOIN latest
+      WHERE txn_month = latest.max_month
         AND trans_group_en = 'Sales'
-        AND meter_sale_price BETWEEN 500 AND 150000
+        AND property_type_en = 'Unit'
+        AND area_name_en IS NOT NULL
       GROUP BY area_name_en
+      HAVING SUM(txn_count) >= 5
     ),
     prev_month AS (
       SELECT
-        area_name_en AS area,
-        ROUND(AVG(meter_sale_price / 10.764)::numeric, 0) AS avg_psf
-      FROM dld_transactions
-      WHERE
-        instance_date >= NOW() - INTERVAL '60 days'
-        AND instance_date < NOW() - INTERVAL '30 days'
+        area_name_en                                                              AS area,
+        ROUND(
+          (SUM(txn_count * avg_price_sqm) / NULLIF(SUM(txn_count), 0) / 10.764)::numeric,
+          0
+        )                                                                         AS avg_psf
+      FROM mv_txn_monthly_unified
+      CROSS JOIN latest
+      WHERE txn_month = latest.max_month - INTERVAL '1 month'
         AND trans_group_en = 'Sales'
-        AND meter_sale_price BETWEEN 500 AND 150000
+        AND property_type_en = 'Unit'
+        AND area_name_en IS NOT NULL
       GROUP BY area_name_en
+    ),
+    yoy_month AS (
+      SELECT
+        area_name_en                                                              AS area,
+        SUM(txn_count)::int                                                       AS txn_count_yoy,
+        ROUND(
+          (SUM(txn_count * avg_price_sqm) / NULLIF(SUM(txn_count), 0) / 10.764)::numeric,
+          0
+        )                                                                         AS avg_psf_yoy
+      FROM mv_txn_monthly_unified
+      CROSS JOIN latest
+      WHERE txn_month = latest.max_month - INTERVAL '1 year'
+        AND trans_group_en = 'Sales'
+        AND property_type_en = 'Unit'
+        AND area_name_en IS NOT NULL
+      GROUP BY area_name_en
+    ),
+    market_total AS (
+      SELECT SUM(txn_count)::int AS total_market_txns
+      FROM mv_txn_monthly_unified
+      CROSS JOIN latest
+      WHERE txn_month = latest.max_month
+        AND trans_group_en = 'Sales'
+        AND property_type_en = 'Unit'
     )
     SELECT
       c.area,
       c.txn_count,
       c.avg_psf,
-      p.avg_psf AS prev_avg_psf
+      p.avg_psf                   AS prev_avg_psf,
+      y.txn_count_yoy,
+      y.avg_psf_yoy,
+      mt.total_market_txns,
+      latest.max_month::text      AS data_month
     FROM current_month c
-    LEFT JOIN prev_month p ON p.area = c.area
-    WHERE c.txn_count >= 5
+    CROSS JOIN latest
+    CROSS JOIN market_total mt
+    LEFT JOIN prev_month p  ON p.area = c.area
+    LEFT JOIN yoy_month  y  ON y.area = c.area
     ORDER BY c.txn_count DESC
     LIMIT 5
   `
@@ -95,7 +142,11 @@ async function fetchTopAreasByVolume(): Promise<AreaVolume[]> {
     area: String(r.area),
     txn_count: Number(r.txn_count),
     avg_psf: Number(r.avg_psf),
-    prev_avg_psf: r.prev_avg_psf !== null ? Number(r.prev_avg_psf) : null,
+    prev_avg_psf: r.prev_avg_psf != null ? Number(r.prev_avg_psf) : null,
+    avg_psf_yoy: r.avg_psf_yoy != null ? Number(r.avg_psf_yoy) : null,
+    txn_count_yoy: r.txn_count_yoy != null ? Number(r.txn_count_yoy) : null,
+    total_market_txns: Number(r.total_market_txns ?? 0),
+    data_month: String(r.data_month ?? ''),
   }))
 }
 
@@ -138,13 +189,25 @@ async function generateBriefing(
 
   const areasBlock = areas
     .map((a) => {
-      const trend =
+      const mom =
         a.prev_avg_psf && a.prev_avg_psf > 0
           ? `${(((a.avg_psf - a.prev_avg_psf) / a.prev_avg_psf) * 100).toFixed(1)}% MoM`
-          : 'no prior period'
-      return `${a.area}: ${a.txn_count} sales | AED ${a.avg_psf.toLocaleString('en-US')}/sqft | ${trend}`
+          : 'no prior month'
+      const yoy =
+        a.avg_psf_yoy && a.avg_psf_yoy > 0
+          ? `${(((a.avg_psf - a.avg_psf_yoy) / a.avg_psf_yoy) * 100).toFixed(1)}% YoY`
+          : 'no prior year'
+      const volYoy =
+        a.txn_count_yoy && a.txn_count_yoy > 0
+          ? ` | vol ${(((a.txn_count - a.txn_count_yoy) / a.txn_count_yoy) * 100).toFixed(1)}% YoY`
+          : ''
+      return `${a.area}: ${a.txn_count} sales | AED ${a.avg_psf.toLocaleString('en-US')}/sqft | ${mom} | ${yoy}${volYoy}`
     })
     .join('\n')
+
+  const marketLine = areas[0]?.total_market_txns
+    ? `Total Dubai market (${areas[0].data_month}): ${areas[0].total_market_txns.toLocaleString('en-US')} sales\n\n`
+    : ''
 
   const distressBlock = [
     `Active distress listings: ${distress.total_active}`,
@@ -159,8 +222,8 @@ Use ONLY the data provided below. Be direct, data-led, and slightly contrarian. 
 
 === RAW DATA ===
 
-TOP 5 AREAS BY SALES VOLUME (last 30 days):
-${areasBlock}
+TOP 5 AREAS BY SALES VOLUME (latest available month):
+${marketLine}${areasBlock}
 
 DISTRESS MARKET SIGNALS:
 ${distressBlock}
@@ -213,6 +276,8 @@ async function run(): Promise<NextResponse> {
 
     const dataSnapshot = {
       week: weekLabel,
+      data_month: areas[0]?.data_month ?? null,
+      total_market_txns: areas[0]?.total_market_txns ?? null,
       top_areas: areas,
       distress,
     }

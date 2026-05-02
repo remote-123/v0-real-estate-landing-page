@@ -15,22 +15,31 @@ export async function generateMetadata() {
 
 async function fetchBenchmarks(): Promise<AreaYieldRow[]> {
   try {
-    // Avg sale PSF per area (last 12 months, sales only)
+    // Avg sale PSF per area — rolling 12 months from most recent data in unified view
     const psfRows = await sql<
       { area_name_en: string; avg_psf: string; txn_count: string }[]
     >`
+      WITH latest AS (
+        SELECT MAX(txn_month) AS max_month
+        FROM mv_txn_monthly_unified
+        WHERE trans_group_en = 'Sales' AND property_type_en = 'Unit'
+      )
       SELECT
         area_name_en,
-        ROUND(AVG(meter_sale_price / 10.764)::numeric, 0) AS avg_psf,
-        COUNT(*)::integer AS txn_count
-      FROM dld_transactions
+        ROUND(
+          (SUM(txn_count * avg_price_sqm) / NULLIF(SUM(txn_count), 0) / 10.764)::numeric,
+          0
+        ) AS avg_psf,
+        SUM(txn_count)::integer AS txn_count
+      FROM mv_txn_monthly_unified
+      CROSS JOIN latest
       WHERE trans_group_en = 'Sales'
-        AND instance_date >= NOW() - INTERVAL '12 months'
-        AND meter_sale_price BETWEEN 500 AND 150000
+        AND property_type_en = 'Unit'
+        AND txn_month >= latest.max_month - INTERVAL '11 months'
         AND area_name_en IS NOT NULL
       GROUP BY area_name_en
-      HAVING COUNT(*) >= 20
-      ORDER BY COUNT(*) DESC
+      HAVING SUM(txn_count) >= 20
+      ORDER BY SUM(txn_count) DESC
       LIMIT 15
     `
 
@@ -97,8 +106,8 @@ export default async function RentalYieldPage() {
           Rental Yield Calculator
         </h1>
         <p className="text-sm text-muted-foreground max-w-lg">
-          Area benchmarks from DLD registered sales. Enter your expected annual rent to compute
-          gross and estimated net yield.
+          Area benchmarks from DLD and Bayut registered sales. Enter your expected annual rent to
+          compute gross and estimated net yield.
         </p>
       </div>
 
