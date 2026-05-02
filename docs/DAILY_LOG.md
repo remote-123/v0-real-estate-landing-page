@@ -7,6 +7,10 @@
 > 3. **Mandatory Signature:** Every entry must explicitly state the tool name at the start (e.g., *"Built by Antigravity"*, *"Built by Claude Code"*, or *"Built by Cursor"*).
 
 
+## 02 May 2026 — Cycle 10
+*Built by Claude Code*
+- **Complete NOW() staleness audit — final sweep (1984d9b, 1a32a74)**: Fixed remaining `NOW() - INTERVAL` instances on `mv_txn_monthly_unified` queries. `app/areas/page.tsx` vol CTE now uses existing `latest` CTE anchor. `app/areas/[slug]/page.tsx` price history + 12m metrics queries use `MAX(txn_month)`. `app/api/admin/researcher/route.ts` fixed 5 remaining NOW() instances (momentum CTE, distress fallback, transactions, mortgage, communities queries). `app/page.tsx` homepage live stats yield query. All NOW() rolling-window usages on `mv_txn_monthly_unified` now anchored to `MAX(txn_month)` — complete across the entire codebase.
+
 ## 02 May 2026 — Cycle 9
 *Built by Claude Code*
 - **Fix remaining NOW() rolling-window staleness — 7 pages (0a78ef3)**: Completed the `mv_txn_monthly_unified` staleness audit started in Cycle 7. `area-momentum` was CRITICAL (returning zero results) — `monthly` CTE filtered `txn_month >= NOW()-3mo` but prev month `latest.m - 1mo` fell outside that window. Fixed by moving `latest` CTE before `monthly` and using `latest.m - 2mo` as lower bound. All other `NOW()` usages replaced with `MAX(txn_month)` anchor across `transaction-pulse` monthly chart, `yield-map` (sales+rent CTEs), `areas/[slug]` (price history + YoY metrics), `communities/[slug]` (YoY metrics), `rental-yield-decay` (3-year window), `liquidity` (24-month chart). All windows now relative to last available data, not calendar time.
