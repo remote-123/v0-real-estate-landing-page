@@ -7,6 +7,10 @@
 > 3. **Mandatory Signature:** Every entry must explicitly state the tool name at the start (e.g., *"Built by Antigravity"*, *"Built by Claude Code"*, or *"Built by Cursor"*).
 
 
+## 02 May 2026 — Cycle 20
+*Built by Claude Code*
+- **Email gate complete — buildings + liquidity (20a3c72)**: `buildings` → 5 free / 200 total, GatedTableOverlay. `liquidity` → KPI cards visible to all; 24-month mortgage chart blurred with overlay; area table row-gated (5 free / 40 total). All 12 data terminal pages now consistently gated.
+
 ## 02 May 2026 — Cycle 19
 *Built by Claude Code*
 - **Email gate on 3 more terminal pages (db1a8ef)**: `supply-pipeline` → 5 free projects / GatedTableOverlay (3,039 total). `developer-track` → 5 free developers / GatedTableOverlay (60 total). `transaction-pulse` → stat cards visible to all, 24-month chart and daily heatmap blurred/hidden with overlay for unauthenticated. All pages: `force-dynamic` + `isTerminalUnlocked()`. Now 11 of 12 data terminal pages are gated.
