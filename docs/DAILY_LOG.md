@@ -7,6 +7,12 @@
 > 3. **Mandatory Signature:** Every entry must explicitly state the tool name at the start (e.g., *"Built by Antigravity"*, *"Built by Claude Code"*, or *"Built by Cursor"*).
 
 
+## 02 May 2026
+*Built by Claude Code*
+- **D3 Refinitiv theme — City Registry terminal**: Implemented D3 Refinitiv/Eikon aesthetic across all thecityregistry.com terminal pages. Added `.cityregistry` CSS class in globals.css overriding bg/card/border/accent to D3 palette (#1C1C1E charcoal, #252527 card, #2c2c2e border, #00BFA5 teal accent). Terminal layout adds `.cityregistry` class to root div and renders `CityRegistryTheme` client component that sets the class on `<html>` (fixes portalled Sheet/modal elements). Header updated: "The City Registry / UAE Real Estate Intelligence" teal label, PRO badge, teal LIVE pulse dot. Sidebar bottom shows D3 "Data Status" panel.
+- **Portal theme fix**: `CityRegistryTheme` component applies `.cityregistry` to `<html>` so mobile sidebar (Sheet), feedback modal (createPortal), and sign-in page all inherit D3 CSS variable overrides. Sign-in page: teal "THE CITY REGISTRY" brand label, teal checkmarks. FeedbackModal: teal submit button, focus rings.
+- **Design preview page expanded**: Added 8 new City Registry concepts — D1 Dune Analytics, D2 Palantir/Intelligence, D3 Refinitiv/Eikon (chosen), E1 Glassmorphism + 3 colour variants (Midnight Teal, Carbon Blue, Onyx Gold), E1-E Black Pearl, E1-F Emerald Private Club. Total: 15 concepts on `/admin/design-preview`.
+
 ## 01 May 2026
 *Built by Claude Code*
 - **Domain split — ADR-006**: Hard split NorthCapital (agency) vs City Registry (data platform). `middleware.ts` now redirects: `/terminal/*` on northcapitaldxb.com → thecityregistry.com/terminal/*; `/blog|/projects|/services|/about|/contact|/areas|/calculator|/glossary` on cityregistry → northcapitaldxb.com. Created `components/city-registry-landing.tsx` — proper landing page for thecityregistry.com root (headline, feature grid, email capture, cross-link to NorthCapital). `app/page.tsx` now server-reads `x-site` header and renders City Registry landing or NorthCapital homepage accordingly.
