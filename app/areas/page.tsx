@@ -46,13 +46,13 @@ async function fetchAreas(): Promise<AreaRow[]> {
       prev_psf: string | null
       txn_count: string
     }[]>`
-      WITH latest AS (SELECT MAX(txn_month) AS m FROM mv_txn_monthly),
+      WITH latest AS (SELECT MAX(txn_month) AS m FROM mv_txn_monthly_unified),
       curr AS (
         SELECT
           area_name_en,
           SUM(txn_count * avg_price_sqm) / NULLIF(SUM(txn_count), 0) AS psm,
           SUM(txn_count) AS cnt
-        FROM mv_txn_monthly, latest
+        FROM mv_txn_monthly_unified, latest
         WHERE txn_month = latest.m
           AND trans_group_en = 'Sales'
           AND area_name_en IS NOT NULL
@@ -63,7 +63,7 @@ async function fetchAreas(): Promise<AreaRow[]> {
         SELECT
           area_name_en,
           SUM(txn_count * avg_price_sqm) / NULLIF(SUM(txn_count), 0) AS psm
-        FROM mv_txn_monthly, latest
+        FROM mv_txn_monthly_unified, latest
         WHERE txn_month = latest.m - INTERVAL '1 month'
           AND trans_group_en = 'Sales'
           AND area_name_en IS NOT NULL
@@ -71,7 +71,7 @@ async function fetchAreas(): Promise<AreaRow[]> {
       ),
       vol AS (
         SELECT area_name_en, SUM(txn_count) AS total_vol
-        FROM mv_txn_monthly
+        FROM mv_txn_monthly_unified
         WHERE trans_group_en = 'Sales'
           AND txn_month >= NOW() - INTERVAL '12 months'
         GROUP BY area_name_en

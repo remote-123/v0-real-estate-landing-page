@@ -22,18 +22,18 @@ function formatPrice(n: number): string {
   return `AED ${Math.round(n).toLocaleString()}`
 }
 
-// Top 30 areas by DLD volume — used for generateStaticParams
-async function getTop30Areas(): Promise<string[]> {
+// Top 50 areas by transaction volume — used for generateStaticParams
+async function getTop50Areas(): Promise<string[]> {
   try {
     const rows = await sql<{ area_name_en: string }[]>`
       SELECT area_name_en
       FROM (
         SELECT area_name_en, SUM(txn_count) AS total
-        FROM mv_txn_monthly
+        FROM mv_txn_monthly_unified
         WHERE area_name_en IS NOT NULL AND trans_group_en = 'Sales'
         GROUP BY area_name_en
         ORDER BY total DESC
-        LIMIT 30
+        LIMIT 50
       ) sub
     `
     return rows.map((r) => r.area_name_en)
@@ -43,7 +43,7 @@ async function getTop30Areas(): Promise<string[]> {
 }
 
 export async function generateStaticParams() {
-  const areas = await getTop30Areas()
+  const areas = await getTop50Areas()
   return areas.map((name) => ({ slug: toSlug(name) }))
 }
 
@@ -66,12 +66,11 @@ async function fetchAreaPageData(slug: string): Promise<AreaPageData | null> {
   try {
     // Resolve slug → area name
     const rows = await sql<{ area_name_en: string }[]>`
-      SELECT area_name_en, SUM(txn_count) AS total
-      FROM mv_txn_monthly
+      SELECT DISTINCT area_name_en
+      FROM mv_txn_monthly_unified
       WHERE area_name_en IS NOT NULL AND trans_group_en = 'Sales'
-      GROUP BY area_name_en
-      ORDER BY total DESC
-      LIMIT 30
+      ORDER BY area_name_en
+      LIMIT 200
     `
     const match = rows.find((r) => toSlug(r.area_name_en) === slug)
     if (!match) return null
@@ -82,15 +81,15 @@ async function fetchAreaPageData(slug: string): Promise<AreaPageData | null> {
     const [psfRows, historyRows, pipelineRows, scRows, distressRows, txnRows] = await Promise.all([
       // Current + prev PSF
       sql<{ avg_psf: string; prev_psf: string | null }[]>`
-        WITH latest AS (SELECT MAX(txn_month) AS m FROM mv_txn_monthly),
+        WITH latest AS (SELECT MAX(txn_month) AS m FROM mv_txn_monthly_unified),
         curr AS (
           SELECT SUM(txn_count * avg_price_sqm) / NULLIF(SUM(txn_count), 0) AS psm
-          FROM mv_txn_monthly, latest
+          FROM mv_txn_monthly_unified, latest
           WHERE txn_month = latest.m AND trans_group_en = 'Sales' AND area_name_en = ${areaName}
         ),
         prev AS (
           SELECT SUM(txn_count * avg_price_sqm) / NULLIF(SUM(txn_count), 0) AS psm
-          FROM mv_txn_monthly, latest
+          FROM mv_txn_monthly_unified, latest
           WHERE txn_month = latest.m - INTERVAL '1 month' AND trans_group_en = 'Sales' AND area_name_en = ${areaName}
         )
         SELECT
@@ -104,7 +103,7 @@ async function fetchAreaPageData(slug: string): Promise<AreaPageData | null> {
         SELECT
           txn_month,
           ROUND((SUM(txn_count * avg_price_sqm) / NULLIF(SUM(txn_count), 0) / 10.764)::numeric, 0) AS avg_psf
-        FROM mv_txn_monthly
+        FROM mv_txn_monthly_unified
         WHERE area_name_en = ${areaName}
           AND trans_group_en = 'Sales'
           AND txn_month >= NOW() - INTERVAL '12 months'
@@ -122,10 +121,10 @@ async function fetchAreaPageData(slug: string): Promise<AreaPageData | null> {
 
       // Service charge
       sql<{ avg_sc: string | null }[]>`
-        SELECT ROUND(AVG(annual_amount_per_sqft)::numeric, 2) AS avg_sc
+        SELECT ROUND(AVG(service_cost)::numeric, 0) AS avg_sc
         FROM dld_service_charges
-        WHERE area_name_en ILIKE ${`%${areaName}%`}
-          AND annual_amount_per_sqft > 0
+        WHERE LOWER(master_community_name_en) LIKE LOWER(${`%${areaName.split(" ")[0]}%`})
+          AND service_cost > 0
       `,
 
       // Distress count
@@ -142,7 +141,7 @@ async function fetchAreaPageData(slug: string): Promise<AreaPageData | null> {
         SELECT
           SUM(txn_count)::integer AS txn_count,
           ROUND(AVG(avg_price_sqm * 80)::numeric, 0) AS avg_price
-        FROM mv_txn_monthly
+        FROM mv_txn_monthly_unified
         WHERE area_name_en = ${areaName}
           AND trans_group_en = 'Sales'
           AND txn_month >= NOW() - INTERVAL '12 months'
