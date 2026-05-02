@@ -36,6 +36,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       '/terminal/mortgage-calculator',
       '/terminal/rental-yield',
       '/tools/rental-yield-calculator',
+      '/tools/service-charge-estimator',
     ].map((route) => ({
       url: `${baseUrl}${route}`,
       lastModified: new Date(),
@@ -128,6 +129,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes = [
     '', '/projects', '/blog', '/about', '/contact', '/calculator', '/areas',
     '/tools/rental-yield-calculator',
+    '/tools/service-charge-estimator',
     ...terminalStaticRoutes,
   ].map((route) => ({
     url: `${baseUrl}${route}`,
