@@ -996,9 +996,159 @@ export default function DesignPreviewPage() {
         </div>
       </section>
 
+      {/* ── E1 LUXURY REAL ESTATE DIRECTION ─────────────────────────────── */}
+      <section className="space-y-4">
+        <h2 className="text-xs font-mono uppercase tracking-widest text-muted-foreground border-b border-border/40 pb-2">
+          E1 Glassmorphism — Luxury Real Estate Direction
+        </h2>
+        <p className="text-[11px] text-muted-foreground">
+          DAMAC / Armani Hotel aesthetic meets data terminal. Dubai luxury real estate palette with frosted glass.
+        </p>
+
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+
+          {/* E1-E — Black Pearl */}
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-foreground">E1-E · Black Pearl</p>
+            <p className="text-[11px] text-muted-foreground">Obsidian black + champagne gold. Signature Dubai luxury palette — DAMAC, Armani Residences. Premium data platform, not startup. Silk glass cards over pure black.</p>
+            <div className="rounded-xl overflow-hidden border shadow-2xl" style={{
+              background: 'linear-gradient(160deg, #0a0a0a 0%, #111008 40%, #0d0c09 100%)',
+              borderColor: 'rgba(201,168,92,0.25)',
+            }}>
+              <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'rgba(201,168,92,0.12)', background: 'rgba(201,168,92,0.03)' }}>
+                <div>
+                  <p className="text-[9px] uppercase tracking-[0.25em] font-light mb-0.5" style={{ color: 'rgba(201,168,92,0.6)' }}>Dubai · Data Intelligence</p>
+                  <span className="text-sm font-bold tracking-wide" style={{ color: '#F5E9C8', fontFamily: 'serif', letterSpacing: '0.08em' }}>THE CITY REGISTRY</span>
+                </div>
+                <div className="flex gap-4 text-[10px]" style={{ color: 'rgba(245,233,200,0.2)' }}>
+                  <span>Terminal</span><span>Insights</span><span>API</span>
+                </div>
+              </div>
+              <div className="p-5 space-y-4">
+                {/* Hero stat */}
+                <div className="rounded-2xl p-5 text-center" style={{
+                  background: 'rgba(201,168,92,0.06)',
+                  backdropFilter: 'blur(30px)',
+                  border: '1px solid rgba(201,168,92,0.18)',
+                }}>
+                  <p className="text-[9px] uppercase tracking-[0.25em] mb-2 font-light" style={{ color: 'rgba(201,168,92,0.5)' }}>Market Pulse · Q1 2026</p>
+                  <p className="text-4xl font-bold" style={{ color: '#C9A85C', fontFamily: 'serif' }}>7.4%</p>
+                  <p className="text-xs mt-1" style={{ color: 'rgba(245,233,200,0.4)' }}>Portfolio Average Yield</p>
+                </div>
+                {/* Stats row */}
+                <div className="grid grid-cols-3 gap-2">
+                  {[['Transactions', '1.66M'], ['Avg PSF', '1,247'], ['Distress', '847']].map(([l, v]) => (
+                    <div key={l} className="rounded-xl p-3 text-center" style={{
+                      background: 'rgba(201,168,92,0.04)',
+                      backdropFilter: 'blur(20px)',
+                      border: '1px solid rgba(201,168,92,0.1)',
+                    }}>
+                      <p className="text-[9px] mb-1.5 font-light" style={{ color: 'rgba(201,168,92,0.45)' }}>{l}</p>
+                      <p className="text-sm font-bold font-mono" style={{ color: '#E8D5A3' }}>{v}</p>
+                    </div>
+                  ))}
+                </div>
+                {/* Area list */}
+                <div className="rounded-xl p-3" style={{
+                  background: 'rgba(201,168,92,0.03)',
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(201,168,92,0.08)',
+                }}>
+                  <p className="text-[9px] uppercase tracking-[0.2em] mb-3 font-light" style={{ color: 'rgba(201,168,92,0.4)' }}>Premium Communities</p>
+                  {[['Dubai Marina', '6.9%'], ['Palm Jumeirah', '5.8%'], ['Downtown Dubai', '6.2%']].map(([a, y], i) => (
+                    <div key={a} className="flex justify-between items-center py-1.5" style={{ borderTop: i > 0 ? '1px solid rgba(201,168,92,0.06)' : 'none' }}>
+                      <span className="text-xs font-light" style={{ color: 'rgba(245,233,200,0.55)' }}>{a}</span>
+                      <span className="text-xs font-mono font-semibold" style={{ color: '#C9A85C' }}>{y}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {/* Footer */}
+              <div className="px-5 py-3 border-t flex items-center justify-between" style={{ borderColor: 'rgba(201,168,92,0.08)' }}>
+                <span className="text-[9px] uppercase tracking-widest font-light" style={{ color: 'rgba(201,168,92,0.3)' }}>Powered by DLD · Bayut</span>
+                <div className="h-3 w-px mx-2" style={{ background: 'rgba(201,168,92,0.2)' }} />
+                <span className="text-[9px] uppercase tracking-widest font-light" style={{ color: 'rgba(201,168,92,0.3)' }}>Dubai, UAE</span>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-1.5 text-[10px]">
+              {['Obsidian #0a0a0a', 'Champagne #C9A85C', 'Silk glass', 'Serif brand', 'DAMAC palette'].map(t => (
+                <span key={t} className="rounded border border-border/40 px-2 py-0.5 text-muted-foreground">{t}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* E1-F — Emerald Private Club */}
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-foreground">E1-F · Emerald Private Club</p>
+            <p className="text-[11px] text-muted-foreground">Deep forest green + aged gold. Private members club meets PropTech. Sophisticated, European luxury — distinct from every other Dubai data platform.</p>
+            <div className="rounded-xl overflow-hidden border shadow-2xl" style={{
+              background: 'linear-gradient(160deg, #050d08 0%, #091a0f 40%, #071210 100%)',
+              borderColor: 'rgba(180,150,70,0.2)',
+            }}>
+              <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'rgba(180,150,70,0.1)', background: 'rgba(180,150,70,0.03)' }}>
+                <div>
+                  <p className="text-[9px] uppercase tracking-[0.25em] font-light mb-0.5" style={{ color: 'rgba(180,150,70,0.6)' }}>Dubai · Intelligence</p>
+                  <span className="text-sm font-bold tracking-wide" style={{ color: '#E8DDB5', fontFamily: 'serif', letterSpacing: '0.06em' }}>THE CITY REGISTRY</span>
+                </div>
+                <div className="flex gap-4 text-[10px]" style={{ color: 'rgba(232,221,181,0.2)' }}>
+                  <span>Terminal</span><span>Research</span><span>API</span>
+                </div>
+              </div>
+              <div className="p-5 space-y-4">
+                <div className="rounded-2xl p-5 text-center" style={{
+                  background: 'rgba(34,197,94,0.05)',
+                  backdropFilter: 'blur(30px)',
+                  border: '1px solid rgba(34,197,94,0.12)',
+                }}>
+                  <p className="text-[9px] uppercase tracking-[0.25em] mb-2 font-light" style={{ color: 'rgba(180,150,70,0.5)' }}>Market Pulse · Q1 2026</p>
+                  <p className="text-4xl font-bold" style={{ color: '#4ADE80', fontFamily: 'serif' }}>7.4%</p>
+                  <p className="text-xs mt-1" style={{ color: 'rgba(232,221,181,0.35)' }}>Portfolio Average Yield</p>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {[['Transactions', '1.66M', '#4ADE80'], ['Avg PSF', '1,247', '#B4964640'], ['Distress', '847', '#F87171']].map(([l, v, c]) => (
+                    <div key={l} className="rounded-xl p-3 text-center" style={{
+                      background: 'rgba(34,197,94,0.04)',
+                      backdropFilter: 'blur(20px)',
+                      border: '1px solid rgba(34,197,94,0.08)',
+                    }}>
+                      <p className="text-[9px] mb-1.5 font-light" style={{ color: 'rgba(180,150,70,0.4)' }}>{l}</p>
+                      <p className="text-sm font-bold font-mono" style={{ color: c as string }}>{v}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="rounded-xl p-3" style={{
+                  background: 'rgba(34,197,94,0.03)',
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(34,197,94,0.07)',
+                }}>
+                  <p className="text-[9px] uppercase tracking-[0.2em] mb-3 font-light" style={{ color: 'rgba(180,150,70,0.4)' }}>Premium Communities</p>
+                  {[['Dubai Marina', '6.9%'], ['Palm Jumeirah', '5.8%'], ['Downtown Dubai', '6.2%']].map(([a, y], i) => (
+                    <div key={a} className="flex justify-between items-center py-1.5" style={{ borderTop: i > 0 ? '1px solid rgba(34,197,94,0.06)' : 'none' }}>
+                      <span className="text-xs font-light" style={{ color: 'rgba(232,221,181,0.5)' }}>{a}</span>
+                      <span className="text-xs font-mono font-semibold" style={{ color: '#4ADE80' }}>{y}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="px-5 py-3 border-t flex items-center justify-between" style={{ borderColor: 'rgba(34,197,94,0.07)' }}>
+                <span className="text-[9px] uppercase tracking-widest font-light" style={{ color: 'rgba(180,150,70,0.3)' }}>Powered by DLD · Bayut</span>
+                <div className="h-3 w-px mx-2" style={{ background: 'rgba(180,150,70,0.15)' }} />
+                <span className="text-[9px] uppercase tracking-widest font-light" style={{ color: 'rgba(180,150,70,0.3)' }}>Dubai, UAE</span>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-1.5 text-[10px]">
+              {['Forest green bg', '#4ADE80 emerald', '#B4964640 gold', 'Private club feel', 'European luxury'].map(t => (
+                <span key={t} className="rounded border border-border/40 px-2 py-0.5 text-muted-foreground">{t}</span>
+              ))}
+            </div>
+          </div>
+
+        </div>
+      </section>
+
       <div className="rounded-lg border border-border/40 bg-muted/20 p-4 text-xs text-muted-foreground space-y-1">
         <p className="font-semibold text-foreground text-[11px]">VC/acquisition picks: C2 Capital Navy or C1 Registry Dark (institutional signal) · D2 Intelligence Layer (Palantir feel) · D3 Refinitiv (most acquirer-legible)</p>
-        <p>Pick one City Registry concept (A–E3, E1-B/C/D) and one North Capital concept (A or B) — I'll implement across all pages.</p>
+        <p>Pick one City Registry concept (A–E3, E1-B through F) and one North Capital concept (A or B) — I'll implement across all pages.</p>
       </div>
     </div>
   )
