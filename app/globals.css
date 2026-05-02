@@ -121,6 +121,29 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* ── D3 Refinitiv theme for thecityregistry.com ─────────────────────── */
+.cityregistry {
+  --background: #1C1C1E;
+  --foreground: #FFFFFF;
+  --card: #252527;
+  --card-foreground: #FFFFFF;
+  --popover: #252527;
+  --popover-foreground: #FFFFFF;
+  --primary: #FFFFFF;
+  --primary-foreground: #1C1C1E;
+  --secondary: #2c2c2e;
+  --secondary-foreground: #aeaeb2;
+  --muted: #2c2c2e;
+  --muted-foreground: #6b6b6b;
+  --accent: #00BFA5;
+  --accent-foreground: #000000;
+  --destructive: #FF453A;
+  --destructive-foreground: #FF453A;
+  --border: #2c2c2e;
+  --input: #2c2c2e;
+  --ring: #00BFA5;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

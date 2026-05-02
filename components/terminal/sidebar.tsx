@@ -121,13 +121,26 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       </div>
 
       <div className="p-4 border-t border-border/50 mt-auto space-y-4">
-        <div className="rounded-lg bg-secondary/50 p-4">
-          <p className="text-xs font-medium text-foreground">Investor Status</p>
-          <div className="mt-2 flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            <p className="text-[10px] text-muted-foreground uppercase tracking-tight">Verified Institutional</p>
+        {isCityRegistry ? (
+          <div className="rounded-lg p-4" style={{ background: 'rgba(0,191,165,0.06)', border: '1px solid rgba(0,191,165,0.15)' }}>
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-xs font-mono font-semibold text-foreground uppercase tracking-widest">Data Status</p>
+              <div className="rounded px-1.5 py-0.5 text-[9px] font-mono font-bold" style={{ background: '#00BFA5', color: '#000' }}>PRO</div>
+            </div>
+            <div className="mt-2 flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full animate-pulse" style={{ background: '#00BFA5' }} />
+              <p className="text-[10px] text-muted-foreground font-mono uppercase tracking-tight">DLD · Bayut · Live</p>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="rounded-lg bg-secondary/50 p-4">
+            <p className="text-xs font-medium text-foreground">Investor Status</p>
+            <div className="mt-2 flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              <p className="text-[10px] text-muted-foreground uppercase tracking-tight">Verified Institutional</p>
+            </div>
+          </div>
+        )}
 
         {!isCityRegistry && (
           <Link

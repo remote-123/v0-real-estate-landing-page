@@ -98,23 +98,23 @@ export default async function InvestorTerminalLayout({
     const isCityRegistry = site === "cityregistry"
 
     return (
-        <div className="min-h-screen bg-background text-foreground">
+        <div className={`min-h-screen bg-background text-foreground${isCityRegistry ? ' cityregistry' : ''}`}>
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(getTerminalSchema(isCityRegistry)) }}
             />
             <InvestorSidebar />
             <main className="lg:pl-64 flex flex-col min-h-screen">
-                <header className="sticky top-0 z-30 flex h-16 items-center border-b border-border/50 bg-background/80 backdrop-blur-md px-6 lg:px-8">
+                <header className="sticky top-0 z-30 flex h-16 items-center border-b border-border/50 bg-background/95 backdrop-blur-md px-6 lg:px-8">
                     <div className="flex flex-1 items-center justify-between">
                         <div className="flex items-center gap-4">
                             <MobileNav />
                             <h1 className="text-[10px] sm:text-sm font-medium text-muted-foreground uppercase tracking-widest flex items-center gap-2">
                                 {isCityRegistry ? (
                                     <>
-                                        <span className="hidden sm:inline text-foreground font-semibold">The City Registry</span>
-                                        <span className="sm:mx-2 opacity-30">/</span>
-                                        <span className="text-muted-foreground">Dubai</span>
+                                        <span className="hidden sm:inline text-foreground font-semibold tracking-wider">The City Registry</span>
+                                        <span className="sm:mx-2 opacity-20">/</span>
+                                        <span className="font-mono text-[10px]" style={{ color: '#00BFA5' }}>UAE Real Estate Intelligence</span>
                                     </>
                                 ) : (
                                     <>
@@ -125,7 +125,15 @@ export default async function InvestorTerminalLayout({
                                 )}
                             </h1>
                         </div>
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-3">
+                            {isCityRegistry && (
+                                <div
+                                    className="hidden sm:flex items-center rounded px-2 py-0.5 text-[10px] font-mono font-bold"
+                                    style={{ background: '#00BFA5', color: '#000' }}
+                                >
+                                    PRO
+                                </div>
+                            )}
                             {!isCityRegistry && (
                                 <Button asChild variant="outline" size="sm" className="hidden sm:flex gap-2 border-accent/20 hover:bg-accent/10 hover:text-accent transition-colors">
                                     <Link href={SITE_CONFIG.calendarLink} target="_blank">
@@ -136,10 +144,15 @@ export default async function InvestorTerminalLayout({
                             )}
                             <FeedbackModal />
                             <UserNav />
-                            <ThemeToggle />
+                            {!isCityRegistry && <ThemeToggle />}
                             <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/50 shrink-0">
-                                <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                                <span className="text-[10px] uppercase tracking-tighter text-muted-foreground font-medium">Market Open</span>
+                                {isCityRegistry
+                                    ? <div className="h-2 w-2 rounded-full animate-pulse" style={{ background: '#00BFA5' }} />
+                                    : <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                                }
+                                <span className="text-[10px] uppercase tracking-tighter text-muted-foreground font-mono font-medium">
+                                    {isCityRegistry ? '↻ LIVE' : 'Market Open'}
+                                </span>
                             </div>
                         </div>
                     </div>
