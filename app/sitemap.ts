@@ -121,6 +121,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     '/terminal/service-charges',
     '/terminal/roi-engine',
     '/terminal/off-plan-pipeline',
+    '/terminal/compare',
     '/terminal/market-briefing',
     '/terminal/mortgage-calculator',
     '/terminal/rental-yield',

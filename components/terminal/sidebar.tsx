@@ -12,12 +12,14 @@ import {
   Home,
   LayoutDashboard,
   Map,
+  Newspaper,
   Percent,
   TrendingDown,
   TrendingUp,
   Users,
   Landmark,
   Activity,
+  GitCompare,
   Layers,
   Wrench,
 } from "lucide-react"
@@ -31,6 +33,7 @@ export const sidebarLinks = [
       { label: "Distress Deals", href: "/terminal/distress-deals", icon: BarChart3 },
       { label: "Rental Drops", href: "/terminal/rental-drops", icon: Home },
       { label: "Transaction Pulse", href: "/terminal/transaction-pulse", icon: Activity },
+      { label: "Market Briefing", href: "/terminal/market-briefing", icon: Newspaper },
     ]
   },
   {
@@ -51,6 +54,7 @@ export const sidebarLinks = [
       { label: "Building Comparator", href: "/terminal/building-comparator", icon: Building2 },
       { label: "Buildings", href: "/terminal/buildings", icon: Building2 },
       { label: "Developer Track Record", href: "/terminal/developer-track", icon: Users },
+      { label: "Area Comparison", href: "/terminal/compare", icon: GitCompare },
     ]
   },
   {
