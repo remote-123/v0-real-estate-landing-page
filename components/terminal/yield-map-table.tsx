@@ -37,7 +37,7 @@ function matchesRoomFilter(rooms: string, filter: string): boolean {
 function YieldBadge({ pct }: { pct: number }) {
   const cls =
     pct >= 8
-      ? "bg-emerald-500/15 text-emerald-400 ring-emerald-500/30"
+      ? "bg-accent/15 text-accent ring-accent/30"
       : pct >= 6
       ? "bg-yellow-400/15 text-yellow-400 ring-yellow-400/30"
       : "bg-muted/50 text-muted-foreground ring-border/40"
@@ -51,8 +51,8 @@ function YieldBadge({ pct }: { pct: number }) {
 function SortIcon({ col, sortKey, sortDir }: { col: SortKey; sortKey: SortKey; sortDir: SortDir }) {
   if (col !== sortKey) return <ArrowUpDown className="ml-1 h-3 w-3 opacity-40" />
   return sortDir === "asc"
-    ? <ArrowUp className="ml-1 h-3 w-3 text-emerald-500" />
-    : <ArrowDown className="ml-1 h-3 w-3 text-emerald-500" />
+    ? <ArrowUp className="ml-1 h-3 w-3 text-accent" />
+    : <ArrowDown className="ml-1 h-3 w-3 text-accent" />
 }
 
 function formatAed(val: number): string {
@@ -108,7 +108,7 @@ export function YieldMapTable({ rows, isAuthenticated, totalRows }: Props) {
   function thCls(key: SortKey) {
     return cn(
       "px-3 py-2.5 text-left text-[10px] font-mono uppercase tracking-wider text-muted-foreground/70 cursor-pointer select-none whitespace-nowrap hover:text-muted-foreground transition-colors",
-      sortKey === key && "text-emerald-500"
+      sortKey === key && "text-accent"
     )
   }
 
@@ -124,7 +124,7 @@ export function YieldMapTable({ rows, isAuthenticated, totalRows }: Props) {
               className={cn(
                 "rounded-md px-3 py-1 text-xs font-medium transition-colors",
                 roomFilter === r
-                  ? "bg-emerald-500/20 text-emerald-400 ring-1 ring-emerald-500/30"
+                  ? "bg-accent/20 text-accent ring-1 ring-accent/30"
                   : "bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground"
               )}
             >
@@ -139,7 +139,7 @@ export function YieldMapTable({ rows, isAuthenticated, totalRows }: Props) {
           <select
             value={minTxns}
             onChange={(e) => setMinTxns(Number(e.target.value))}
-            className="rounded-md bg-card border border-border/50 px-2 py-1 text-base sm:text-xs text-foreground focus:outline-none focus:border-emerald-500/50"
+            className="rounded-md bg-card border border-border/50 px-2 py-1 text-base sm:text-xs text-foreground focus:outline-none focus:border-accent/50"
           >
             {MIN_TXN_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>{o.label}</option>

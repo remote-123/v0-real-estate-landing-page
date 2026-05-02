@@ -58,9 +58,9 @@ export function EmailCaptureWidget({
 
   if (status === "success") {
     return (
-      <div className="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-4 py-3">
-        <CheckCircle className="h-4 w-4 shrink-0 text-emerald-400" />
-        <p className="text-sm text-emerald-400 font-medium">
+      <div className="flex items-center gap-2 rounded-lg border border-accent/30 bg-accent/5 px-4 py-3">
+        <CheckCircle className="h-4 w-4 shrink-0 text-accent" />
+        <p className="text-sm text-accent font-medium">
           You&apos;re in. First digest lands Monday.
         </p>
       </div>
@@ -98,12 +98,12 @@ export function EmailCaptureWidget({
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           disabled={status === "loading"}
-          className="flex-1 min-w-0 rounded-md border border-border/50 bg-background/60 px-3 py-2 text-base sm:text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/50 disabled:opacity-50"
+          className="flex-1 min-w-0 rounded-md border border-border/50 bg-background/60 px-3 py-2 text-base sm:text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-accent/50 disabled:opacity-50"
         />
         <button
           type="submit"
           disabled={status === "loading" || !email.trim()}
-          className="shrink-0 flex items-center gap-1.5 rounded-md bg-emerald-600 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="shrink-0 flex items-center gap-1.5 rounded-md bg-accent px-3 py-2 text-sm font-semibold text-accent-foreground transition-colors hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {status === "loading" ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin" />

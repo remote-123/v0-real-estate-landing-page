@@ -39,7 +39,7 @@ type StatusConfig = {
 }
 
 const STATUS_MAP: Record<string, StatusConfig> = {
-  complete: { label: 'Complete', className: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20' },
+  complete: { label: 'Complete', className: 'bg-accent/15 text-accent border-accent/20' },
   under_construction: { label: 'Under Constr.', className: 'bg-yellow-500/15 text-yellow-400 border-yellow-500/20' },
   planned: { label: 'Planned', className: 'bg-blue-500/15 text-blue-400 border-blue-500/20' },
   cancelled: { label: 'Cancelled', className: 'bg-red-500/15 text-red-400 border-red-500/20' },
@@ -219,7 +219,7 @@ export function BuildingsTable({ data }: Props) {
         const hasCoords = row.original.osm_lat != null && row.original.osm_lng != null
         return (
           <span title={hasCoords ? `${row.original.osm_lat}, ${row.original.osm_lng}` : 'No coordinates'}>
-            <MapPin className={cn('h-3.5 w-3.5 mx-auto', hasCoords ? 'text-emerald-400' : 'text-muted-foreground/20')} />
+            <MapPin className={cn('h-3.5 w-3.5 mx-auto', hasCoords ? 'text-accent' : 'text-muted-foreground/20')} />
           </span>
         )
       },

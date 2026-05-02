@@ -96,7 +96,7 @@ export default async function RentalDropsPage() {
         <div className="space-y-6 max-w-[1600px] mx-auto pb-24 lg:pb-10 px-4 sm:px-0">
             <header className="space-y-3">
                 <div className="flex items-center gap-2">
-                    <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <div className="h-2 w-2 rounded-full bg-accent animate-pulse" />
                     <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
                         Daily · Dubai · Rentals
                     </span>

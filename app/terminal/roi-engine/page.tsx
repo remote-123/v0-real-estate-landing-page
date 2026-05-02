@@ -144,12 +144,12 @@ export default async function ROIEnginePage() {
 
         <div className="lg:col-span-5 space-y-6">
           <div className="rounded-xl border border-border/40 bg-card/40 p-6">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-emerald-500 mb-4">Investment Strategy</h3>
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-accent mb-4">Investment Strategy</h3>
             <div className="space-y-4 text-sm text-muted-foreground">
               <p>
                 A net ROI of <span className="text-foreground font-medium">7% or higher</span> is considered institutional-grade in the current Dubai market.
               </p>
-              <div className="p-3 border-l-2 border-emerald-500 bg-emerald-500/5">
+              <div className="p-3 border-l-2 border-accent bg-accent/5">
                 <p className="italic">
                   "Yield compression is expected in prime areas like Downtown. Focus on high-density secondary hubs for maximum rental growth."
                 </p>
@@ -163,7 +163,7 @@ export default async function ROIEnginePage() {
           </div>
 
           <div className="rounded-xl border border-border/40 bg-card/40 p-6">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-emerald-500 mb-2">Tax Optimization</h3>
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-accent mb-2">Tax Optimization</h3>
             <p className="text-sm text-muted-foreground">
               Dubai offers 0% personal income tax on rental yields. Corporate tax may apply for institutional holders (9% above AED 375k threshold).
             </p>
@@ -174,7 +174,7 @@ export default async function ROIEnginePage() {
       {/* Live DLD Area Benchmarks */}
       <div className="rounded-xl border border-border/40 bg-card/40 p-6">
         <div className="flex items-center justify-between mb-1">
-          <h3 className="text-sm font-semibold uppercase tracking-wider text-emerald-500">
+          <h3 className="text-sm font-semibold uppercase tracking-wider text-accent">
             Live Area Benchmarks — Avg Sale PSF (Last 12 Months)
           </h3>
           <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Apartments only</span>
@@ -231,7 +231,7 @@ export default async function ROIEnginePage() {
       {hasServiceCharges && (
         <div className="rounded-xl border border-border/40 bg-card/40 p-6">
           <div className="flex items-center justify-between mb-1">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-emerald-500">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-accent">
               Service Charge Reference — DLD Data (2023+)
             </h3>
             <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Annual avg per project</span>

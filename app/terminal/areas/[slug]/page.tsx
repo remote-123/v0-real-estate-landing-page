@@ -217,7 +217,7 @@ function PriceSparkline({ history }: { history: SparkPoint[] }) {
       <polyline
         points={pts}
         fill="none"
-        stroke={isUp ? "#10b981" : "#ef4444"}
+        stroke={isUp ? "var(--accent, #10b981)" : "#ef4444"}
         strokeWidth="1.5"
         strokeLinejoin="round"
         strokeLinecap="round"
@@ -240,7 +240,7 @@ export default async function AreaDeepDivePage({
     data.prev_avg_psf && data.avg_psf
       ? ((data.avg_psf - data.prev_avg_psf) / data.prev_avg_psf) * 100
       : null
-  const momColor = momChange === null ? "" : momChange >= 0 ? "text-emerald-400" : "text-red-400"
+  const momColor = momChange === null ? "" : momChange >= 0 ? "text-accent" : "text-red-400"
 
   return (
     <div className="flex w-full flex-col px-0 sm:px-8 xl:px-12 py-0 sm:py-6 space-y-6 max-w-6xl mx-auto pb-24 lg:pb-12">
@@ -363,7 +363,7 @@ export default async function AreaDeepDivePage({
             </div>
           ) : (
             <div>
-              <p className="font-mono text-2xl font-bold text-emerald-400">0</p>
+              <p className="font-mono text-2xl font-bold text-accent">0</p>
               <p className="text-sm text-muted-foreground mt-1">No active pipeline projects</p>
               <p className="text-xs text-muted-foreground/60 font-mono mt-1">
                 Constrained supply supports price stability.
@@ -406,7 +406,7 @@ export default async function AreaDeepDivePage({
               {data.distress_count > 0 && (
                 <Link
                   href={`/terminal/distress-deals?area=${encodeURIComponent(displayName)}`}
-                  className="text-[11px] text-emerald-400 hover:underline font-mono mt-1 block"
+                  className="text-[11px] text-accent hover:underline font-mono mt-1 block"
                 >
                   View distress deals for {displayName} →
                 </Link>
@@ -426,7 +426,7 @@ export default async function AreaDeepDivePage({
         </div>
         <Link
           href={`/terminal/communities/${slug}`}
-          className="shrink-0 text-xs font-mono text-emerald-400 hover:underline"
+          className="shrink-0 text-xs font-mono text-accent hover:underline"
         >
           Community screener →
         </Link>

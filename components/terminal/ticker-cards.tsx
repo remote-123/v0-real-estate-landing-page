@@ -79,7 +79,7 @@ export async function TerminalTickerCards() {
             {/* DUBAIRESI Token Card */}
             <div className="flex items-center gap-3 rounded-lg border border-border/50 bg-card/60 px-4 py-2.5 backdrop-blur-sm">
                 <div className="flex items-center gap-1.5">
-                    <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="flex h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
                     <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">DUBAIRESI</span>
                 </div>
                 <div className="flex items-baseline gap-1.5">
@@ -89,7 +89,7 @@ export async function TerminalTickerCards() {
                     {resiData && (
                         <span className={cn(
                             "flex items-center gap-0.5 text-[10px] font-semibold",
-                            resiTrendDir === "up" ? "text-emerald-500" : resiTrendDir === "down" ? "text-red-500" : "text-muted-foreground"
+                            resiTrendDir === "up" ? "text-accent" : resiTrendDir === "down" ? "text-red-500" : "text-muted-foreground"
                         )}>
                             <TrendIcon dir={resiTrendDir} />
                             {resiData.change24h > 0 ? "+" : ""}{resiData.change24h.toFixed(2)}%
@@ -114,7 +114,7 @@ export async function TerminalTickerCards() {
                     {dfmData && (
                         <span className={cn(
                             "flex items-center gap-0.5 text-[10px] font-semibold",
-                            dfmTrendDir === "up" ? "text-emerald-500" : dfmTrendDir === "down" ? "text-red-500" : "text-muted-foreground"
+                            dfmTrendDir === "up" ? "text-accent" : dfmTrendDir === "down" ? "text-red-500" : "text-muted-foreground"
                         )}>
                             <TrendIcon dir={dfmTrendDir} />
                             {dfmData.changePct > 0 ? "+" : ""}{dfmData.changePct.toFixed(2)}%
@@ -136,7 +136,7 @@ export async function TerminalTickerCards() {
                     <span className="text-sm font-bold font-mono text-foreground">{UAE_BASE_RATE.value}</span>
                     <span className={cn(
                         "flex items-center gap-0.5 text-[10px] font-semibold",
-                        UAE_BASE_RATE.trendDir === "down" ? "text-emerald-500" : "text-red-500"
+                        UAE_BASE_RATE.trendDir === "down" ? "text-accent" : "text-red-500"
                     )}>
                         <TrendIcon dir={UAE_BASE_RATE.trendDir} />
                         {UAE_BASE_RATE.changeLabel}

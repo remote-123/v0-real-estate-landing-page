@@ -183,7 +183,7 @@ export default async function OffPlanPipelinePage() {
       {/* Pipeline table */}
       <div className="rounded-xl border border-border/40 bg-card/40 p-6">
         <div className="flex items-center justify-between mb-1">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-emerald-500">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-accent">
             Pipeline by Area
           </h2>
           <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Sorted by active units</span>
@@ -218,7 +218,7 @@ export default async function OffPlanPipelinePage() {
                       <td className="py-2.5 pr-4 font-medium text-foreground">
                         {formatAreaName(area.area_name_en)}
                       </td>
-                      <td className="py-2.5 px-2 text-right tabular-nums text-emerald-400 font-medium">
+                      <td className="py-2.5 px-2 text-right tabular-nums text-accent font-medium">
                         {area.active_units.toLocaleString()}
                       </td>
                       <td className="py-2.5 px-2 text-right tabular-nums text-muted-foreground">
@@ -237,7 +237,7 @@ export default async function OffPlanPipelinePage() {
                         <div className="inline-flex items-center gap-2">
                           <div className="w-16 h-1.5 rounded-full bg-secondary overflow-hidden">
                             <div
-                              className="h-full rounded-full bg-emerald-500"
+                              className="h-full rounded-full bg-accent"
                               style={{ width: `${completedPct}%` }}
                             />
                           </div>

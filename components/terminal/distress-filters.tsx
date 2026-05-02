@@ -42,7 +42,7 @@ export function DistressFilters({ communities = [] }: { communities?: string[] }
                         </button>
                     ))}
                 </div>
-                <Button asChild size="sm" className="gap-2 bg-emerald-600 hover:bg-emerald-500 text-white shrink-0">
+                <Button asChild size="sm" className="gap-2 bg-accent hover:bg-accent/90 text-accent-foreground shrink-0">
                     <a href={`https://wa.me/${WA_NUMBER}?text=${WA_MESSAGE}`} target="_blank" rel="noopener noreferrer">
                         <MessageCircle className="h-3 w-3" />
                         Secure a Deal

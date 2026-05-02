@@ -82,7 +82,7 @@ export function TransactionPulseChart({ data }: Props) {
             <YAxis axisLine={false} tickLine={false} tick={TICK} width={40} />
             <Tooltip contentStyle={TOOLTIP_STYLE} />
             <Legend iconType="square" iconSize={8} wrapperStyle={{ fontSize: "10px", paddingTop: "8px" }} />
-            <Bar dataKey="Sales" stackId="a" fill="#10b981" radius={[0, 0, 0, 0]} />
+            <Bar dataKey="Sales" stackId="a" fill="var(--accent, #10b981)" radius={[0, 0, 0, 0]} />
             <Bar dataKey="Mortgages" stackId="a" fill="#60a5fa" />
             <Bar dataKey="Gifts" stackId="a" fill="#facc15" radius={[2, 2, 0, 0]} />
           </BarChart>
@@ -117,7 +117,7 @@ export function TransactionPulseChart({ data }: Props) {
               formatter={(v: number, name: string) => [`AED ${Number(v).toFixed(2)}bn`, name]}
             />
             <Legend iconType="square" iconSize={8} wrapperStyle={{ fontSize: "10px", paddingTop: "8px" }} />
-            <Line type="monotone" dataKey="value_bn" stroke="#10b981" strokeWidth={1.5} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} name="Sales" />
+            <Line type="monotone" dataKey="value_bn" stroke="var(--accent, #10b981)" strokeWidth={1.5} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} name="Sales" />
             <Line type="monotone" dataKey="mortgage_bn" stroke="#60a5fa" strokeWidth={1.5} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} name="Mortgages" />
             <Line type="monotone" dataKey="gifts_bn" stroke="#facc15" strokeWidth={1.5} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} name="Gifts" />
             <Line type="monotone" dataKey="Cash" stroke="#f97316" strokeWidth={1.5} strokeDasharray="4 2" dot={false} activeDot={{ r: 4, strokeWidth: 0 }} name="Cash (est.)" />

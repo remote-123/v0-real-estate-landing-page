@@ -71,8 +71,8 @@ export function TerminalCategoryView({ category }: TerminalCategoryViewProps) {
                             </div>
                             <div className="flex items-center gap-2">
                                 <span className={cn(
-                                    "flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10",
-                                    selectedMetric?.trendDir === "up" ? "text-emerald-500" :
+                                    "flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-accent/10",
+                                    selectedMetric?.trendDir === "up" ? "text-accent" :
                                         selectedMetric?.trendDir === "down" ? "text-red-500" :
                                             "text-muted-foreground bg-muted/10"
                                 )}>
@@ -138,9 +138,9 @@ export function TerminalCategoryView({ category }: TerminalCategoryViewProps) {
                         <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-4">Risk Assessment</h3>
                         <div className="space-y-4">
                             {[
-                                { label: "Market Volatility", value: "Low", color: "text-emerald-500" },
+                                { label: "Market Volatility", value: "Low", color: "text-accent" },
                                 { label: "Policy Shift Risk", value: "Moderate", color: "text-amber-500" },
-                                { label: "Liquidity Buffer", value: "High", color: "text-emerald-500" },
+                                { label: "Liquidity Buffer", value: "High", color: "text-accent" },
                             ].map((risk) => (
                                 <div key={risk.label} className="flex items-center justify-between border-b border-border/20 pb-2">
                                     <span className="text-xs text-muted-foreground">{risk.label}</span>

@@ -116,7 +116,7 @@ function mergeData(
   )
 }
 
-const COLORS = ["#10b981", "#f59e0b"] // emerald + amber
+const COLORS = ["var(--accent, #10b981)", "#f59e0b"] // accent + amber
 
 export function CompareClient() {
   const [area1, setArea1] = useState<string>("")
@@ -227,7 +227,7 @@ export function CompareClient() {
               <select
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
-                className="w-full rounded-lg border border-border/50 bg-card/60 px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500/50 appearance-none"
+                className="w-full rounded-lg border border-border/50 bg-card/60 px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent/50 appearance-none"
               >
                 <option value="">Select area...</option>
                 {AREA_OPTIONS.map((a) => (
@@ -272,7 +272,7 @@ export function CompareClient() {
                   </div>
                   <div className="flex flex-wrap gap-1">
                     {entryWinner === label && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-400 uppercase tracking-wide">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-medium text-accent uppercase tracking-wide">
                         <Award className="h-2.5 w-2.5" /> Lower Entry
                       </span>
                     )}
@@ -304,7 +304,7 @@ export function CompareClient() {
                         stats.mom_change === null
                           ? "text-muted-foreground"
                           : stats.mom_change >= 0
-                          ? "text-emerald-400"
+                          ? "text-accent"
                           : "text-red-400"
                       }`}
                     >

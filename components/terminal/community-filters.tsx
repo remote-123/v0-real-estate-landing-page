@@ -22,7 +22,7 @@ function Pill({ active, onClick, children }: { active: boolean; onClick: () => v
       className={cn(
         'px-3 py-1 rounded-md font-mono text-[11px] uppercase tracking-wide transition-colors',
         active
-          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+          ? 'bg-accent/20 text-accent border border-accent/40'
           : 'text-muted-foreground border border-border/50 hover:border-border hover:text-foreground'
       )}
     >

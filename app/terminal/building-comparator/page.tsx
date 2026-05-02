@@ -93,12 +93,12 @@ function BuildingSearch({
     return () => document.removeEventListener("mousedown", handler)
   }, [])
 
-  const accentBorder = color === "emerald" ? "border-emerald-500" : "border-blue-500"
-  const accentBg = color === "emerald" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : "bg-blue-500/10 text-blue-400 border-blue-500/30"
+  const accentBorder = color === "emerald" ? "border-accent" : "border-blue-500"
+  const accentBg = color === "emerald" ? "bg-accent/10 text-accent border-accent/30" : "bg-blue-500/10 text-blue-400 border-blue-500/30"
 
   return (
     <div className="flex-1 min-w-0" ref={containerRef}>
-      <p className={`font-mono text-xs uppercase tracking-widest mb-2 ${color === "emerald" ? "text-emerald-500" : "text-blue-400"}`}>
+      <p className={`font-mono text-xs uppercase tracking-widest mb-2 ${color === "emerald" ? "text-accent" : "text-blue-400"}`}>
         {label}
       </p>
       {selected ? (
@@ -276,7 +276,7 @@ export default function BuildingComparatorPage() {
           <button
             onClick={() => compare()}
             disabled={!buildingA || loading}
-            className="shrink-0 rounded-md bg-emerald-500 px-6 py-2 text-sm font-semibold text-black transition-opacity hover:opacity-90 disabled:opacity-40"
+            className="shrink-0 rounded-md bg-accent px-6 py-2 text-sm font-semibold text-accent-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
           >
             {loading ? "Loading…" : "Compare"}
           </button>
@@ -298,7 +298,7 @@ export default function BuildingComparatorPage() {
                   className={cn(
                     "px-3 py-1 rounded-md text-xs font-medium transition-colors",
                     selectedBeds === tab.value
-                      ? "bg-emerald-500 text-black"
+                      ? "bg-accent text-accent-foreground"
                       : "bg-secondary text-muted-foreground hover:text-foreground"
                   )}
                 >
@@ -324,7 +324,7 @@ export default function BuildingComparatorPage() {
               <Line
                 type="monotone"
                 dataKey={buildingA}
-                stroke="#10b981"
+                stroke="var(--accent, #10b981)"
                 strokeWidth={2}
                 dot={false}
                 connectNulls
@@ -352,7 +352,7 @@ export default function BuildingComparatorPage() {
             .filter(b => b.stats)
             .map(({ name, stats, color }) => (
               <div key={name} className="rounded-xl border border-border/40 bg-card/40 p-5 space-y-3">
-                <p className={`font-mono text-xs uppercase tracking-widest ${color === "emerald" ? "text-emerald-500" : "text-blue-400"}`}>
+                <p className={`font-mono text-xs uppercase tracking-widest ${color === "emerald" ? "text-accent" : "text-blue-400"}`}>
                   {name}
                 </p>
                 <div className="grid grid-cols-2 gap-3">
@@ -377,7 +377,7 @@ export default function BuildingComparatorPage() {
               <thead>
                 <tr className="border-b border-border/40">
                   <th className="py-2 pr-4 text-left font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Year</th>
-                  <th className="py-2 pr-4 text-right font-mono text-[10px] uppercase tracking-widest text-emerald-500">{buildingA}</th>
+                  <th className="py-2 pr-4 text-right font-mono text-[10px] uppercase tracking-widest text-accent">{buildingA}</th>
                   {buildingB && (
                     <th className="py-2 text-right font-mono text-[10px] uppercase tracking-widest text-blue-400">{buildingB}</th>
                   )}
@@ -419,7 +419,7 @@ export default function BuildingComparatorPage() {
                 <thead>
                   <tr className="border-b border-border/40">
                     <th className="py-2 pr-4 text-left font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Bedrooms</th>
-                    <th className="py-2 pr-4 text-right font-mono text-[10px] uppercase tracking-widest text-emerald-500">{buildingA}</th>
+                    <th className="py-2 pr-4 text-right font-mono text-[10px] uppercase tracking-widest text-accent">{buildingA}</th>
                     {buildingB && (
                       <th className="py-2 text-right font-mono text-[10px] uppercase tracking-widest text-blue-400">{buildingB}</th>
                     )}

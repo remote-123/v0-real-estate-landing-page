@@ -191,7 +191,7 @@ export default async function DeveloperTrackPage() {
                       <td className="px-4 py-3 text-right hidden md:table-cell">
                         <span
                           className={`font-mono text-xs ${
-                            finishRate >= 50 ? "text-emerald-400" : "text-muted-foreground"
+                            finishRate >= 50 ? "text-accent" : "text-muted-foreground"
                           }`}
                         >
                           {finishRate}%

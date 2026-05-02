@@ -61,7 +61,7 @@ export function LiquidityChart({ data }: { data: LiquidityPoint[] }) {
             formatter={(val) => <span style={{ color: "hsl(var(--muted-foreground))" }}>{val}</span>}
           />
           <Bar yAxisId="count" dataKey="mortgages" name="Mortgages" fill="#f59e0b" opacity={0.85} barSize={6} />
-          <Bar yAxisId="count" dataKey="sales" name="Sales" fill="#10b981" opacity={0.6} barSize={6} />
+          <Bar yAxisId="count" dataKey="sales" name="Sales" fill="var(--accent, #10b981)" opacity={0.6} barSize={6} />
           <Line
             yAxisId="ratio"
             type="monotone"

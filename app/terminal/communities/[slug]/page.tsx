@@ -276,7 +276,7 @@ export default async function CommunityPage({
 
   const { area, history, noData, serviceChargeAvg, distressCount, topProjects } = result
   const momChange = Number(area.mom_change ?? 0)
-  const momColor = momChange >= 0 ? 'text-emerald-400' : 'text-red-400'
+  const momColor = momChange >= 0 ? 'text-accent' : 'text-red-400'
 
   const formatPrice = (n: number) => {
     if (n >= 1_000_000) return `AED ${(n / 1_000_000).toFixed(2)}M`
@@ -324,7 +324,7 @@ export default async function CommunityPage({
             No {type === 'flat' ? 'flat' : 'villa'} sales recorded in this area.{' '}
             <Link
               href={`?type=${type === 'flat' ? 'villa' : 'flat'}`}
-              className="text-emerald-400 hover:underline"
+              className="text-accent hover:underline"
             >
               Try {type === 'flat' ? 'Villa' : 'Flat'}
             </Link>
@@ -389,7 +389,7 @@ export default async function CommunityPage({
             </div>
           ) : (
             <div className="flex flex-col gap-1">
-              <p className="font-mono text-2xl font-bold text-emerald-400">0</p>
+              <p className="font-mono text-2xl font-bold text-accent">0</p>
               <p className="text-sm text-muted-foreground">No units in the pipeline</p>
               <p className="text-xs text-muted-foreground/60 font-mono mt-1">Constrained supply supports price stability.</p>
             </div>
@@ -420,7 +420,7 @@ export default async function CommunityPage({
               {distressCount > 0 && (
                 <Link
                   href={`/terminal/distress-deals?area=${encodeURIComponent(displayName)}`}
-                  className="text-[11px] text-emerald-400 hover:underline font-mono mt-1 block"
+                  className="text-[11px] text-accent hover:underline font-mono mt-1 block"
                 >
                   View distress deals for {displayName} →
                 </Link>

@@ -59,7 +59,7 @@ export function FeatureRequestForm() {
     if (status === "success") {
         return (
             <div className="flex flex-col items-center gap-3 py-6 text-center">
-                <CheckCircle className="h-8 w-8 text-emerald-500" />
+                <CheckCircle className="h-8 w-8 text-accent" />
                 <p className="text-sm font-semibold text-foreground">Request received</p>
                 <p className="text-xs text-muted-foreground max-w-xs">
                     We review every submission. If it gets traction, it ships. Thank you.

@@ -48,7 +48,7 @@ export function StatCard({
                         {trend && (
                             <span className={cn(
                                 "flex items-center text-[10px] font-medium",
-                                trendDir === "up" ? "text-emerald-500" :
+                                trendDir === "up" ? "text-accent" :
                                     trendDir === "down" ? "text-red-500" :
                                         "text-muted-foreground"
                             )}>

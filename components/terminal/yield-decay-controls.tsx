@@ -12,7 +12,7 @@ type RoomOption = typeof ROOM_OPTIONS[number]
 
 const ROOM_COLORS: Record<RoomOption, string> = {
   "Studio": "#6366f1",
-  "1 B/R": "#10b981",
+  "1 B/R": "var(--accent, #10b981)",
   "2 B/R": "#eab308",
   "3 B/R": "#f97316",
 }
@@ -104,7 +104,7 @@ export function YieldDecayControls({ data }: Props) {
         <select
           value={selectedArea}
           onChange={e => setSelectedArea(e.target.value)}
-          className="rounded-md border border-border/40 bg-card/40 px-3 py-1.5 text-xs font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500/50 max-w-[220px]"
+          className="rounded-md border border-border/40 bg-card/40 px-3 py-1.5 text-xs font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-accent/50 max-w-[220px]"
         >
           {areas.map(a => (
             <option key={a} value={a}>{a}</option>
@@ -118,7 +118,7 @@ export function YieldDecayControls({ data }: Props) {
               onClick={() => setSelectedRoom(r)}
               className={`px-3 py-1 rounded-full text-[10px] font-mono uppercase tracking-widest transition-colors ${
                 selectedRoom === r
-                  ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
+                  ? "bg-accent/20 text-accent border border-accent/40"
                   : "bg-card/40 text-muted-foreground border border-border/40 hover:border-border"
               }`}
             >
@@ -222,10 +222,10 @@ export function YieldDecayControls({ data }: Props) {
                       {row.area}
                     </td>
                     <td className="px-3 py-2 text-muted-foreground">{row.room}</td>
-                    <td className={`px-3 py-2 text-right font-semibold ${belowThreshold ? "text-red-400" : "text-emerald-400"}`}>
+                    <td className={`px-3 py-2 text-right font-semibold ${belowThreshold ? "text-red-400" : "text-accent"}`}>
                       {row.latestYield.toFixed(2)}%
                     </td>
-                    <td className={`px-3 py-2 text-right ${row.change < 0 ? "text-red-400" : "text-emerald-400"}`}>
+                    <td className={`px-3 py-2 text-right ${row.change < 0 ? "text-red-400" : "text-accent"}`}>
                       {row.change >= 0 ? "+" : ""}{row.change.toFixed(2)}pp
                     </td>
                     <td className="px-5 py-2 text-right text-muted-foreground">{row.qtrs}</td>

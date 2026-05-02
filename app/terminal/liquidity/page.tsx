@@ -105,7 +105,7 @@ function deriveKpis(pivoted: LiquidityPoint[]) {
 function riskLabel(ratio: number): { label: string; color: string } {
   if (ratio >= 80) return { label: "High", color: "text-red-400" }
   if (ratio >= 50) return { label: "Moderate", color: "text-yellow-400" }
-  return { label: "Low", color: "text-emerald-400" }
+  return { label: "Low", color: "text-accent" }
 }
 
 export default async function LiquidityPage() {
@@ -222,7 +222,7 @@ export default async function LiquidityPage() {
                           <div
                             className={cn(
                               "h-full rounded-full",
-                              ratio >= 80 ? "bg-red-400" : ratio >= 50 ? "bg-yellow-400" : "bg-emerald-400"
+                              ratio >= 80 ? "bg-red-400" : ratio >= 50 ? "bg-yellow-400" : "bg-accent"
                             )}
                             style={{ width: `${Math.min(ratio, 100)}%` }}
                           />

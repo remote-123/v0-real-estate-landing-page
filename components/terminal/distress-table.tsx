@@ -103,7 +103,7 @@ export function DistressTable({ deals }: Props) {
         return (
           <span className={cn(
             'font-mono text-xs tabular-nums font-semibold',
-            isBelowAvg ? 'text-emerald-400' : 'text-foreground'
+            isBelowAvg ? 'text-accent' : 'text-foreground'
           )}>
             {psf > 0 ? psf.toLocaleString() : '—'}
           </span>
@@ -122,7 +122,7 @@ export function DistressTable({ deals }: Props) {
         const days = row.original.daysOnMarket
         const tier = row.original.domTier
         const colorClass =
-          tier === 'fresh' ? 'text-emerald-400' :
+          tier === 'fresh' ? 'text-accent' :
           tier === 'aging' ? 'text-yellow-400' :
           tier === 'stale' ? 'text-orange-400' :
           'text-red-400'

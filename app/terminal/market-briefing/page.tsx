@@ -94,8 +94,8 @@ export default async function MarketBriefingPage() {
           {/* Briefing content */}
           <div className="rounded-xl border border-border/40 bg-card/40 p-6 sm:p-8">
             <div className="flex items-center gap-2 mb-6">
-              <div className="rounded-lg bg-emerald-500/10 p-2">
-                <FileText className="h-4 w-4 text-emerald-500" />
+              <div className="rounded-lg bg-accent/10 p-2">
+                <FileText className="h-4 w-4 text-accent" />
               </div>
               <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 North Capital Research — Institutional Briefing
@@ -116,7 +116,7 @@ export default async function MarketBriefingPage() {
 
                 if (isHeading) {
                   return (
-                    <h3 key={i} className="text-[10px] uppercase tracking-widest font-semibold text-emerald-500 pt-4 first:pt-0">
+                    <h3 key={i} className="text-[10px] uppercase tracking-widest font-semibold text-accent pt-4 first:pt-0">
                       {paragraph}
                     </h3>
                   )

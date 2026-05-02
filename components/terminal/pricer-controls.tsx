@@ -40,19 +40,19 @@ function DistBar({ p10, p25, p50, p75, p90 }: DistBarProps) {
 
   return (
     <div className="relative h-4 w-full min-w-[120px] rounded overflow-hidden bg-muted/20">
-      {/* P25–P75 emerald band */}
+      {/* P25–P75 accent band */}
       <div
-        className="absolute top-0 h-full bg-emerald-500/40"
+        className="absolute top-0 h-full bg-accent/40"
         style={{ left: `${p25pct}%`, width: `${p75pct - p25pct}%` }}
       />
       {/* P50 tick */}
       <div
-        className="absolute top-0 h-full w-0.5 bg-emerald-400"
+        className="absolute top-0 h-full w-0.5 bg-accent"
         style={{ left: `${p50pct}%` }}
       />
       {/* P50 dot */}
       <div
-        className="absolute top-1/2 -translate-y-1/2 h-2.5 w-2.5 rounded-full bg-emerald-400 border border-background z-10"
+        className="absolute top-1/2 -translate-y-1/2 h-2.5 w-2.5 rounded-full bg-accent border border-background z-10"
         style={{ left: `calc(${p50pct}% - 5px)` }}
       />
     </div>
@@ -94,7 +94,7 @@ export function PricerControls({ data, isAuthenticated, totalRows }: Props) {
           placeholder="Search community..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full sm:w-72 rounded-md border border-border/40 bg-card/40 px-3 py-2 text-base sm:text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
+          className="w-full sm:w-72 rounded-md border border-border/40 bg-card/40 px-3 py-2 text-base sm:text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-accent/50"
         />
         <div className="flex flex-wrap gap-1.5">
           {ROOM_PILLS.map((pill) => (
@@ -104,7 +104,7 @@ export function PricerControls({ data, isAuthenticated, totalRows }: Props) {
               className={cn(
                 "rounded-full px-3 py-1 font-mono text-xs uppercase tracking-wider transition-colors",
                 roomFilter === pill.value
-                  ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
+                  ? "bg-accent/20 text-accent border border-accent/40"
                   : "bg-card/40 border border-border/40 text-muted-foreground hover:text-foreground hover:border-border"
               )}
             >
@@ -128,7 +128,7 @@ export function PricerControls({ data, isAuthenticated, totalRows }: Props) {
               <th className="px-4 py-3 text-left font-mono text-xs uppercase tracking-widest text-muted-foreground whitespace-nowrap">Bedrooms</th>
               <th className="px-4 py-3 text-right font-mono text-xs uppercase tracking-widest text-muted-foreground/60 whitespace-nowrap">P10</th>
               <th className="px-4 py-3 text-right font-mono text-xs uppercase tracking-widest text-muted-foreground whitespace-nowrap">P25</th>
-              <th className="px-4 py-3 text-right font-mono text-xs uppercase tracking-widest text-emerald-500 whitespace-nowrap">Median</th>
+              <th className="px-4 py-3 text-right font-mono text-xs uppercase tracking-widest text-accent whitespace-nowrap">Median</th>
               <th className="px-4 py-3 text-right font-mono text-xs uppercase tracking-widest text-muted-foreground whitespace-nowrap">P75</th>
               <th className="px-4 py-3 text-right font-mono text-xs uppercase tracking-widest text-muted-foreground/60 whitespace-nowrap">P90</th>
               <th className="px-4 py-3 text-left font-mono text-xs uppercase tracking-widest text-muted-foreground whitespace-nowrap">Fair Value Band</th>
@@ -164,7 +164,7 @@ export function PricerControls({ data, isAuthenticated, totalRows }: Props) {
                   <td className="px-4 py-3 text-right font-mono text-xs text-muted-foreground whitespace-nowrap">
                     {fmt(row.p25)}
                   </td>
-                  <td className="px-4 py-3 text-right font-mono text-sm font-bold text-emerald-400 whitespace-nowrap">
+                  <td className="px-4 py-3 text-right font-mono text-sm font-bold text-accent whitespace-nowrap">
                     {fmt(row.p50)}
                   </td>
                   <td className="px-4 py-3 text-right font-mono text-xs text-muted-foreground whitespace-nowrap">
@@ -174,7 +174,7 @@ export function PricerControls({ data, isAuthenticated, totalRows }: Props) {
                     {fmt(row.p90)}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
-                    <span className="inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 font-mono text-xs text-emerald-400">
+                    <span className="inline-flex items-center rounded-full border border-accent/30 bg-accent/10 px-2.5 py-0.5 font-mono text-xs text-accent">
                       {fmt(row.p25)} – {fmt(row.p75)}
                     </span>
                   </td>

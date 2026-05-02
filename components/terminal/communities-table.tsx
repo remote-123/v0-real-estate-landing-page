@@ -42,7 +42,7 @@ function MiniSparkline({ data }: { data?: number[] }) {
   }).join(' ')
 
   const isUp = data[data.length - 1] >= data[0]
-  const color = isUp ? 'stroke-emerald-400' : 'stroke-red-400'
+  const color = isUp ? 'stroke-accent' : 'stroke-red-400'
 
   return (
     <svg width={width} height={height} className="overflow-visible" viewBox={`0 -2 ${width} ${height + 4}`}>
@@ -63,7 +63,7 @@ function MomBadge({ value }: { value: number }) {
   const isPos = num >= 0
   return (
     <span className={cn('flex items-center gap-0.5 font-mono text-xs font-semibold',
-      isPos ? 'text-emerald-400' : 'text-red-400')}>
+      isPos ? 'text-accent' : 'text-red-400')}>
       {isPos ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
       {isPos ? '+' : ''}{num.toFixed(1)}%
     </span>

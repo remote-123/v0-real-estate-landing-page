@@ -129,7 +129,7 @@ export default async function YieldMapPage() {
       {/* Yield legend */}
       <div className="px-4 sm:px-0 flex items-center gap-4 flex-wrap">
         <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground/50">Yield tiers:</span>
-        <span className="rounded-full px-2.5 py-0.5 text-xs font-mono font-semibold ring-1 bg-emerald-500/15 text-emerald-400 ring-emerald-500/30">≥8% High</span>
+        <span className="rounded-full px-2.5 py-0.5 text-xs font-mono font-semibold ring-1 bg-accent/15 text-accent ring-accent/30">≥8% High</span>
         <span className="rounded-full px-2.5 py-0.5 text-xs font-mono font-semibold ring-1 bg-yellow-400/15 text-yellow-400 ring-yellow-400/30">6–8% Mid</span>
         <span className="rounded-full px-2.5 py-0.5 text-xs font-mono font-semibold ring-1 bg-muted/50 text-muted-foreground ring-border/40">&lt;6% Low</span>
       </div>

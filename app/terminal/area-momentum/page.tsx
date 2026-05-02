@@ -210,7 +210,7 @@ export default async function AreaMomentumPage() {
                     <td
                       className={`px-4 py-3 text-right font-mono text-xs font-semibold ${
                         area.price_mom_pct >= 0
-                          ? "text-emerald-500"
+                          ? "text-accent"
                           : "text-red-400"
                       }`}
                     >
@@ -219,7 +219,7 @@ export default async function AreaMomentumPage() {
                     <td
                       className={`px-4 py-3 text-right font-mono text-xs font-semibold ${
                         area.vol_mom_pct >= 0
-                          ? "text-emerald-500"
+                          ? "text-accent"
                           : "text-red-400"
                       }`}
                     >
@@ -233,7 +233,7 @@ export default async function AreaMomentumPage() {
                         <div className="relative w-20 h-5 flex items-center">
                           <div className="absolute inset-0 rounded-sm bg-muted/20" />
                           <div
-                            className="absolute left-0 top-0 h-full rounded-sm bg-emerald-500/20"
+                            className="absolute left-0 top-0 h-full rounded-sm bg-accent/20"
                             style={{ width: `${barWidth}%` }}
                           />
                           <span className="relative w-full text-right pr-1 font-mono text-xs text-foreground">
@@ -244,7 +244,7 @@ export default async function AreaMomentumPage() {
                     </td>
                     <td className="px-4 py-3">
                       {isBreakout && (
-                        <span className="inline-flex items-center gap-1 rounded-sm bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-emerald-400">
+                        <span className="inline-flex items-center gap-1 rounded-sm bg-accent/10 border border-accent/30 px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-accent">
                           Breakout
                         </span>
                       )}

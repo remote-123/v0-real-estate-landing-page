@@ -31,7 +31,7 @@ function StatusBadge({ status }: { status: string | null }) {
     s === "Under Construction"
       ? "bg-amber-400/10 text-amber-400 ring-amber-400/20"
       : s === "Completed"
-      ? "bg-emerald-400/10 text-emerald-400 ring-emerald-400/20"
+      ? "bg-accent/10 text-accent ring-accent/20"
       : "bg-slate-400/10 text-slate-400 ring-slate-400/20"
   return (
     <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 whitespace-nowrap", cls)}>

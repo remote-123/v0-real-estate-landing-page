@@ -99,8 +99,8 @@ export default async function TransactionPulsePage() {
       {/* Header */}
       <div className="space-y-1 px-4 sm:px-0">
         <div className="flex items-center gap-2">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-          <p className="text-[10px] font-mono font-semibold uppercase tracking-widest text-emerald-500">
+          <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
+          <p className="text-[10px] font-mono font-semibold uppercase tracking-widest text-accent">
             Live DLD Feed
           </p>
         </div>

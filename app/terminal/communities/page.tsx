@@ -192,7 +192,7 @@ export default async function CommunitiesPage() {
           </div>
           <div className="flex-1 rounded-xl bg-background border border-border/50 p-4">
             <p className="font-mono text-xs text-muted-foreground mb-1">Avg AED/sqft</p>
-            <p className="font-mono text-xl md:text-2xl font-bold text-emerald-400">
+            <p className="font-mono text-xl md:text-2xl font-bold text-accent">
               {avgPsf.toLocaleString()}
             </p>
           </div>

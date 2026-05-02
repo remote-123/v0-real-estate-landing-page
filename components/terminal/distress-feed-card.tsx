@@ -78,7 +78,7 @@ function PsfTrendChart({ area, type, listingPsf }: { area: string; type: string;
         <Line
           type="monotone"
           dataKey="avg_psf"
-          stroke="#10b981"
+          stroke="var(--accent, #10b981)"
           strokeWidth={1.5}
           dot={false}
           activeDot={{ r: 3 }}
@@ -127,7 +127,7 @@ export interface DistressFeedCardProps {
 const WA_NUMBER = "971554006230"
 
 const DOM_TIER_LABEL = {
-    fresh: { label: "Fresh listing", color: "text-emerald-400 border-emerald-500/30" },
+    fresh: { label: "Fresh listing", color: "text-accent border-accent/30" },
     aging: { label: "Aging — 14–30 days", color: "text-yellow-400 border-yellow-500/30" },
     stale: { label: "Stale — 30–90 days", color: "text-orange-400 border-orange-500/30" },
     overdue: { label: "Overdue — 90+ days", color: "text-red-400 border-red-500/30" },
@@ -248,7 +248,7 @@ export function DealModal({ deal, onClose }: { deal: DistressFeedCardProps; onCl
                                     AED/sqft — 18-month area trend
                                 </p>
                                 <div className="flex items-center gap-3 text-[9px] font-mono text-muted-foreground">
-                                    <span className="flex items-center gap-1"><span className="inline-block w-3 h-px bg-emerald-500" /> Area avg</span>
+                                    <span className="flex items-center gap-1"><span className="inline-block w-3 h-px bg-accent" /> Area avg</span>
                                     <span className="flex items-center gap-1"><span className="inline-block w-3 h-px border-t-2 border-dashed border-amber-400" /> This listing</span>
                                 </div>
                             </div>
@@ -256,13 +256,13 @@ export function DealModal({ deal, onClose }: { deal: DistressFeedCardProps; onCl
                             {deal.areaBenchmarkPsf && psfVsArea !== null && (
                                 <div className="flex items-center justify-between pt-1 border-t border-border/30">
                                     <span className="text-[10px] text-muted-foreground">vs 18-mo avg AED {formatFull(deal.areaBenchmarkPsf)}/sqft</span>
-                                    <span className={`font-mono text-xs font-semibold ${psfVsArea < 0 ? "text-emerald-400" : "text-red-400"}`}>
+                                    <span className={`font-mono text-xs font-semibold ${psfVsArea < 0 ? "text-accent" : "text-red-400"}`}>
                                         {psfVsArea > 0 ? "+" : ""}{psfVsArea.toFixed(1)}%
                                     </span>
                                 </div>
                             )}
                             {psfVsArea !== null && psfVsArea < -5 && (
-                                <p className="text-[11px] text-emerald-400 font-medium">
+                                <p className="text-[11px] text-accent font-medium">
                                     Priced {Math.abs(psfVsArea).toFixed(1)}% below the 18-month {deal.type.toLowerCase()} avg for this area.
                                 </p>
                             )}
@@ -316,7 +316,7 @@ export function DealModal({ deal, onClose }: { deal: DistressFeedCardProps; onCl
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={() => fireWhatsAppIntent(deal)}
-                            className="flex items-center justify-center gap-2 w-full rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-3 text-sm font-semibold transition-colors"
+                            className="flex items-center justify-center gap-2 w-full rounded-lg bg-accent hover:bg-accent/90 text-accent-foreground px-4 py-3 text-sm font-semibold transition-colors"
                         >
                             <MessageCircle className="h-4 w-4" />
                             Chat with an analyst on WhatsApp

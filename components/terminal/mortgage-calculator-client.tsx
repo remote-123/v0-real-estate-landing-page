@@ -47,7 +47,7 @@ export function MortgageCalculatorClient() {
   }, [propertyPrice, downPaymentPct, interestRate, loanTermYears])
 
   const inputClass =
-    "w-full rounded-md border border-border/50 bg-background/60 px-3 py-2 text-base sm:text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
+    "w-full rounded-md border border-border/50 bg-background/60 px-3 py-2 text-base sm:text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-accent/50"
 
   return (
     <div className="space-y-6">
@@ -176,7 +176,7 @@ export function MortgageCalculatorClient() {
               key={item.label}
               className={`rounded-lg border p-4 ${
                 item.highlight
-                  ? "border-emerald-500/30 bg-emerald-500/5"
+                  ? "border-accent/30 bg-accent/5"
                   : "border-border/40 bg-background/30"
               }`}
             >
@@ -185,7 +185,7 @@ export function MortgageCalculatorClient() {
               </p>
               <p
                 className={`font-mono text-sm font-bold leading-tight ${
-                  item.highlight ? "text-emerald-400" : "text-foreground"
+                  item.highlight ? "text-accent" : "text-foreground"
                 }`}
               >
                 {item.value}
@@ -209,7 +209,7 @@ export function MortgageCalculatorClient() {
           </div>
           <div className="h-2 w-full rounded-full bg-muted/30 overflow-hidden">
             <div
-              className="h-full rounded-full bg-emerald-500 transition-all"
+              className="h-full rounded-full bg-accent transition-all"
               style={{
                 width: `${(results.loanAmount / (results.loanAmount + results.totalInterest)) * 100}%`,
               }}
@@ -217,7 +217,7 @@ export function MortgageCalculatorClient() {
           </div>
           <div className="flex justify-between text-[10px] font-mono text-muted-foreground/60">
             <span className="flex items-center gap-1">
-              <span className="inline-block w-2.5 h-1.5 rounded-sm bg-emerald-500/60" />
+              <span className="inline-block w-2.5 h-1.5 rounded-sm bg-accent/60" />
               Principal AED {formatFull(results.loanAmount)}
             </span>
             <span className="flex items-center gap-1">

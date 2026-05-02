@@ -13,13 +13,13 @@ export type MultiPricePoint = {
 
 const FLAT_LINES = [
   { key: 'studio', label: 'Studio', color: '#6366f1' },
-  { key: '1br',    label: '1 BR',   color: '#10b981' },
+  { key: '1br',    label: '1 BR',   color: 'var(--accent, #10b981)' },
   { key: '2br',    label: '2 BR',   color: '#f59e0b' },
   { key: '3br',    label: '3 BR',   color: '#ef4444' },
   { key: '4br',    label: '4 BR+',  color: '#a855f7' },
 ]
 
-const VILLA_LINE = { key: 'all', label: 'Villa', color: '#10b981' }
+const VILLA_LINE = { key: 'all', label: 'Villa', color: 'var(--accent, #10b981)' }
 
 interface Props {
   priceHistory: MultiPricePoint[]
@@ -62,7 +62,7 @@ export function CommunityCharts({ priceHistory, type }: Props) {
             {label}
           </h3>
         </div>
-        <span className={`font-mono text-sm font-bold ${isPos ? 'text-emerald-400' : 'text-red-400'}`}>
+        <span className={`font-mono text-sm font-bold ${isPos ? 'text-accent' : 'text-red-400'}`}>
           {primary.label} {isPos ? '+' : ''}{change}%
         </span>
       </div>

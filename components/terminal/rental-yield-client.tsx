@@ -47,7 +47,7 @@ export function RentalYieldClient({ benchmarks }: RentalYieldClientProps) {
   }, [grossYield, selected, annualRent, purchasePrice])
 
   const inputClass =
-    "w-full rounded-md border border-border/50 bg-background/60 px-3 py-2 text-base sm:text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
+    "w-full rounded-md border border-border/50 bg-background/60 px-3 py-2 text-base sm:text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-accent/50"
 
   return (
     <div className="space-y-6">
@@ -85,7 +85,7 @@ export function RentalYieldClient({ benchmarks }: RentalYieldClientProps) {
                   key={row.area_name_en}
                   className={`border-b border-border/20 transition-colors cursor-pointer ${
                     row.display_name === selectedArea
-                      ? "bg-emerald-500/5 border-emerald-500/20"
+                      ? "bg-accent/5 border-accent/20"
                       : i % 2 === 0
                       ? "bg-background/20"
                       : ""
@@ -187,11 +187,11 @@ export function RentalYieldClient({ benchmarks }: RentalYieldClientProps) {
         {/* Results */}
         {grossYield !== null ? (
           <div className="grid grid-cols-2 gap-3 pt-2">
-            <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-4">
+            <div className="rounded-lg border border-accent/30 bg-accent/5 p-4">
               <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-1.5">
                 Gross Yield
               </p>
-              <p className="font-mono text-2xl font-bold text-emerald-400">
+              <p className="font-mono text-2xl font-bold text-accent">
                 {grossYield.toFixed(2)}%
               </p>
               <p className="text-[10px] text-muted-foreground/60 mt-1 font-mono">

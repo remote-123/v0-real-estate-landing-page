@@ -43,8 +43,8 @@ export function BuildingPSFChart({ data }: { data: PSFPoint[] }) {
         <AreaChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
           <defs>
             <linearGradient id="psfGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-              <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+              <stop offset="5%" stopColor="var(--accent, #10b981)" stopOpacity={0.3} />
+              <stop offset="95%" stopColor="var(--accent, #10b981)" stopOpacity={0} />
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
@@ -60,11 +60,11 @@ export function BuildingPSFChart({ data }: { data: PSFPoint[] }) {
           <Area
             type="monotone"
             dataKey="avg_psf"
-            stroke="#10b981"
+            stroke="var(--accent, #10b981)"
             strokeWidth={1.5}
             fill="url(#psfGradient)"
             dot={false}
-            activeDot={{ r: 3, fill: "#10b981" }}
+            activeDot={{ r: 3, fill: "var(--accent, #10b981)" }}
           />
         </AreaChart>
       </ResponsiveContainer>
