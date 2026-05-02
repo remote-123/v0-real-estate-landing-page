@@ -60,6 +60,7 @@
 
 ## Backlog Ideas (from MEGA_IDEAS)
 - Pascal Editor (3D floor plan viewer) — integrate on building comparator
+- [x] **Mortgage calculator** `/tools/mortgage-calculator` — BUILT Cycle 34 (2026-05-02): public SEO tool, WebApplication + FAQPage JSON-LD, 7-Q Dubai mortgage FAQ, multi-domain metadata, sitemap both branches. Reuses terminal MortgageCalculatorClient.
 - [x] **Rental yield calculator** `/tools/rental-yield-calculator` — BUILT 2026-05-02 (live benchmarks, JSON-LD, FAQ schema, sitemap)
 - [x] **Service charge estimator** `/tools/service-charge-estimator` — BUILT 2026-05-02 (Cycle 12): typeahead, YoY budget trend, per-unit + AED/sqft estimates, category breakdown
 - [x] **Email gate on Phase 2 terminal pages** — BUILT 2026-05-02 (Cycle 11): inline email form overlay, cookie unlock, router.refresh() re-render

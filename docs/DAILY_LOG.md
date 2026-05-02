@@ -7,6 +7,12 @@
 > 3. **Mandatory Signature:** Every entry must explicitly state the tool name at the start (e.g., *"Built by Antigravity"*, *"Built by Claude Code"*, or *"Built by Cursor"*).
 
 
+## 02 May 2026 — Cycle 34
+
+*Built by Claude Code*
+
+- **Public mortgage calculator tool** at `/tools/mortgage-calculator` — third public SEO tool (alongside rental yield + service charge). Reuses `MortgageCalculatorClient` from terminal (pure client component, zero terminal deps). SEO metadata with multi-domain support (northcapitaldxb/cityregistry), `WebApplication` + `FAQPage` JSON-LD, 7-question Dubai mortgage FAQ (LTV limits, rates, expat/non-resident rules, fees, max term, fix vs variable), lead CTA. Added to sitemap both domain branches.
+
 ## 02 May 2026 — Cycle 33
 
 *Built by Claude Code*
