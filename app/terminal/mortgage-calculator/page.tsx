@@ -1,34 +1,12 @@
-import type { Metadata } from "next"
+import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { MortgageCalculatorClient } from "@/components/terminal/mortgage-calculator-client"
 
-export const metadata: Metadata = {
-  title: "Mortgage Calculator — Dubai Property Finance | North Capital DXB",
-  description:
-    "Model your monthly repayments, total interest, and loan costs for Dubai real estate. Defaults based on UAE bank rates for expat buyers.",
-  alternates: {
-    canonical: "/terminal/mortgage-calculator",
-  },
-  openGraph: {
-    title: "Mortgage Calculator — Dubai Property Finance | North Capital DXB",
-    description:
-      "Model your monthly repayments, total interest, and loan costs for Dubai real estate.",
-    url: "/terminal/mortgage-calculator",
-    images: [
-      {
-        url: "https://www.northcapitaldxb.com/images/distress-social.png",
-        width: 1200,
-        height: 630,
-        alt: "Mortgage Calculator — North Capital DXB",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Mortgage Calculator — Dubai Property Finance | North Capital DXB",
-    description:
-      "Model your monthly repayments, total interest, and loan costs for Dubai real estate.",
-    images: ["https://www.northcapitaldxb.com/images/distress-social.png"],
-  },
+export async function generateMetadata() {
+  return terminalPageMeta({
+    title: "Mortgage Calculator — Dubai Property Finance",
+    description: "Model your monthly repayments, total interest, and loan costs for Dubai real estate. Defaults based on UAE bank rates for expat buyers.",
+    path: "/terminal/mortgage-calculator",
+  })
 }
 
 export default function MortgageCalculatorPage() {

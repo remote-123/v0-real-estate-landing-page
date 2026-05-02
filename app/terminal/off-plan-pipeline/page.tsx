@@ -1,4 +1,4 @@
-import type { Metadata } from "next"
+import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { sql } from "@/lib/db"
 import { formatAreaName } from "@/lib/area-names"
 import { StatCard } from "@/components/terminal/stat-card"
@@ -8,18 +8,12 @@ import { GatedTableOverlay } from "@/components/auth/gated-table-overlay"
 
 export const revalidate = 3600
 
-export const metadata: Metadata = {
-  title: "Off-Plan Pipeline | North Capital DXB",
-  description:
-    "Dubai off-plan development pipeline by area. Track total units under development, active projects, and expected completions across all DLD-registered communities.",
-  alternates: {
-    canonical: "/terminal/off-plan-pipeline",
-  },
-  openGraph: {
-    title: "Off-Plan Pipeline | North Capital DXB",
-    description: "Track Dubai's off-plan development pipeline: units under construction by area, active projects, and completion timeline from DLD data.",
-    url: "/terminal/off-plan-pipeline",
-  },
+export async function generateMetadata() {
+  return terminalPageMeta({
+    title: "Off-Plan Pipeline",
+    description: "Dubai off-plan development pipeline by area. Track total units under development, active projects, and expected completions across all DLD-registered communities.",
+    path: "/terminal/off-plan-pipeline",
+  })
 }
 
 interface AreaPipeline {

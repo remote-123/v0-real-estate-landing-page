@@ -1,4 +1,4 @@
-import type { Metadata } from "next"
+import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { TrendingUp } from "lucide-react"
 import { sql } from "@/lib/db"
 import { StatCard } from "@/components/terminal/stat-card"
@@ -7,13 +7,12 @@ import type { PriceIndexRow } from "@/components/terminal/price-index-chart"
 
 export const revalidate = 86400
 
-export const metadata: Metadata = {
-  title: "Dubai Residential Price Index | North Capital DXB",
-  description:
-    "Monthly DLD price index for Dubai residential real estate — all types, flats, and villas from 2011 to present.",
-  alternates: {
-    canonical: "/terminal/price-index",
-  },
+export async function generateMetadata() {
+  return terminalPageMeta({
+    title: "Dubai Residential Price Index",
+    description: "Monthly DLD price index for Dubai residential real estate — all types, flats, and villas from 2011 to present.",
+    path: "/terminal/price-index",
+  })
 }
 
 async function fetchPriceIndex(): Promise<PriceIndexRow[]> {

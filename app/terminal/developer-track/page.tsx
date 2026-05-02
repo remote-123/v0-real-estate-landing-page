@@ -1,4 +1,4 @@
-import type { Metadata } from "next"
+import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { sql } from "@/lib/db"
 import { Building2, TrendingUp, BarChart3 } from "lucide-react"
 import { StatCard } from "@/components/terminal/stat-card"
@@ -6,13 +6,12 @@ import { formatAreaName } from "@/lib/area-names"
 
 export const revalidate = 3600
 
-export const metadata: Metadata = {
-  title: "Developer Track Record | North Capital DXB",
-  description:
-    "Dubai developer league table ranked by DLD-registered project pipeline, unit count, and top areas. Data-driven developer due diligence.",
-  alternates: {
-    canonical: "/terminal/developer-track",
-  },
+export async function generateMetadata() {
+  return terminalPageMeta({
+    title: "Developer Track Record",
+    description: "Dubai developer league table ranked by DLD-registered project pipeline, unit count, and top areas. Data-driven developer due diligence.",
+    path: "/terminal/developer-track",
+  })
 }
 
 interface DeveloperRow {

@@ -1,21 +1,15 @@
-import type { Metadata } from "next"
+import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { sql } from "@/lib/db"
 import { FileText } from "lucide-react"
 
 export const revalidate = 3600
 
-export const metadata: Metadata = {
-  title: "Weekly Market Briefing | North Capital DXB",
-  description:
-    "Institutional-grade weekly market briefing for Dubai real estate. DLD data-driven analysis covering top areas by volume, distress signals, and price momentum.",
-  alternates: {
-    canonical: "/terminal/market-briefing",
-  },
-  openGraph: {
-    title: "Weekly Market Briefing | North Capital DXB",
-    description: "DLD data-driven weekly briefing covering Dubai real estate market signals, distress activity, and top-performing areas.",
-    url: "/terminal/market-briefing",
-  },
+export async function generateMetadata() {
+  return terminalPageMeta({
+    title: "Weekly Market Briefing",
+    description: "Institutional-grade weekly market briefing for Dubai real estate. DLD data-driven analysis covering top areas by volume, distress signals, and price momentum.",
+    path: "/terminal/market-briefing",
+  })
 }
 
 interface Briefing {

@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { ChevronRight, Globe, MapPin, Zap, Twitter, Lightbulb } from "lucide-react"
 import { StatCard } from "@/components/terminal/stat-card"
 import { TerminalTickerCards } from "@/components/terminal/ticker-cards"
@@ -8,31 +9,12 @@ import { TERMINAL_ICONS, SanityTerminalCategory } from "@/lib/terminal"
 
 export const dynamic = 'force-dynamic'
 
-export const metadata = {
-    title: "Market Intelligence Terminal | North Capital DXB",
+export async function generateMetadata() {
+  return terminalPageMeta({
+    title: "Market Intelligence Terminal",
     description: "Aggregated macro-economic datasets for the Dubai real estate market. Institutional-grade analysis of yields, pricing, and occupancy.",
-    alternates: {
-        canonical: "/terminal"
-    },
-    openGraph: {
-        title: "Market Intelligence Terminal | North Capital DXB",
-        description: "Aggregated macro-economic datasets for the Dubai real estate market. Institutional-grade analysis of yields, pricing, and occupancy.",
-        url: "/terminal",
-        images: [
-            {
-                url: "https://www.northcapitaldxb.com/images/distress-social.png",
-                width: 1200,
-                height: 630,
-                alt: "North Capital DXB — Market Intelligence Terminal",
-            },
-        ],
-    },
-    twitter: {
-        card: "summary_large_image",
-        title: "Market Intelligence Terminal | North Capital DXB",
-        description: "Aggregated macro-economic datasets for the Dubai real estate market. Institutional-grade analysis of yields, pricing, and occupancy.",
-        images: ["https://www.northcapitaldxb.com/images/distress-social.png"],
-    },
+    path: "/terminal",
+  })
 }
 
 async function getTerminalData(): Promise<SanityTerminalCategory[]> {

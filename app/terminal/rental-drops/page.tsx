@@ -1,16 +1,16 @@
-import type { Metadata } from "next"
+import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { RentalTable, type RentalListing } from "@/components/terminal/rental-table"
 import { sql } from "@/lib/db"
 import { auth } from "@/auth"
 
 export const dynamic = 'force-dynamic'
 
-export const metadata: Metadata = {
-    title: "Rental Drops Dubai | North Capital DXB",
+export async function generateMetadata() {
+  return terminalPageMeta({
+    title: "Rental Drops Dubai",
     description: "Aggregated rental listings from Bayut and PropertyFinder. Monthly pricing computed. Newest listings first — no tab-switching required.",
-    alternates: {
-        canonical: "/terminal/rental-drops"
-    },
+    path: "/terminal/rental-drops",
+  })
 }
 
 async function fetchListingsFromDB(): Promise<RentalListing[]> {

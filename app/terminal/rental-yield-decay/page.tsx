@@ -1,4 +1,4 @@
-import type { Metadata } from "next"
+import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { TrendingDown, Activity, AlertTriangle } from "lucide-react"
 import { sql } from "@/lib/db"
 import { StatCard } from "@/components/terminal/stat-card"
@@ -6,13 +6,12 @@ import { YieldDecayControls } from "@/components/terminal/yield-decay-controls"
 
 export const revalidate = 3600
 
-export const metadata: Metadata = {
-  title: "Rental Yield Decay | North Capital DXB",
-  description:
-    "Track gross rental yield compression across Dubai communities over 12 quarters. Areas flagged where yields fall below the 5% risk-free threshold.",
-  alternates: {
-    canonical: "/terminal/rental-yield-decay",
-  },
+export async function generateMetadata() {
+  return terminalPageMeta({
+    title: "Rental Yield Decay",
+    description: "Track gross rental yield compression across Dubai communities over 12 quarters. Areas flagged where yields fall below the 5% risk-free threshold.",
+    path: "/terminal/rental-yield-decay",
+  })
 }
 
 export type YieldRow = {

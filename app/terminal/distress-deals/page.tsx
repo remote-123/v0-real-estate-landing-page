@@ -1,4 +1,4 @@
-import type { Metadata } from "next"
+import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { MapPin } from "lucide-react"
 import { DistressTable } from "@/components/terminal/distress-table"
 import { DistressFilters } from "@/components/terminal/distress-filters"
@@ -211,31 +211,12 @@ function scoreDistress(
     return { score: Math.min(score, 100), tags }
 }
 
-export const metadata: Metadata = {
-    title: "Distress Deals Dubai | Real-Time Price Drop Scanner",
+export async function generateMetadata() {
+  return terminalPageMeta({
+    title: "Distress Deals Dubai",
     description: "Live feed of anomalous price drops in the Dubai real estate market. Identifying strategic distress sale opportunities.",
-    alternates: {
-        canonical: "/terminal/distress-deals"
-    },
-    openGraph: {
-        title: "Distress Deals Dubai | Real-Time Price Drop Scanner",
-        description: "Live feed of anomalous price drops in the Dubai real estate market. Identifying strategic distress sale opportunities.",
-        url: "/terminal/distress-deals",
-        images: [
-            {
-                url: "https://www.northcapitaldxb.com/images/distress-social.png",
-                width: 1200,
-                height: 630,
-                alt: "North Capital DXB — Live Distress Deals Dubai",
-            },
-        ],
-    },
-    twitter: {
-        card: "summary_large_image",
-        title: "Distress Deals Dubai | Real-Time Price Drop Scanner",
-        description: "Live feed of anomalous price drops in the Dubai real estate market. Identifying strategic distress sale opportunities.",
-        images: ["https://www.northcapitaldxb.com/images/distress-social.png"],
-    },
+    path: "/terminal/distress-deals",
+  })
 }
 
 export default async function DistressDealsPage(props: {

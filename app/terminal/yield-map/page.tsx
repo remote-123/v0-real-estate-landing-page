@@ -1,4 +1,4 @@
-import type { Metadata } from "next"
+import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { TrendingUp } from "lucide-react"
 import { sql } from "@/lib/db"
 import { StatCard } from "@/components/terminal/stat-card"
@@ -9,13 +9,12 @@ import { auth } from "@/auth"
 
 export const dynamic = 'force-dynamic'
 
-export const metadata: Metadata = {
-  title: "Dubai Yield Map | North Capital DXB",
-  description:
-    "Gross rental yield by community and bedroom type. Rolling 12 months of DLD-registered sales and rental contracts.",
-  alternates: {
-    canonical: "/terminal/yield-map",
-  },
+export async function generateMetadata() {
+  return terminalPageMeta({
+    title: "Dubai Yield Map",
+    description: "Gross rental yield by community and bedroom type. Rolling 12 months of DLD-registered sales and rental contracts.",
+    path: "/terminal/yield-map",
+  })
 }
 
 async function fetchYieldData(): Promise<YieldRow[]> {

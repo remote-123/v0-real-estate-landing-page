@@ -1,11 +1,12 @@
-import type { Metadata } from "next"
+import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { CompareClient } from "@/components/terminal/compare-client"
 
-export const metadata: Metadata = {
-  title: "Area Comparison | North Capital DXB",
-  description:
-    "Compare two Dubai areas side by side — PSF trend, average price, 12-month high/low, and momentum signals. Powered by live DLD transaction data.",
-  alternates: { canonical: "/terminal/compare" },
+export async function generateMetadata() {
+  return terminalPageMeta({
+    title: "Area Comparison",
+    description: "Compare two Dubai areas side by side — PSF trend, average price, 12-month high/low, and momentum signals. Powered by live DLD transaction data.",
+    path: "/terminal/compare",
+  })
 }
 
 export default function ComparePage() {

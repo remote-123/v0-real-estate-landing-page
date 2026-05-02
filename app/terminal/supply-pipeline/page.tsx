@@ -1,4 +1,4 @@
-import type { Metadata } from "next"
+import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { sql } from "@/lib/db"
 import { Building2, CalendarClock, Layers, MapPin } from "lucide-react"
 import { StatCard } from "@/components/terminal/stat-card"
@@ -6,13 +6,12 @@ import { SupplyPipelineTable } from "@/components/terminal/supply-pipeline-table
 
 export const revalidate = 3600
 
-export const metadata: Metadata = {
-  title: "Off-Plan Supply Pipeline | North Capital DXB",
-  description:
-    "Track upcoming unit supply by area and developer. DLD-registered projects Under Construction and Not Started across Dubai.",
-  alternates: {
-    canonical: "/terminal/supply-pipeline",
-  },
+export async function generateMetadata() {
+  return terminalPageMeta({
+    title: "Off-Plan Supply Pipeline",
+    description: "Track upcoming unit supply by area and developer. DLD-registered projects Under Construction and Not Started across Dubai.",
+    path: "/terminal/supply-pipeline",
+  })
 }
 
 export interface Project {

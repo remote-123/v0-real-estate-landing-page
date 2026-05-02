@@ -1,28 +1,16 @@
-import type { Metadata } from 'next'
+import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { ROICalculator } from "@/components/roi-calculator"
 import { sql } from "@/lib/db"
 import { formatAreaName } from "@/lib/area-names"
 
 export const revalidate = 3600
 
-export const metadata: Metadata = {
-  title: 'ROI Engine — Dubai Real Estate Yield Calculator | North Capital DXB',
-  description: 'Model net rental yields, gross yields, and cash-on-cash returns for Dubai property investments. Live DLD benchmarks: avg PSF by area and bedroom type.',
-  alternates: {
-    canonical: '/terminal/roi-engine',
-  },
-  openGraph: {
-    title: 'ROI Engine — Dubai Real Estate Yield Calculator | North Capital DXB',
-    description: 'Model net rental yields, gross yields, and cash-on-cash returns for Dubai property investments.',
-    url: '/terminal/roi-engine',
-    images: [{ url: 'https://www.northcapitaldxb.com/images/distress-social.png', width: 1200, height: 630, alt: 'ROI Engine — North Capital DXB' }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'ROI Engine — Dubai Real Estate Yield Calculator | North Capital DXB',
-    description: 'Model net rental yields, gross yields, and cash-on-cash returns for Dubai property investments.',
-    images: ['https://www.northcapitaldxb.com/images/distress-social.png'],
-  },
+export async function generateMetadata() {
+  return terminalPageMeta({
+    title: "ROI Engine — Dubai Real Estate Yield Calculator",
+    description: "Model net rental yields, gross yields, and cash-on-cash returns for Dubai property investments. Live DLD benchmarks: avg PSF by area and bedroom type.",
+    path: "/terminal/roi-engine",
+  })
 }
 
 interface AreaBenchmark {

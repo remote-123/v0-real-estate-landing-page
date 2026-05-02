@@ -1,13 +1,15 @@
-import type { Metadata } from 'next'
+import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { sql } from '@/lib/db'
 import { BuildingsTable } from '@/components/terminal/buildings-table'
 
 export const revalidate = 3600
 
-export const metadata: Metadata = {
-  title: 'Buildings Directory | North Capital DXB',
-  description: 'Browse and search the Dubai buildings registry — completion year, developer, area, and coordinates.',
-  alternates: { canonical: '/terminal/buildings' },
+export async function generateMetadata() {
+  return terminalPageMeta({
+    title: "Buildings Directory",
+    description: "Browse and search the Dubai buildings registry — completion year, developer, area, and coordinates.",
+    path: "/terminal/buildings",
+  })
 }
 
 type BuildingRow = {

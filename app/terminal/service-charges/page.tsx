@@ -1,4 +1,4 @@
-import type { Metadata } from "next"
+import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { sql } from "@/lib/db"
 import { Building2, Calendar, MapPin, Layers } from "lucide-react"
 import { StatCard } from "@/components/terminal/stat-card"
@@ -7,13 +7,12 @@ import { auth } from "@/auth"
 
 export const dynamic = 'force-dynamic'
 
-export const metadata: Metadata = {
-  title: "Service Charge Intelligence | North Capital DXB",
-  description:
-    "Annual operating costs by project — DLD service charge data for net yield calculation in Dubai real estate.",
-  alternates: {
-    canonical: "/terminal/service-charges",
-  },
+export async function generateMetadata() {
+  return terminalPageMeta({
+    title: "Service Charge Intelligence",
+    description: "Annual operating costs by project — DLD service charge data for net yield calculation in Dubai real estate.",
+    path: "/terminal/service-charges",
+  })
 }
 
 export interface ServiceChargeRow {

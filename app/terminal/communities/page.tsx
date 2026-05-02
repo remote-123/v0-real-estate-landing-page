@@ -1,5 +1,5 @@
 import React from 'react'
-import type { Metadata } from 'next'
+import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { CommunitiesTable } from '@/components/terminal/communities-table'
 import { type Community } from '@/lib/types/community'
 import { sql } from '@/lib/db'
@@ -8,26 +8,12 @@ import { auth } from '@/auth'
 
 export const dynamic = 'force-dynamic'
 
-export const metadata: Metadata = {
-  title: 'Community Screener | North Capital DXB',
-  description: 'Institutional-grade metrics across every Dubai community — yield, price/sqft, transaction velocity, and supply pipeline.',
-  alternates: {
-    canonical: '/terminal/communities',
-  },
-  openGraph: {
-    images: [
-      {
-        url: '/images/terminal-communities-social.png',
-        width: 1200,
-        height: 630,
-        alt: 'Dubai Community Intelligence — North Capital DXB',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    images: ['/images/terminal-communities-social.png'],
-  },
+export async function generateMetadata() {
+  return terminalPageMeta({
+    title: "Community Screener",
+    description: "Institutional-grade metrics across every Dubai community — yield, price/sqft, transaction velocity, and supply pipeline.",
+    path: "/terminal/communities",
+  })
 }
 
 type CommunityRow = {

@@ -1,4 +1,4 @@
-import type { Metadata } from "next"
+import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { Activity, TrendingUp, DollarSign, BarChart2 } from "lucide-react"
 import { sql } from "@/lib/db"
 import { StatCard } from "@/components/terminal/stat-card"
@@ -7,11 +7,12 @@ import { TransactionHeatmap } from "@/components/terminal/transaction-heatmap"
 
 export const revalidate = 3600
 
-export const metadata: Metadata = {
-  title: "Transaction Pulse | North Capital DXB",
-  description:
-    "Monthly sales volume, value, and market velocity across all Dubai transaction types — powered by Dubai Land Department data.",
-  alternates: { canonical: "/terminal/transaction-pulse" },
+export async function generateMetadata() {
+  return terminalPageMeta({
+    title: "Transaction Pulse",
+    description: "Monthly sales volume, value, and market velocity across all Dubai transaction types — powered by Dubai Land Department data.",
+    path: "/terminal/transaction-pulse",
+  })
 }
 
 type DayRow = { day: string; daily_txns: number }

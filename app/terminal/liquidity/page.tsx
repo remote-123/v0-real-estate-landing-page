@@ -1,4 +1,4 @@
-import type { Metadata } from "next"
+import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { sql } from "@/lib/db"
 import { BarChart3, TrendingUp, DollarSign, AlertTriangle } from "lucide-react"
 import { StatCard } from "@/components/terminal/stat-card"
@@ -8,11 +8,12 @@ import { cn } from "@/lib/utils"
 
 export const revalidate = 3600
 
-export const metadata: Metadata = {
-  title: "Mortgage & Liquidity Scanner | North Capital DXB",
-  description:
-    "Track mortgage deal flow, leverage ratios, and liquidity risk by Dubai community. Powered by DLD transaction data.",
-  alternates: { canonical: "/terminal/liquidity" },
+export async function generateMetadata() {
+  return terminalPageMeta({
+    title: "Mortgage & Liquidity Scanner",
+    description: "Track mortgage deal flow, leverage ratios, and liquidity risk by Dubai community. Powered by DLD transaction data.",
+    path: "/terminal/liquidity",
+  })
 }
 
 type MonthRow = {

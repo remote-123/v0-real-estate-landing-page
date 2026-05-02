@@ -1,38 +1,16 @@
-import type { Metadata } from "next"
+import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { sql } from "@/lib/db"
 import { formatAreaName } from "@/lib/area-names"
 import { RentalYieldClient, type AreaYieldRow } from "@/components/terminal/rental-yield-client"
 
 export const revalidate = 3600
 
-export const metadata: Metadata = {
-  title: "Rental Yield Calculator — Dubai Area Benchmarks | North Capital DXB",
-  description:
-    "Compute gross and net rental yield for Dubai properties. Benchmarks: avg PSF and service charges per area from DLD data.",
-  alternates: {
-    canonical: "/terminal/rental-yield",
-  },
-  openGraph: {
-    title: "Rental Yield Calculator — Dubai Area Benchmarks | North Capital DXB",
-    description:
-      "Compute gross and net rental yield for Dubai properties using live DLD benchmarks.",
-    url: "/terminal/rental-yield",
-    images: [
-      {
-        url: "https://www.northcapitaldxb.com/images/distress-social.png",
-        width: 1200,
-        height: 630,
-        alt: "Rental Yield Calculator — North Capital DXB",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Rental Yield Calculator — Dubai Area Benchmarks | North Capital DXB",
-    description:
-      "Compute gross and net rental yield for Dubai properties using live DLD benchmarks.",
-    images: ["https://www.northcapitaldxb.com/images/distress-social.png"],
-  },
+export async function generateMetadata() {
+  return terminalPageMeta({
+    title: "Rental Yield Calculator — Dubai Area Benchmarks",
+    description: "Compute gross and net rental yield for Dubai properties. Benchmarks: avg PSF and service charges per area from DLD data.",
+    path: "/terminal/rental-yield",
+  })
 }
 
 async function fetchBenchmarks(): Promise<AreaYieldRow[]> {

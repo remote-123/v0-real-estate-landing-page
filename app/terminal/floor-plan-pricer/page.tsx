@@ -1,17 +1,16 @@
-import type { Metadata } from "next"
+import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { sql } from "@/lib/db"
 import { PricerControls } from "@/components/terminal/pricer-controls"
 import { auth } from "@/auth"
 
 export const dynamic = 'force-dynamic'
 
-export const metadata: Metadata = {
-  title: "Floor Plan Pricer | North Capital DXB",
-  description:
-    "Price-per-sqft distribution by community and bedroom type. Based on 24 months of DLD registered sales.",
-  alternates: {
-    canonical: "/terminal/floor-plan-pricer",
-  },
+export async function generateMetadata() {
+  return terminalPageMeta({
+    title: "Floor Plan Pricer",
+    description: "Price-per-sqft distribution by community and bedroom type. Based on 24 months of DLD registered sales.",
+    path: "/terminal/floor-plan-pricer",
+  })
 }
 
 export interface PricerRow {

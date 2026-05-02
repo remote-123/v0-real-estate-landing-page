@@ -1,4 +1,4 @@
-import type { Metadata } from "next"
+import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { sql } from "@/lib/db"
 import { TrendingUp, Zap, BarChart3 } from "lucide-react"
 import { StatCard } from "@/components/terminal/stat-card"
@@ -8,13 +8,12 @@ import { GatedTableOverlay } from "@/components/auth/gated-table-overlay"
 
 export const dynamic = 'force-dynamic'
 
-export const metadata: Metadata = {
-  title: "Area Momentum | North Capital DXB",
-  description:
-    "Communities ranked by combined price and volume acceleration. Identifies Dubai real estate markets moving before wider coverage.",
-  alternates: {
-    canonical: "/terminal/area-momentum",
-  },
+export async function generateMetadata() {
+  return terminalPageMeta({
+    title: "Area Momentum",
+    description: "Communities ranked by combined price and volume acceleration. Identifies Dubai real estate markets moving before wider coverage.",
+    path: "/terminal/area-momentum",
+  })
 }
 
 interface AreaRow {
