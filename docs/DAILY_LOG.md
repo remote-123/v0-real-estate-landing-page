@@ -7,6 +7,10 @@
 > 3. **Mandatory Signature:** Every entry must explicitly state the tool name at the start (e.g., *"Built by Antigravity"*, *"Built by Claude Code"*, or *"Built by Cursor"*).
 
 
+## 02 May 2026 — Cycle 16
+*Built by Claude Code*
+- **Sidebar: add Area Comparison + Market Briefing (ef493cd)**: Added `/terminal/compare` (Area Comparison) under Buildings & Developers and `/terminal/market-briefing` (Market Briefing) under Terminal group. Added `/terminal/compare` to sitemap for both domains. Sidebar now has 20 links across 4 groups — all built terminal pages now visible.
+
 ## 02 May 2026 — Cycle 15
 *Built by Claude Code*
 - **Area pages SEO improvements (e09aa84)**: Updated all area metadata "2025" → "2026". Improved service charge query on `/areas/[slug]` — exact match (LOWER=LOWER) first, then LIKE fallback — prevents false positives from the previous first-word-only fuzzy match. Added BreadcrumbList schema to all 50+ area deep-dive pages. Enriched Dataset schema with `spatialCoverage` (Place node) and `variableMeasured` (avg PSF + 12m txn count PropertyValue nodes).
