@@ -44,4 +44,4 @@
 - [x] **Rental yield calculator** `/tools/rental-yield-calculator` — BUILT 2026-05-02 (live benchmarks, JSON-LD, FAQ schema, sitemap)
 - [x] **Service charge estimator** `/tools/service-charge-estimator` — BUILT 2026-05-02 (Cycle 12): typeahead, YoY budget trend, per-unit + AED/sqft estimates, category breakdown
 - [x] **Email gate on Phase 2 terminal pages** — BUILT 2026-05-02 (Cycle 11): inline email form overlay, cookie unlock, router.refresh() re-render
-- [x] **Weekly distress deal email alert system** — BUILT (already existed at /api/cron/weekly-distress-digest)
+- [x] **Weekly distress deal email alert system** — BUILT + improved (Cycle 24 2026-05-02): proper institutional HTML email template with deal cards, tier badges, PSF discount %; Telegram /leads bug fixed (subscribed_at)

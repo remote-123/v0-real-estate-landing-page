@@ -7,6 +7,11 @@
 > 3. **Mandatory Signature:** Every entry must explicitly state the tool name at the start (e.g., *"Built by Antigravity"*, *"Built by Claude Code"*, or *"Built by Cursor"*).
 
 
+## 02 May 2026 — Cycle 24
+*Built by Claude Code*
+- **Telegram /leads bug fix (5fe1ddd)**: `handleLeadsCommand` was querying `ORDER BY created_at DESC` — `email_leads` has no `created_at`, only `subscribed_at`. Fixed to `subscribed_at DESC`. Command was silently failing in prod.
+- **Institutional email template for weekly distress digest**: Replaced bare `textToHtml()` with full branded HTML email. Dark navy header, Gemini analysis paragraphs, deal cards (tier badge, price, PSF vs area avg % discount, score, DOM), CTA button, RERA footer. `sendEmailToLead()` now receives `deals[]` so cards render with live data.
+
 ## 02 May 2026 — Cycle 23
 *Built by Claude Code*
 - **Individual briefing pages /terminal/market-briefing/[id] (371e0e9)**: Dynamic route for each weekly briefing. Full content gated (blur + GatedTableOverlay for unauthenticated). Breadcrumb navigation. Prev/Next links between consecutive briefings. generateMetadata with briefing week in title. Archive page now links directly to `/[id]` instead of always showing latest.
