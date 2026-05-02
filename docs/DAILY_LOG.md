@@ -7,6 +7,10 @@
 > 3. **Mandatory Signature:** Every entry must explicitly state the tool name at the start (e.g., *"Built by Antigravity"*, *"Built by Claude Code"*, or *"Built by Cursor"*).
 
 
+## 02 May 2026 — Cycle 22
+*Built by Claude Code*
+- **Market Briefing archive page (006546c)**: New `/terminal/market-briefing/archive` lists all weekly briefings (last 52 weeks). Row-gated: 3 free briefings shown, GatedTableOverlay for rest. Each row: week label, date, 200-char excerpt. Main briefing page gets "Archive →" link. Added to sitemap.
+
 ## 02 May 2026 — Cycle 21
 *Built by Claude Code*
 - **CityRegistry feature grid expanded to 17 cards + vault sync (8ee1866)**: Added Developer Track Record, Buildings Directory, Area Comparison, Market Briefing, Rental Drops to `city-registry-landing.tsx` FEATURES array. New icons: Users, GitCompare, Newspaper, Home. Updated `vault/Open-Actions.md` — marked all gating, market briefing, area-list, and service charge estimator as complete.
