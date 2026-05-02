@@ -7,6 +7,10 @@
 > 3. **Mandatory Signature:** Every entry must explicitly state the tool name at the start (e.g., *"Built by Antigravity"*, *"Built by Claude Code"*, or *"Built by Cursor"*).
 
 
+## 02 May 2026 — Cycle 25
+*Built by Claude Code*
+- **Vitest test infrastructure + 44 tests (4f1dbac)**: First test coverage in the entire codebase. Installed vitest + @vitest/coverage-v8. Configured vitest.config.ts with @ alias + node environment. 5 test files: `lib/area-names.test.ts` (8), `lib/rate-limit.test.ts` (11), `api/unsubscribe.test.ts` (7), `api/email-capture.test.ts` (12), `api/telegram-webhook.test.ts` (6). Key regression guard: test explicitly verifies `handleLeadsCommand` uses `subscribed_at` not `created_at` — would have caught the Cycle 24 bug before deploy. Test exposed that `waitUntil` from `@vercel/functions` needs mocking in tests (added to `vi.mock`). `npm test` runs all 44 in ~770ms.
+
 ## 02 May 2026 — Cycle 24
 *Built by Claude Code*
 - **Telegram /leads bug fix (5fe1ddd)**: `handleLeadsCommand` was querying `ORDER BY created_at DESC` — `email_leads` has no `created_at`, only `subscribed_at`. Fixed to `subscribed_at DESC`. Command was silently failing in prod.

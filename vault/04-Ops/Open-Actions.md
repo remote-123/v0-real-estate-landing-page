@@ -39,6 +39,13 @@
 - [x] Google Search Console TXT record + meta tag verification
 - [ ] Submit sitemap in Search Console dashboard
 
+## Testing (Added 2026-05-02)
+- [x] **Vitest test infrastructure** — BUILT Cycle 25: vitest.config.ts, 5 test files, 44 passing tests. `npm test` command. Coverage: lib/area-names, lib/rate-limit, api/unsubscribe, api/email-capture, api/telegram-webhook.
+- [ ] **Expand test coverage**: api/cron routes (market-briefing, distress-digest), component tests, db utility functions
+
+## Known Risks / Tech Debt
+- `whatsapp_intents.created_at` — column existence assumed in Telegram `/leads` command handler. Test documents this assumption. Verify schema when checking whatsapp_intents table.
+
 ## Backlog Ideas (from MEGA_IDEAS)
 - Pascal Editor (3D floor plan viewer) — integrate on building comparator
 - [x] **Rental yield calculator** `/tools/rental-yield-calculator` — BUILT 2026-05-02 (live benchmarks, JSON-LD, FAQ schema, sitemap)
