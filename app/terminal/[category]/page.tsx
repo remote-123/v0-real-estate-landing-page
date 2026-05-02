@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: { params: Promise<{ category:
     return {
         title: `${category.title} Analytics | Dubai Investor Terminal`,
         description: category.description || `Macro-economic real estate metrics for ${category.title} in the Dubai market.`,
-        alternates: { canonical: `https://www.northcapitaldxb.com/terminal/${slug}` }
+        alternates: { canonical: `/terminal/${slug}` }
     }
 }
 

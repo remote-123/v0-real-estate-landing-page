@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   description:
     "Dubai developer league table ranked by DLD-registered project pipeline, unit count, and top areas. Data-driven developer due diligence.",
   alternates: {
-    canonical: "https://www.northcapitaldxb.com/terminal/developer-track",
+    canonical: "/terminal/developer-track",
   },
 }
 

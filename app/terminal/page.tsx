@@ -12,12 +12,12 @@ export const metadata = {
     title: "Market Intelligence Terminal | North Capital DXB",
     description: "Aggregated macro-economic datasets for the Dubai real estate market. Institutional-grade analysis of yields, pricing, and occupancy.",
     alternates: {
-        canonical: "https://www.northcapitaldxb.com/terminal"
+        canonical: "/terminal"
     },
     openGraph: {
         title: "Market Intelligence Terminal | North Capital DXB",
         description: "Aggregated macro-economic datasets for the Dubai real estate market. Institutional-grade analysis of yields, pricing, and occupancy.",
-        url: "https://www.northcapitaldxb.com/terminal",
+        url: "/terminal",
         images: [
             {
                 url: "https://www.northcapitaldxb.com/images/distress-social.png",

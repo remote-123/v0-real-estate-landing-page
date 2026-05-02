@@ -11,12 +11,12 @@ export const metadata: Metadata = {
   description:
     "Dubai off-plan development pipeline by area. Track total units under development, active projects, and expected completions across all DLD-registered communities.",
   alternates: {
-    canonical: "https://www.northcapitaldxb.com/terminal/off-plan-pipeline",
+    canonical: "/terminal/off-plan-pipeline",
   },
   openGraph: {
     title: "Off-Plan Pipeline | North Capital DXB",
     description: "Track Dubai's off-plan development pipeline: units under construction by area, active projects, and completion timeline from DLD data.",
-    url: "https://www.northcapitaldxb.com/terminal/off-plan-pipeline",
+    url: "/terminal/off-plan-pipeline",
   },
 }
 

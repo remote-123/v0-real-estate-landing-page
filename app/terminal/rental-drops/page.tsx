@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     title: "Rental Drops Dubai | North Capital DXB",
     description: "Aggregated rental listings from Bayut and PropertyFinder. Monthly pricing computed. Newest listings first — no tab-switching required.",
     alternates: {
-        canonical: "https://www.northcapitaldxb.com/terminal/rental-drops"
+        canonical: "/terminal/rental-drops"
     },
 }
 

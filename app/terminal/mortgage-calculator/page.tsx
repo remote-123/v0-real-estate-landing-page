@@ -6,13 +6,13 @@ export const metadata: Metadata = {
   description:
     "Model your monthly repayments, total interest, and loan costs for Dubai real estate. Defaults based on UAE bank rates for expat buyers.",
   alternates: {
-    canonical: "https://www.northcapitaldxb.com/terminal/mortgage-calculator",
+    canonical: "/terminal/mortgage-calculator",
   },
   openGraph: {
     title: "Mortgage Calculator — Dubai Property Finance | North Capital DXB",
     description:
       "Model your monthly repayments, total interest, and loan costs for Dubai real estate.",
-    url: "https://www.northcapitaldxb.com/terminal/mortgage-calculator",
+    url: "/terminal/mortgage-calculator",
     images: [
       {
         url: "https://www.northcapitaldxb.com/images/distress-social.png",

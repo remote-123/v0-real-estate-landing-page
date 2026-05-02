@@ -11,6 +11,7 @@ export const metadata: Metadata = {
   title: "Transaction Pulse | North Capital DXB",
   description:
     "Monthly sales volume, value, and market velocity across all Dubai transaction types — powered by Dubai Land Department data.",
+  alternates: { canonical: "/terminal/transaction-pulse" },
 }
 
 type DayRow = { day: string; daily_txns: number }

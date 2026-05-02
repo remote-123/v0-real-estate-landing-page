@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   description:
     "Monthly DLD price index for Dubai residential real estate — all types, flats, and villas from 2011 to present.",
   alternates: {
-    canonical: "https://www.northcapitaldxb.com/terminal/price-index",
+    canonical: "/terminal/price-index",
   },
 }
 

@@ -1,6 +1,6 @@
 # Open Actions & Backlog
 
-> Source: `docs/HUMAN_ACTIONS_REQUIRED.md` — last updated 2026-03-26
+> Source: `docs/HUMAN_ACTIONS_REQUIRED.md` — last updated 2026-05-01
 > Check this doc for current status — items may be stale.
 
 ## P0 — Blocked (In-Person Required)
@@ -25,6 +25,7 @@
 
 ## P3 — Terminal Features
 - [ ] **Liquidity Scanner** `/terminal/liquidity` — not built
+- [ ] **Researcher automation** `/admin/automations/researcher` — placeholder created, spec TBD
 - [ ] **Access gating** — Phase 2 pages behind free email signup, Phase 3 behind paid/HNW
 
 ## SEO (Done 2026-05-01)

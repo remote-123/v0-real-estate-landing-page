@@ -21,6 +21,25 @@
 **Why**: Terminal traffic outpacing agency site. Acquisition positioning — PropTech buyers (Bayut, CoStar, REA Group) want "the data platform" not "the agency with a dashboard".
 **Status**: Live. Middleware, layout, SEO, Google Search Console all configured.
 
+## ADR-006 — Full Domain Split: Agency vs Data Platform (2026-05-01)
+**Decision**: Hard split the two domains. NorthCapital = agency only. City Registry = data platform only.
+**Why**: Running both with identical terminal pages causes SEO cannibalization and brand confusion. Two distinct audiences, two distinct conversion goals.
+**NorthCapital DXB** (agency/conversion):
+- Remove `/terminal/*` — 301 redirect all terminal URLs → thecityregistry.com/terminal/*
+- Keep: homepage, blog (agency/project news only), contact, about, agent roster, off-plan project showcase
+- CTAs: WhatsApp, book viewing, lead gen
+- SEO angle: "Dubai property investment agency", developer launches
+
+**The City Registry** (data platform/authority):
+- Terminal is the entire product
+- Add thin landing page before terminal (explains platform, email capture)
+- Blog moves here — data-driven market analysis fits this brand
+- Small footer link → northcapitaldxb.com for investment enquiries
+- SEO angle: "Dubai real estate data", "property market intelligence"
+
+**Flow**: City Registry builds audience + SEO authority → warm leads funnel to NorthCapital for conversion.
+**Status**: Decision made. Not yet implemented.
+
 ## ADR-005 — Single CRON_SECRET (2026-03-25)
 **Decision**: Consolidate CRON_SECRET2 (used for fetch-listings) into single CRON_SECRET.
 **Why**: fetch-listings route removed, replaced by fetch-rental-listings. No need for second secret.

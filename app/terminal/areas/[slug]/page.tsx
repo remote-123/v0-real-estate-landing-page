@@ -173,6 +173,7 @@ export async function generateMetadata({
   return {
     title: `${name} Area Deep-Dive — Price, Pipeline & Distress | North Capital DXB`,
     description: `Full investment profile for ${name}: price per sqft trend, off-plan pipeline, service charges, and active distress deals.`,
+    alternates: { canonical: `/terminal/areas/${slug}` },
     openGraph: {
       images: [
         {

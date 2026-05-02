@@ -9,12 +9,12 @@ export const metadata: Metadata = {
   title: 'ROI Engine — Dubai Real Estate Yield Calculator | North Capital DXB',
   description: 'Model net rental yields, gross yields, and cash-on-cash returns for Dubai property investments. Live DLD benchmarks: avg PSF by area and bedroom type.',
   alternates: {
-    canonical: 'https://www.northcapitaldxb.com/terminal/roi-engine',
+    canonical: '/terminal/roi-engine',
   },
   openGraph: {
     title: 'ROI Engine — Dubai Real Estate Yield Calculator | North Capital DXB',
     description: 'Model net rental yields, gross yields, and cash-on-cash returns for Dubai property investments.',
-    url: 'https://www.northcapitaldxb.com/terminal/roi-engine',
+    url: '/terminal/roi-engine',
     images: [{ url: 'https://www.northcapitaldxb.com/images/distress-social.png', width: 1200, height: 630, alt: 'ROI Engine — North Capital DXB' }],
   },
   twitter: {

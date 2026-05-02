@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   description:
     "Annual operating costs by project — DLD service charge data for net yield calculation in Dubai real estate.",
   alternates: {
-    canonical: "https://www.northcapitaldxb.com/terminal/service-charges",
+    canonical: "/terminal/service-charges",
   },
 }
 

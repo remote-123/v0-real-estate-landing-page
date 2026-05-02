@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils'
 import { Suspense } from 'react'
 import { formatAreaName } from '@/lib/area-names'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 3600
 
 type TypeFilter = 'flat' | 'villa'
 
@@ -228,6 +228,22 @@ async function fetchAreaData(
   }
 }
 
+export async function generateStaticParams() {
+  try {
+    const rows = await sql<{ area_name_en: string }[]>`
+      SELECT area_name_en, SUM(txn_count) AS total
+      FROM mv_txn_monthly
+      WHERE area_name_en IS NOT NULL AND trans_group_en = 'Sales'
+      GROUP BY area_name_en
+      ORDER BY total DESC
+      LIMIT 100
+    `
+    return rows.map((r) => ({ slug: toSlug(r.area_name_en) }))
+  } catch {
+    return []
+  }
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
   const result = await fetchAreaData(slug, 'flat')
@@ -236,6 +252,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title: `${name} — Community Intelligence | North Capital DXB`,
     description: `Price per sqft, transaction volume, and supply pipeline for ${name}, Dubai.`,
+    alternates: { canonical: `/terminal/communities/${slug}` },
     openGraph: {
       images: [{ url: '/images/terminal-communities-social.png', width: 1200, height: 630, alt: `${name} Community Intelligence — North Capital DXB` }],
     },

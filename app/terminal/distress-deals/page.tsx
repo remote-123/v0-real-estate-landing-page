@@ -214,12 +214,12 @@ export const metadata: Metadata = {
     title: "Distress Deals Dubai | Real-Time Price Drop Scanner",
     description: "Live feed of anomalous price drops in the Dubai real estate market. Identifying strategic distress sale opportunities.",
     alternates: {
-        canonical: "https://www.northcapitaldxb.com/terminal/distress-deals"
+        canonical: "/terminal/distress-deals"
     },
     openGraph: {
         title: "Distress Deals Dubai | Real-Time Price Drop Scanner",
         description: "Live feed of anomalous price drops in the Dubai real estate market. Identifying strategic distress sale opportunities.",
-        url: "https://www.northcapitaldxb.com/terminal/distress-deals",
+        url: "/terminal/distress-deals",
         images: [
             {
                 url: "https://www.northcapitaldxb.com/images/distress-social.png",

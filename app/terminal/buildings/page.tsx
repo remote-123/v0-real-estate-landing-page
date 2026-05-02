@@ -1,17 +1,19 @@
 import type { Metadata } from 'next'
 import { sql } from '@/lib/db'
-import { auth } from '@/auth'
 import { BuildingsTable } from '@/components/terminal/buildings-table'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 3600
 
 export const metadata: Metadata = {
   title: 'Buildings Directory | North Capital DXB',
   description: 'Browse and search the Dubai buildings registry — completion year, developer, area, and coordinates.',
+  alternates: { canonical: '/terminal/buildings' },
 }
 
 type BuildingRow = {
   building_key: string
+  slug: string | null
+  global_slug: string | null
   building_name_en: string
   area_name_en: string | null
   primary_sub_type: string | null
@@ -31,6 +33,8 @@ async function fetchBuildings(): Promise<BuildingRow[]> {
     const rows = await sql<BuildingRow[]>`
       SELECT
         building_key,
+        slug,
+        global_slug,
         building_name_en,
         area_name_en,
         primary_sub_type,
@@ -54,12 +58,8 @@ async function fetchBuildings(): Promise<BuildingRow[]> {
   }
 }
 
-const FREE_ROWS = 5
-
 export default async function BuildingsPage() {
-  const [session, allData] = await Promise.all([auth(), fetchBuildings()])
-  const isAuthenticated = !!session
-  const data = isAuthenticated ? allData : allData.slice(0, FREE_ROWS)
+  const allData = await fetchBuildings()
 
   const withCoords = allData.filter(r => r.osm_lat != null && r.osm_lng != null).length
   const offPlan = allData.filter(r =>
@@ -123,11 +123,7 @@ export default async function BuildingsPage() {
 
       {/* Table */}
       <section>
-        <BuildingsTable
-          data={data}
-          isAuthenticated={isAuthenticated}
-          totalRows={allData.length}
-        />
+        <BuildingsTable data={allData} />
       </section>
 
     </div>

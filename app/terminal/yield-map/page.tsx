@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   description:
     "Gross rental yield by community and bedroom type. Rolling 12 months of DLD-registered sales and rental contracts.",
   alternates: {
-    canonical: "https://www.northcapitaldxb.com/terminal/yield-map",
+    canonical: "/terminal/yield-map",
   },
 }
 

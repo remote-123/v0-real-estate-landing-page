@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   description:
     "Track gross rental yield compression across Dubai communities over 12 quarters. Areas flagged where yields fall below the 5% risk-free threshold.",
   alternates: {
-    canonical: "https://www.northcapitaldxb.com/terminal/rental-yield-decay",
+    canonical: "/terminal/rental-yield-decay",
   },
 }
 

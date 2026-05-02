@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { headers } from "next/headers"
 import { Navbar } from "@/components/navbar"
 import { Hero } from "@/components/hero"
 import { StrategicAlliances } from "@/components/strategic-alliances"
@@ -12,13 +13,34 @@ import { Footer } from "@/components/footer"
 import { FaqSection } from "@/components/faq-section"
 import { FeaturedProjects } from "@/components/featured-projects"
 import { MarketIntelligenceTeaser } from "@/components/market-intelligence-teaser"
+import { CityRegistryLanding } from "@/components/city-registry-landing"
 
-export const metadata: Metadata = {
-  title: 'Institutional-Grade Dubai Real Estate Advisory | North Capital DXB',
-  description: 'Boutique real estate portfolio engineering for global expats. 0% tax, 7%+ net yields, and hard-currency hedging. Vetted inventory and strategic market intelligence.',
-  openGraph: {
-    title: 'North Capital DXB | Real Estate Investment Strategy',
-    description: 'Boutique real estate portfolio engineering for global expats. 7%+ net yields and tax-free capital preservation.',
+export async function generateMetadata(): Promise<Metadata> {
+  const headersList = await headers()
+  const site = headersList.get("x-site") ?? "northcapital"
+
+  if (site === "cityregistry") {
+    return {
+      title: "Dubai Real Estate Intelligence Platform | The City Registry",
+      description: "Institutional-grade Dubai property data. Transaction analytics, yield maps, community screener, distress deal scanner — powered by DLD and Bayut data.",
+      metadataBase: new URL("https://thecityregistry.com"),
+      alternates: { canonical: "https://thecityregistry.com" },
+      openGraph: {
+        title: "The City Registry — Dubai Real Estate Data Platform",
+        description: "Institutional-grade Dubai property data. Transaction analytics, yield maps, community screener, distress deal scanner.",
+        url: "https://thecityregistry.com",
+        siteName: "The City Registry",
+      },
+    }
+  }
+
+  return {
+    title: "Institutional-Grade Dubai Real Estate Advisory | North Capital DXB",
+    description: "Boutique real estate portfolio engineering for global expats. 0% tax, 7%+ net yields, and hard-currency hedging. Vetted inventory and strategic market intelligence.",
+    openGraph: {
+      title: "North Capital DXB | Real Estate Investment Strategy",
+      description: "Boutique real estate portfolio engineering for global expats. 7%+ net yields and tax-free capital preservation.",
+    },
   }
 }
 
@@ -71,8 +93,15 @@ const faqSchema = {
   ]
 }
 
+export default async function Home() {
+  const headersList = await headers()
+  const site = headersList.get("x-site") ?? "northcapital"
+  const isCityRegistry = site === "cityregistry"
 
-export default function Home() {
+  if (isCityRegistry) {
+    return <CityRegistryLanding />
+  }
+
   return (
     <>
       <script

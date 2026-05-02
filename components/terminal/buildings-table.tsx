@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { GatedTableOverlay } from '@/components/auth/gated-table-overlay'
+import Link from 'next/link'
 import { useLocalStorage } from '@/lib/hooks/use-local-storage'
 import {
   useReactTable,
@@ -12,11 +12,13 @@ import {
   type ColumnDef,
   type SortingState,
 } from '@tanstack/react-table'
-import { ArrowUpDown, ArrowUp, ArrowDown, Search, MapPin } from 'lucide-react'
+import { ArrowUpDown, ArrowUp, ArrowDown, Search, MapPin, ExternalLink } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 type BuildingRow = {
   building_key: string
+  slug?: string | null
+  global_slug?: string | null
   building_name_en: string
   area_name_en: string | null
   primary_sub_type: string | null
@@ -62,11 +64,9 @@ function SortIcon({ sorted }: { sorted: false | 'asc' | 'desc' }) {
 
 interface Props {
   data: BuildingRow[]
-  isAuthenticated?: boolean
-  totalRows?: number
 }
 
-export function BuildingsTable({ data, isAuthenticated = true, totalRows }: Props) {
+export function BuildingsTable({ data }: Props) {
   const [sorting, setSorting] = useLocalStorage<SortingState>('terminal:buildings:sort', [])
   const [globalFilter, setGlobalFilter] = useLocalStorage<string>('terminal:buildings:filter', '')
 
@@ -89,9 +89,26 @@ export function BuildingsTable({ data, isAuthenticated = true, totalRows }: Prop
           Building <SortIcon sorted={column.getIsSorted()} />
         </button>
       ),
-      cell: ({ getValue }) => (
-        <p className="font-medium text-foreground text-sm leading-tight">{getValue<string>()}</p>
-      ),
+      cell: ({ row }) => {
+        const name = row.original.building_name_en
+        const href = row.original.global_slug
+          ? `/terminal/buildings/${row.original.global_slug}`
+          : row.original.slug
+          ? `/terminal/buildings/${row.original.slug}`
+          : null
+        if (href) {
+          return (
+            <Link
+              href={href}
+              className="group flex items-center gap-1.5 font-medium text-foreground hover:text-accent text-sm leading-tight transition-colors"
+            >
+              {name}
+              <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-60 transition-opacity shrink-0" />
+            </Link>
+          )
+        }
+        return <p className="font-medium text-foreground text-sm leading-tight">{name}</p>
+      },
       size: 240,
     },
     {
@@ -288,10 +305,6 @@ export function BuildingsTable({ data, isAuthenticated = true, totalRows }: Prop
           </table>
         </div>
 
-        {/* Gated overlay */}
-        {!isAuthenticated && totalRows !== undefined && (
-          <GatedTableOverlay freeRows={data.length} totalRows={totalRows} />
-        )}
       </div>
     </div>
   )

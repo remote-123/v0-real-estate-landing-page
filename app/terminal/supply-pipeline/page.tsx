@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   description:
     "Track upcoming unit supply by area and developer. DLD-registered projects Under Construction and Not Started across Dubai.",
   alternates: {
-    canonical: "https://www.northcapitaldxb.com/terminal/supply-pipeline",
+    canonical: "/terminal/supply-pipeline",
   },
 }
 

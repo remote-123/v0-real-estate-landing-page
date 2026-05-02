@@ -6,6 +6,7 @@ import type { Metadata } from "next"
 export const metadata: Metadata = {
   title: "Sign In | North Capital DXB",
   description: "Sign in to unlock full access to Dubai real estate intelligence.",
+  robots: { index: false, follow: false },
 }
 
 export default async function SignInPage({

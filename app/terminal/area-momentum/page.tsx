@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   description:
     "Communities ranked by combined price and volume acceleration. Identifies Dubai real estate markets moving before wider coverage.",
   alternates: {
-    canonical: "https://www.northcapitaldxb.com/terminal/area-momentum",
+    canonical: "/terminal/area-momentum",
   },
 }
 

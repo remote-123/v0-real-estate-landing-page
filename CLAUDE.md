@@ -16,6 +16,10 @@ Before starting any task, check `.agent/skills/` and `.claude/agents/skills/` fo
 - ALWAYS read a file before editing it
 - NEVER commit secrets, credentials, or .env files
 - Summarize your work in the `docs/DAILY_LOG.md` file after every task
+- **Vault** (`vault/`) is the project's Obsidian knowledge base — treat it as living documentation and second brain
+  - At session start, consult relevant vault notes before diving into unfamiliar areas
+  - After completing any task that changes architecture, DB schema, API routes, ops, or strategy — update the relevant vault note(s) alongside DAILY_LOG.md
+  - Vault structure: `00-Index/MOC.md` (master index), `01-Architecture/`, `02-Features/`, `03-Data/`, `04-Ops/`, `05-Decisions/`, `06-Strategy/`
 
 ## File Organization
 

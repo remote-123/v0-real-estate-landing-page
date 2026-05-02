@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: "Area Comparison | North Capital DXB",
   description:
     "Compare two Dubai areas side by side — PSF trend, average price, 12-month high/low, and momentum signals. Powered by live DLD transaction data.",
+  alternates: { canonical: "/terminal/compare" },
 }
 
 export default function ComparePage() {

@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   title: 'Community Screener | North Capital DXB',
   description: 'Institutional-grade metrics across every Dubai community — yield, price/sqft, transaction velocity, and supply pipeline.',
   alternates: {
-    canonical: 'https://www.northcapitaldxb.com/terminal/communities',
+    canonical: '/terminal/communities',
   },
   openGraph: {
     images: [

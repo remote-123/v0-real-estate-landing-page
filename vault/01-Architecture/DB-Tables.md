@@ -25,10 +25,17 @@
 | `reddit_seen_posts` | 0 | Cron | Created 2026-03-21 |
 | `reddit_voice_samples` | 0 | Cron | Created 2026-03-21 |
 
+## Global Buildings Schema (re_* tables — 2026-05-01)
+| Table | Rows | Purpose |
+|---|---|---|
+| `re_cities` | 1 | Dubai (foundation for multi-city expansion) |
+| `re_areas` | 298 | Areas from dld_areas, with slugs |
+| `re_buildings` | ~7,959 | Enriched buildings with global_slug = `dubai/{area}/{building}` |
+
 ## Support / Mapping
 | Table | Rows | Purpose |
 |---|---|---|
-| `area_name_mapping` | 30 | Bayut→DLD community name bridge |
+| `area_name_mapping` | 83 | Bayut→DLD community name bridge (expanded 2026-05-01) |
 | `bayut_ingest_log` | 0 | Budget tracking per cron run |
 
 ## Materialized Views

@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   description:
     "Price-per-sqft distribution by community and bedroom type. Based on 24 months of DLD registered sales.",
   alternates: {
-    canonical: "https://www.northcapitaldxb.com/terminal/floor-plan-pricer",
+    canonical: "/terminal/floor-plan-pricer",
   },
 }
 

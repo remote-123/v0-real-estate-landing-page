@@ -10,13 +10,13 @@ export const metadata: Metadata = {
   description:
     "Compute gross and net rental yield for Dubai properties. Benchmarks: avg PSF and service charges per area from DLD data.",
   alternates: {
-    canonical: "https://www.northcapitaldxb.com/terminal/rental-yield",
+    canonical: "/terminal/rental-yield",
   },
   openGraph: {
     title: "Rental Yield Calculator — Dubai Area Benchmarks | North Capital DXB",
     description:
       "Compute gross and net rental yield for Dubai properties using live DLD benchmarks.",
-    url: "https://www.northcapitaldxb.com/terminal/rental-yield",
+    url: "/terminal/rental-yield",
     images: [
       {
         url: "https://www.northcapitaldxb.com/images/distress-social.png",

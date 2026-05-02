@@ -19,7 +19,8 @@ import {
   ShieldCheck,
   TrendingDown,
   TrendingUp,
-  Users
+  Users,
+  Landmark,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -36,6 +37,7 @@ export const sidebarLinks = [
     title: "Intelligence",
     links: [
       { label: "Community Screener", href: "/terminal/communities", icon: Map },
+      { label: "Mortgage & Liquidity", href: "/terminal/liquidity", icon: Landmark },
       { label: "Buildings", href: "/terminal/buildings", icon: Building2 },
       // { label: "Price Index", href: "/terminal/price-index", icon: TrendingUp },
       // { label: "Supply Pipeline", href: "/terminal/supply-pipeline", icon: BarChart3 },

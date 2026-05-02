@@ -34,6 +34,13 @@ Same codebase, same Vercel project, same Neon DB.
 ## northcapitaldxb.com Change
 Navbar shows "City Registry ↗" button linking to `https://thecityregistry.com`.
 
+## Planned Split (ADR-006 — decided 2026-05-01, not yet built)
+- NorthCapital drops `/terminal/*` entirely — 301 → thecityregistry.com
+- City Registry gets thin landing page before terminal + email capture
+- Blog moves to City Registry (data/market analysis content)
+- NorthCapital becomes pure agency: agent roster, project showcase, lead gen CTAs
+- Footer cross-link: "Investment enquiries → northcapitaldxb.com"
+
 ## Future
 - City switcher: "Dubai" → city selector as more markets added (Toronto etc.)
 - Separate GA property for cityregistry traffic isolation

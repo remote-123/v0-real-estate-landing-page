@@ -9,12 +9,12 @@ export const metadata: Metadata = {
   description:
     "Institutional-grade weekly market briefing for Dubai real estate. DLD data-driven analysis covering top areas by volume, distress signals, and price momentum.",
   alternates: {
-    canonical: "https://www.northcapitaldxb.com/terminal/market-briefing",
+    canonical: "/terminal/market-briefing",
   },
   openGraph: {
     title: "Weekly Market Briefing | North Capital DXB",
     description: "DLD data-driven weekly briefing covering Dubai real estate market signals, distress activity, and top-performing areas.",
-    url: "https://www.northcapitaldxb.com/terminal/market-briefing",
+    url: "/terminal/market-briefing",
   },
 }
 

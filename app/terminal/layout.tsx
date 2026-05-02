@@ -82,7 +82,7 @@ function getTerminalSchema(isCityRegistry: boolean) {
         "@type": "Dataset",
         "name": "North Capital Dubai Investor Terminal",
         "description": "Institutional-grade real estate metrics, market intelligence, and distress deal scanning for the Dubai market. Aggregated macro-economic datasets from data.dubai and DLD.",
-        "url": "https://www.northcapitaldxb.com/terminal",
+        "url": "/terminal",
         "creator": { "@type": "Organization", "name": "North Capital DXB" },
         "variableMeasured": ["Rental Yields", "Price per Square Foot", "Market Occupancy", "Transaction Volume", "Distress Sale Discounts"],
     }
