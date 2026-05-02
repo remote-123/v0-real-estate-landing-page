@@ -1,5 +1,7 @@
 import type { Metadata } from "next"
+import { TrendingUp } from "lucide-react"
 import { sql } from "@/lib/db"
+import { StatCard } from "@/components/terminal/stat-card"
 import { YieldMapTable } from "@/components/terminal/yield-map-table"
 import type { YieldRow } from "@/components/terminal/yield-map-table"
 import { formatAreaName } from "@/lib/area-names"
@@ -85,189 +87,63 @@ export default async function YieldMapPage() {
       : null
   const totalCombos = allRows.length
 
-  // Top 5 for the blueprint panel
-  const topFive = allRows.slice(0, 5)
-
   return (
-    // E3 Spatial/Architectural — light override
-    <div
-      className="min-h-screen -m-6 sm:-m-8 p-6 sm:p-10"
-      style={{ background: '#F8FAFF' }}
-    >
-      {/* ── Blueprint hero ──────────────────────────────────────────── */}
-      <div
-        className="rounded-2xl overflow-hidden mb-8 border"
-        style={{ borderColor: '#dde6f0', background: '#FFFFFF' }}
-      >
-        <div className="grid grid-cols-1 lg:grid-cols-5">
+    <div className="flex w-full flex-col px-0 sm:px-8 xl:px-12 py-0 sm:py-6 space-y-6 max-w-7xl mx-auto pb-24 lg:pb-12">
 
-          {/* Left — page identity + stats */}
-          <div className="lg:col-span-2 p-8 space-y-6 border-b lg:border-b-0 lg:border-r" style={{ borderColor: '#dde6f0' }}>
-            <div>
-              <p
-                className="text-[9px] uppercase tracking-[0.2em] font-mono mb-2"
-                style={{ color: '#0F2550', opacity: 0.4 }}
-              >
-                Dubai · Yield Intelligence
-              </p>
-              <h1
-                className="font-serif text-4xl font-bold leading-tight"
-                style={{ color: '#0F2550' }}
-              >
-                Yield Map
-              </h1>
-              <p className="text-sm mt-2 leading-relaxed" style={{ color: '#64748b' }}>
-                Gross rental yield by community and bedroom type. Rolling 12 months of DLD-registered contracts.
-              </p>
-            </div>
-
-            {/* Stats — border-left accent style */}
-            <div className="space-y-4">
-              <div className="border-l-2 pl-4" style={{ borderColor: '#0F2550' }}>
-                <p className="text-[10px] uppercase tracking-widest mb-0.5" style={{ color: '#94a3b8' }}>Top Yield</p>
-                <p className="text-3xl font-bold" style={{ color: '#0F2550' }}>
-                  {topYield !== null ? `${topYield.toFixed(2)}%` : '—'}
-                </p>
-                {allRows[0] && (
-                  <p className="text-xs mt-0.5" style={{ color: '#64748b' }}>
-                    {formatAreaName(allRows[0].area_name_en)} · {allRows[0].rooms_en}
-                  </p>
-                )}
-              </div>
-              <div className="border-l-2 pl-4" style={{ borderColor: '#B8860B' }}>
-                <p className="text-[10px] uppercase tracking-widest mb-0.5" style={{ color: '#94a3b8' }}>Portfolio Average</p>
-                <p className="text-2xl font-bold" style={{ color: '#B8860B' }}>
-                  {avgYield !== null ? `${avgYield.toFixed(2)}%` : '—'}
-                </p>
-                <p className="text-xs mt-0.5" style={{ color: '#64748b' }}>Unweighted mean, all areas</p>
-              </div>
-              <div className="border-l-2 pl-4" style={{ borderColor: '#64748b' }}>
-                <p className="text-[10px] uppercase tracking-widest mb-0.5" style={{ color: '#94a3b8' }}>Combinations Tracked</p>
-                <p className="text-2xl font-bold" style={{ color: '#475569' }}>
-                  {totalCombos > 0 ? totalCombos.toLocaleString() : '—'}
-                </p>
-                <p className="text-xs mt-0.5" style={{ color: '#64748b' }}>Area + bedroom pairs with ≥10 txns</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Right — blueprint grid panel */}
-          <div className="lg:col-span-3 relative overflow-hidden" style={{ background: '#F0F4FC', minHeight: 320 }}>
-            {/* Blueprint grid */}
-            <svg
-              width="100%" height="100%"
-              style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
-              preserveAspectRatio="none"
-            >
-              {Array.from({ length: 20 }, (_, i) => (
-                <line
-                  key={`h${i}`}
-                  x1="0" y1={`${(i + 1) * 5}%`}
-                  x2="100%" y2={`${(i + 1) * 5}%`}
-                  stroke="#0F2550" strokeWidth="0.4" opacity="0.18"
-                />
-              ))}
-              {Array.from({ length: 20 }, (_, i) => (
-                <line
-                  key={`v${i}`}
-                  x1={`${(i + 1) * 5}%`} y1="0"
-                  x2={`${(i + 1) * 5}%`} y2="100%"
-                  stroke="#0F2550" strokeWidth="0.4" opacity="0.18"
-                />
-              ))}
-              {/* Cross-hairs at center */}
-              <line x1="50%" y1="40%" x2="50%" y2="60%" stroke="#0F2550" strokeWidth="1" opacity="0.3" />
-              <line x1="40%" y1="50%" x2="60%" y2="50%" stroke="#0F2550" strokeWidth="1" opacity="0.3" />
-            </svg>
-
-            {/* Yield bars overlay */}
-            <div className="relative p-8 space-y-3">
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-[10px] uppercase tracking-[0.2em] font-mono" style={{ color: '#0F2550', opacity: 0.5 }}>
-                  Top Yielding Communities
-                </p>
-                <span className="text-[9px] font-mono px-2 py-0.5 rounded-sm" style={{ background: '#0F2550', color: '#F8FAFF' }}>
-                  {totalCombos} pairs
-                </span>
-              </div>
-
-              {topFive.map((r, i) => {
-                const w = Math.round((r.gross_yield_pct / (topYield ?? 10)) * 100)
-                const isHigh = r.gross_yield_pct >= 8
-                const isMid = r.gross_yield_pct >= 6
-                const barColor = isHigh ? '#0F2550' : isMid ? '#B8860B' : '#94a3b8'
-                return (
-                  <div key={`${r.area_name_en}-${r.rooms_en}`} className="space-y-1">
-                    <div className="flex justify-between items-baseline">
-                      <span className="text-xs font-medium" style={{ color: '#0F2550' }}>
-                        {formatAreaName(r.area_name_en)}
-                      </span>
-                      <div className="flex items-center gap-3">
-                        <span className="text-[10px]" style={{ color: '#94a3b8' }}>{r.rooms_en}</span>
-                        <span className="text-sm font-bold font-mono tabular-nums" style={{ color: barColor }}>
-                          {r.gross_yield_pct.toFixed(2)}%
-                        </span>
-                      </div>
-                    </div>
-                    <div className="h-1 rounded-full" style={{ background: 'rgba(15,37,80,0.12)' }}>
-                      <div
-                        className="h-1 rounded-full transition-all"
-                        style={{ width: `${w}%`, background: barColor }}
-                      />
-                    </div>
-                    {i < 4 && (
-                      <div style={{ borderBottom: '1px solid rgba(15,37,80,0.08)', paddingBottom: 4 }} />
-                    )}
-                  </div>
-                )
-              })}
-
-              {topFive.length === 0 && (
-                <p className="text-sm" style={{ color: '#94a3b8' }}>No data available</p>
-              )}
-            </div>
-
-            {/* Coordinate watermark */}
-            <div
-              className="absolute bottom-4 right-4 text-[9px] font-mono"
-              style={{ color: '#0F2550', opacity: 0.3 }}
-            >
-              25.2°N · 55.3°E — Dubai, UAE
-            </div>
-          </div>
-        </div>
+      {/* Page header */}
+      <div className="space-y-1 px-4 sm:px-0">
+        <p className="text-[10px] font-mono font-semibold uppercase tracking-widest text-muted-foreground/70">
+          Gross Yield Scanner
+        </p>
+        <h1 className="font-serif text-3xl font-bold tracking-tight">Dubai Yield Map</h1>
+        <p className="text-sm text-muted-foreground max-w-2xl">
+          Gross rental yield by community and bedroom type. Rolling 12 months of DLD-registered sales and rental contracts.
+        </p>
       </div>
 
-      {/* ── Yield legend ────────────────────────────────────────────── */}
-      <div className="flex items-center gap-4 flex-wrap mb-4">
-        <span className="text-[10px] font-mono uppercase tracking-wider" style={{ color: '#94a3b8' }}>Yield tiers:</span>
-        <span
-          className="rounded-sm px-2.5 py-0.5 text-xs font-mono font-semibold border"
-          style={{ background: 'rgba(15,37,80,0.06)', color: '#0F2550', borderColor: 'rgba(15,37,80,0.2)' }}
-        >
-          ≥8% High
-        </span>
-        <span
-          className="rounded-sm px-2.5 py-0.5 text-xs font-mono font-semibold border"
-          style={{ background: 'rgba(184,134,11,0.08)', color: '#B8860B', borderColor: 'rgba(184,134,11,0.25)' }}
-        >
-          6–8% Mid
-        </span>
-        <span
-          className="rounded-sm px-2.5 py-0.5 text-xs font-mono font-semibold border"
-          style={{ background: 'rgba(100,116,139,0.08)', color: '#64748b', borderColor: 'rgba(100,116,139,0.2)' }}
-        >
-          &lt;6% Low
-        </span>
+      {/* Stat cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 px-4 sm:px-0">
+        <StatCard
+          label="Top Yield"
+          value={topYield !== null ? `${topYield.toFixed(2)}%` : "—"}
+          trendDir="up"
+          trend="highest community/bed type"
+          icon={TrendingUp}
+          description={topYield !== null ? `${formatAreaName(rows[0]?.area_name_en)} — ${rows[0]?.rooms_en}` : "No data"}
+        />
+        <StatCard
+          label="Avg Yield"
+          value={avgYield !== null ? `${avgYield.toFixed(2)}%` : "—"}
+          trendDir="neutral"
+          trend="across all combinations"
+          description="Unweighted mean of all qualifying area/bedroom pairs"
+        />
+        <StatCard
+          label="Combinations Tracked"
+          value={totalCombos > 0 ? totalCombos.toLocaleString() : "—"}
+          trendDir="neutral"
+          description="Area + bedroom pairs with ≥10 sales and ≥10 rental contracts"
+        />
       </div>
 
-      {/* ── Table ───────────────────────────────────────────────────── */}
-      <YieldMapTable rows={rows} isAuthenticated={isAuthenticated} totalRows={allRows.length} variant="e3" />
+      {/* Yield legend */}
+      <div className="px-4 sm:px-0 flex items-center gap-4 flex-wrap">
+        <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground/50">Yield tiers:</span>
+        <span className="rounded-full px-2.5 py-0.5 text-xs font-mono font-semibold ring-1 bg-emerald-500/15 text-emerald-400 ring-emerald-500/30">≥8% High</span>
+        <span className="rounded-full px-2.5 py-0.5 text-xs font-mono font-semibold ring-1 bg-yellow-400/15 text-yellow-400 ring-yellow-400/30">6–8% Mid</span>
+        <span className="rounded-full px-2.5 py-0.5 text-xs font-mono font-semibold ring-1 bg-muted/50 text-muted-foreground ring-border/40">&lt;6% Low</span>
+      </div>
 
-      {/* Source */}
-      <p className="mt-6 text-[10px] font-mono uppercase tracking-wider" style={{ color: '#94a3b8' }}>
+      {/* Table with filters */}
+      <div className="px-4 sm:px-0">
+        <YieldMapTable rows={rows} isAuthenticated={isAuthenticated} totalRows={allRows.length} />
+      </div>
+
+      {/* Source note */}
+      <p className="px-4 sm:px-0 text-[10px] text-muted-foreground/50 uppercase tracking-wider font-mono">
         Source: Dubai Land Department — DLD-registered sales and rental contracts, rolling 12 months
       </p>
+
     </div>
   )
 }
