@@ -7,6 +7,12 @@
 > 3. **Mandatory Signature:** Every entry must explicitly state the tool name at the start (e.g., *"Built by Antigravity"*, *"Built by Claude Code"*, or *"Built by Cursor"*).
 
 
+## 02 May 2026 — Cycle 39
+
+*Built by Claude Code*
+
+- **Off-Plan Payment Plan Calculator** at `/tools/off-plan-payment-calculator` — 5th public SEO tool. Targets "Dubai off-plan payment plan calculator 2026", "40/60 payment plan Dubai", "post-handover payment plan Dubai". Four presets: 20/80 (5%+15%+80%), 40/60 (10%+30%+60%), 60/40 (20%+40%+40%), 30/30/40 post-handover (10%+20%+30%+40% over 2 years post-keys). Plus fully custom (configurable booking/construction/handover/post-handover % with live validation that sum = 100%). Payment schedule table with milestone labels, estimated dates by handover year (2025–2030), AED amounts, % per milestone, cumulative %. Summary cards colour-coded by phase. Server component with `generateMetadata()`, `WebApplication` + `FAQPage` JSON-LD, 7 off-plan FAQs. Added to sitemap both domains. 231 tests, 659 pages, build clean.
+
 ## 02 May 2026 — Cycle 38
 
 *Built by Claude Code*
