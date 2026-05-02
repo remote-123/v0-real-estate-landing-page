@@ -9,6 +9,7 @@
 
 ## 02 May 2026
 *Built by Claude Code*
+- **Sitemap + app/areas/* unified view upgrade (bbeadc8, 27be0d1)**: Replaced `mv_txn_monthly` with `mv_txn_monthly_unified` in `app/areas/page.tsx`, `app/areas/[slug]/page.tsx`, and `app/sitemap.ts`. Fixed broken service charge query in areas/[slug] (wrong column `annual_amount_per_sqft` → `service_cost`, matching terminal/areas pattern). Added `/areas` static route and `/areas/[slug]` dynamic URLs (top 60 by volume) to NorthCapital sitemap — these pages were crawlable but missing from sitemap.xml. Parallelised community + area sitemap queries. Bumped all `generateStaticParams` from top 30/20 → top 50/60.
 - **Areas deep-dive page upgraded to unified data + YoY metric (200bfaa)**: Migrated `app/terminal/areas/[slug]/page.tsx` from `mv_txn_monthly` (DLD-only, stale Feb 2026) to `mv_txn_monthly_unified` (DLD + Bayut, rolling fresh data) across all 4 SQL query sites. Added YoY PSF change stat (prev 12-24 month window) and Deals (12 Months) transaction count as two new stat cards — grid expanded from 4 to 6 cards (2×3 on desktop). `generateStaticParams` now pre-renders top 50 areas (up from 20) using unified view. Swapped `force-dynamic` for `revalidate=3600` (ISR now viable). Schema.org `Dataset` variableMeasured updated with txn count and YoY delta. Source attribution updated to credit Bayut alongside DLD.
 
 
