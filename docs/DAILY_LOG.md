@@ -7,6 +7,10 @@
 > 3. **Mandatory Signature:** Every entry must explicitly state the tool name at the start (e.g., *"Built by Antigravity"*, *"Built by Claude Code"*, or *"Built by Cursor"*).
 
 
+## 02 May 2026 — Cycle 8
+*Built by Claude Code*
+- **Free SEO tool: /tools/rental-yield-calculator (d53a0d4)**: Public no-auth page targeting "Dubai rental yield calculator" keywords. Server component (`revalidate=86400`) fetches live benchmarks — sales PSF from `mv_txn_monthly_unified` (last 12 months, `MAX(txn_month)` anchor), rental rates from `rental_listings` (1,168 active PF listings). Outputs gross yield, net yield after service charge, annual mortgage payment, monthly cashflow, and cash-on-cash return. Interactive client component (`components/tools/rental-yield-calculator.tsx`) with sortable benchmark table (up to 80 area+bedroom combos, filterable by bed type). JSON-LD `WebApplication` + `FAQPage` schema for SEO. Lead CTA at bottom routes to /contact. Added to both northcapitaldxb.com and thecityregistry.com sitemaps.
+
 ## 02 May 2026
 *Built by Claude Code*
 - **Complete dld_transactions staleness audit + fix (427c3b8, f1c59e4, 2764fbc)**: Identified that 9 pages/routes used `dld_transactions WHERE instance_date >= NOW() - INTERVAL '...'` — returning zero or partial results since DLD is stale at Feb 2026. Root cause: all rolling-window queries anchored to `NOW()` rather than the last available DLD date.

@@ -38,6 +38,7 @@
 
 ## Backlog Ideas (from MEGA_IDEAS)
 - Pascal Editor (3D floor plan viewer) — integrate on building comparator
-- Free tools for organic traffic (yield calculator, service charge estimator)
+- [x] **Rental yield calculator** `/tools/rental-yield-calculator` — BUILT 2026-05-02 (live benchmarks, JSON-LD, FAQ schema, sitemap)
+- [ ] Service charge estimator `/tools/service-charge-estimator` — still to build
 - Email gate on Phase 2 terminal pages
 - Weekly distress deal email alert system

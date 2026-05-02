@@ -35,6 +35,13 @@ Data-first intelligence for HNW/institutional investors allocating capital into 
 | Developer Track Record | `/terminal/developer-track` | P2 | ✅ Built (not in sidebar) |
 | Mortgage & Liquidity Scanner | `/terminal/liquidity` | P3 | ❌ Not built |
 
+## Free SEO Tools — Lead Magnet Pages
+*Public no-auth pages targeting high-intent keywords. Live Neon benchmarks.*
+
+| Tool | Route | Status | Target keyword |
+|---|---|---|---|
+| Rental Yield Calculator | `/tools/rental-yield-calculator` | ✅ Built 2026-05-02 | "Dubai rental yield calculator" |
+
 ## Access Gating Plan (not yet implemented)
 - Phase 1 pages: public (SEO/discovery)
 - Phase 2 pages: gate behind free email signup
