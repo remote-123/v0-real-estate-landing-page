@@ -125,7 +125,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ]
 
   const staticRoutes = [
-    '', '/projects', '/blog', '/about', '/contact', '/calculator',
+    '', '/projects', '/blog', '/about', '/contact', '/calculator', '/areas',
     ...terminalStaticRoutes,
   ].map((route) => ({
     url: `${baseUrl}${route}`,
@@ -134,46 +134,49 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: route === '' ? 1 : route.startsWith('/terminal') ? 0.85 : 0.9,
   }))
 
-  // 6. Dynamic community pages — one URL per DLD area
+  // 6. Dynamic community + area pages — parallelised, unified view
   let communityUrls: MetadataRoute.Sitemap = []
+  let areaDeepDiveUrls: MetadataRoute.Sitemap = []
+  let publicAreaUrls: MetadataRoute.Sitemap = []
   try {
-    const areaRows = await sql<{ area_name_en: string }[]>`
-      SELECT DISTINCT area_name_en
-      FROM mv_txn_monthly
-      WHERE area_name_en IS NOT NULL
-      ORDER BY area_name_en
-    `
+    const [areaRows, topAreas] = await Promise.all([
+      sql<{ area_name_en: string }[]>`
+        SELECT DISTINCT area_name_en
+        FROM mv_txn_monthly_unified
+        WHERE area_name_en IS NOT NULL
+        ORDER BY area_name_en
+      `,
+      sql<{ area_name_en: string }[]>`
+        SELECT area_name_en, SUM(txn_count) AS total
+        FROM mv_txn_monthly_unified
+        WHERE area_name_en IS NOT NULL AND trans_group_en = 'Sales'
+        GROUP BY area_name_en
+        ORDER BY total DESC
+        LIMIT 60
+      `,
+    ])
     communityUrls = areaRows.map((row) => ({
       url: `${baseUrl}/terminal/communities/${toSlug(row.area_name_en)}`,
       lastModified: new Date(),
       changeFrequency: 'daily' as const,
       priority: 0.75,
     }))
-  } catch {
-    // If DB is unavailable during build, skip community URLs gracefully
-  }
-
-  // 7. Dynamic area deep-dive pages — top 20 areas
-  let areaDeepDiveUrls: MetadataRoute.Sitemap = []
-  try {
-    const topAreas = await sql<{ area_name_en: string }[]>`
-      SELECT area_name_en, SUM(txn_count) AS total
-      FROM mv_txn_monthly
-      WHERE area_name_en IS NOT NULL AND trans_group_en = 'Sales'
-      GROUP BY area_name_en
-      ORDER BY total DESC
-      LIMIT 20
-    `
     areaDeepDiveUrls = topAreas.map((row) => ({
       url: `${baseUrl}/terminal/areas/${toSlug(row.area_name_en)}`,
       lastModified: new Date(),
       changeFrequency: 'daily' as const,
-      priority: 0.75,
+      priority: 0.80,
+    }))
+    publicAreaUrls = topAreas.map((row) => ({
+      url: `${baseUrl}/areas/${toSlug(row.area_name_en)}`,
+      lastModified: new Date(),
+      changeFrequency: 'daily' as const,
+      priority: 0.78,
     }))
   } catch {
-    // If DB is unavailable during build, skip
+    // If DB is unavailable during build, skip dynamic URLs gracefully
   }
 
-  // 8. Combine everything for Google
-  return [...staticRoutes, ...communityUrls, ...areaDeepDiveUrls, ...projectUrls, ...postUrls]
+  // 7. Combine everything for Google
+  return [...staticRoutes, ...communityUrls, ...areaDeepDiveUrls, ...publicAreaUrls, ...projectUrls, ...postUrls]
 }
