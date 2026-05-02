@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowRight, BarChart3, Building2, Map, TrendingUp, Zap, Percent, Layers, FileText, Calculator, Landmark } from "lucide-react"
+import { ArrowRight, BarChart3, Building2, Map, TrendingUp, Zap, Percent, Layers, FileText, Calculator, Landmark, Users, GitCompare, Newspaper, Home } from "lucide-react"
 import { EmailCaptureWidget } from "@/components/terminal/email-capture-widget"
 
 const FEATURES = [
@@ -64,6 +64,36 @@ const FEATURES = [
     label: "Building Comparator",
     description: "Side-by-side PSF trend, yield, and service charge comparison",
     href: "/terminal/building-comparator",
+  },
+  {
+    icon: Users,
+    label: "Developer Track Record",
+    description: "League table: pipeline units, finish rate, and top area per developer",
+    href: "/terminal/developer-track",
+  },
+  {
+    icon: Building2,
+    label: "Buildings Directory",
+    description: "Dubai buildings registry with completion year, developer, and coordinates",
+    href: "/terminal/buildings",
+  },
+  {
+    icon: GitCompare,
+    label: "Area Comparison",
+    description: "PSF trend, momentum, and 12-month range side-by-side for two areas",
+    href: "/terminal/compare",
+  },
+  {
+    icon: Newspaper,
+    label: "Market Briefing",
+    description: "Weekly AI-generated institutional analysis from live DLD data",
+    href: "/terminal/market-briefing",
+  },
+  {
+    icon: Home,
+    label: "Rental Drops",
+    description: "Listings with confirmed rent reductions — landlord pressure signals",
+    href: "/terminal/rental-drops",
   },
   {
     icon: Calculator,

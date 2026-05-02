@@ -27,9 +27,12 @@
 - [ ] **LinkedIn Sign-In** — needs LinkedIn Developer app
 
 ## P3 — Terminal Features
-- [x] **Liquidity Scanner** `/terminal/liquidity` — BUILT (as of 2026-05)
+- [x] **Liquidity Scanner** `/terminal/liquidity` — BUILT + gated (as of 2026-05)
 - [x] **Researcher automation** `/admin/automations/researcher` — BUILT with Gemini 2.5 Flash, 8 query types (as of 2026-05-02)
-- [x] **Access gating** — Phase 2 pages gated: distress-deals, off-plan-pipeline, communities, rental-drops, floor-plan-pricer, service-charges, yield-map, area-momentum, building-comparator
+- [x] **Access gating — ALL data terminal pages** — DONE 2026-05-02 (Cycles 11+19+20): distress-deals, off-plan-pipeline, communities, rental-drops, floor-plan-pricer, service-charges, yield-map, area-momentum, building-comparator, supply-pipeline, developer-track, transaction-pulse, buildings, liquidity
+- [x] **Market Briefing table + seed** — `market_briefings` table created, first briefing seeded May 2 2026, Monday 06:00 UTC cron ready (Cycle 17)
+- [x] **Dynamic area list** — `/api/area-list` endpoint, `CompareClient` now fetches top-100 DLD areas by volume instead of hardcoded 40 (Cycle 18)
+- [ ] **Add market-briefing cron to cron-job.org**: `GET /api/cron/generate-market-briefing` Bearer CRON_SECRET — Monday 06:00 UTC
 
 ## SEO (Done 2026-05-01)
 - [x] thecityregistry.com sitemap, robots.txt, meta tags, schema.org
@@ -39,6 +42,6 @@
 ## Backlog Ideas (from MEGA_IDEAS)
 - Pascal Editor (3D floor plan viewer) — integrate on building comparator
 - [x] **Rental yield calculator** `/tools/rental-yield-calculator` — BUILT 2026-05-02 (live benchmarks, JSON-LD, FAQ schema, sitemap)
-- [ ] Service charge estimator `/tools/service-charge-estimator` — still to build
+- [x] **Service charge estimator** `/tools/service-charge-estimator` — BUILT 2026-05-02 (Cycle 12): typeahead, YoY budget trend, per-unit + AED/sqft estimates, category breakdown
 - [x] **Email gate on Phase 2 terminal pages** — BUILT 2026-05-02 (Cycle 11): inline email form overlay, cookie unlock, router.refresh() re-render
 - [x] **Weekly distress deal email alert system** — BUILT (already existed at /api/cron/weekly-distress-digest)
