@@ -7,6 +7,14 @@
 > 3. **Mandatory Signature:** Every entry must explicitly state the tool name at the start (e.g., *"Built by Antigravity"*, *"Built by Claude Code"*, or *"Built by Cursor"*).
 
 
+## 02 May 2026 — Cycle 36
+
+*Built by Claude Code*
+
+- **Data pipeline test coverage milestone** — `tests/api/cron/fetch-rental-listings.test.ts` (14 tests) + `tests/lib/bayut14.test.ts` (33 tests). Crossed **200 tests** total (209 passing).
+- `fetch-rental-listings`: auth (3), PF API graceful degradation — HTTP error returns [] not 500 (3), mapPF regressions: `location_tree level=1` area extraction, `is_direct_from_developer` filter, price=0 filter, null property_id filter, divide-by-zero guard for size=0, `monthly_price = Math.round(annual/12)` (6), SQL upsert count + Telegram error on SQL throw (2).
+- `bayut14.ts`: `bedsToRoomsEn` — null/undefined/0/negative → "Studio", full 1-6 mapping, 7+ capped (11); `transformBayutHit` — null hash_id/date → null, "Rent"/"Sales"/null category, ISO date slice, beds→rooms_en, rent_value mapping (13); `fetchBayutPage` — missing API key throws, HTTP error with status, success=false, data=null, happy path, empty hits, URL query string (9).
+
 ## 02 May 2026 — Cycle 35
 
 *Built by Claude Code*
