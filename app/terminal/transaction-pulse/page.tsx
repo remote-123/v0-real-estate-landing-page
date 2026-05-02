@@ -28,7 +28,8 @@ async function fetchData(): Promise<{ monthly: MonthlyRow[]; daily: DayRow[] }> 
           ROUND((SUM(total_value) / 1e9)::numeric, 2) AS value_bn,
           ROUND(AVG(avg_price_sqm)::numeric, 0) AS avg_psm
         FROM mv_txn_monthly_unified
-        WHERE txn_month >= NOW() - INTERVAL '24 months'
+        CROSS JOIN (SELECT MAX(txn_month) AS max_month FROM mv_txn_monthly_unified) latest
+        WHERE txn_month >= latest.max_month - INTERVAL '23 months'
           AND trans_group_en IN ('Sales', 'Mortgages', 'Gifts')
         GROUP BY txn_month, trans_group_en
         ORDER BY txn_month ASC

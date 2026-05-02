@@ -40,7 +40,8 @@ async function fetchData() {
           SUM(txn_count)::integer AS deals,
           ROUND((SUM(total_value) / 1e9)::numeric, 3) AS value_bn
         FROM mv_txn_monthly_unified
-        WHERE txn_month >= NOW() - INTERVAL '24 months'
+        CROSS JOIN (SELECT MAX(txn_month) AS max_m FROM mv_txn_monthly_unified) l
+        WHERE txn_month >= l.max_m - INTERVAL '23 months'
           AND trans_group_en IN ('Sales', 'Mortgages')
           AND area_name_en IS NOT NULL
         GROUP BY txn_month, trans_group_en

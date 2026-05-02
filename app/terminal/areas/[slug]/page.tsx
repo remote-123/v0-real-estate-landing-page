@@ -79,9 +79,10 @@ async function fetchAreaData(slug: string): Promise<AreaDeepDiveData | null> {
           txn_month,
           ROUND((SUM(txn_count * avg_price_sqm) / NULLIF(SUM(txn_count), 0) / 10.764)::numeric, 0) AS avg_psf
         FROM mv_txn_monthly_unified
+        CROSS JOIN (SELECT MAX(txn_month) AS max_m FROM mv_txn_monthly_unified WHERE trans_group_en = 'Sales') l
         WHERE area_name_en = ${areaName}
           AND trans_group_en = 'Sales'
-          AND txn_month >= NOW() - INTERVAL '12 months'
+          AND txn_month >= l.max_m - INTERVAL '11 months'
         GROUP BY txn_month
         ORDER BY txn_month ASC
       `,
@@ -114,22 +115,25 @@ async function fetchAreaData(slug: string): Promise<AreaDeepDiveData | null> {
 
       // YoY PSF (prev 12-24 month window) + total 12m transaction count
       sql<{ txn_count_12m: string; yoy_psf: string | null }[]>`
-        WITH curr_window AS (
+        WITH latest AS (SELECT MAX(txn_month) AS m FROM mv_txn_monthly_unified WHERE trans_group_en = 'Sales'),
+        curr_window AS (
           SELECT
             SUM(txn_count) AS cnt,
             SUM(txn_count * avg_price_sqm) / NULLIF(SUM(txn_count), 0) AS psm
           FROM mv_txn_monthly_unified
+          CROSS JOIN latest
           WHERE area_name_en = ${areaName}
             AND trans_group_en = 'Sales'
-            AND txn_month >= NOW() - INTERVAL '12 months'
+            AND txn_month >= latest.m - INTERVAL '11 months'
         ),
         prev_window AS (
           SELECT SUM(txn_count * avg_price_sqm) / NULLIF(SUM(txn_count), 0) AS psm
           FROM mv_txn_monthly_unified
+          CROSS JOIN latest
           WHERE area_name_en = ${areaName}
             AND trans_group_en = 'Sales'
-            AND txn_month >= NOW() - INTERVAL '24 months'
-            AND txn_month < NOW() - INTERVAL '12 months'
+            AND txn_month >= latest.m - INTERVAL '23 months'
+            AND txn_month < latest.m - INTERVAL '11 months'
         )
         SELECT
           COALESCE(curr_window.cnt, 0) AS txn_count_12m,

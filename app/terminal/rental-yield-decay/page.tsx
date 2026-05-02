@@ -41,7 +41,7 @@ async function fetchYieldData(): Promise<YieldRow[]> {
         WHERE area_name_en IS NOT NULL
           AND rooms_en IS NOT NULL
           AND property_type_en = 'Unit'
-          AND txn_month >= NOW() - INTERVAL '3 years'
+          AND txn_month >= (SELECT MAX(txn_month) FROM mv_txn_monthly_unified WHERE trans_group_en = 'Sales') - INTERVAL '35 months'
         GROUP BY 1, 2, 3
       )
       SELECT

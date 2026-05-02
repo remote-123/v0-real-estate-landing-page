@@ -197,23 +197,26 @@ async function fetchAreaData(
 
       // YoY PSF (prev 12-24 month window) + 12-month transaction count
       sql<{ txn_count_12m: string; yoy_psf: string | null }[]>`
-        WITH curr_window AS (
+        WITH latest AS (SELECT MAX(txn_month) AS m FROM mv_txn_monthly_unified WHERE trans_group_en = 'Sales'),
+        curr_window AS (
           SELECT
             SUM(txn_count) AS cnt,
             SUM(txn_count * avg_price_sqm) / NULLIF(SUM(txn_count), 0) AS psm
           FROM mv_txn_monthly_unified m
+          CROSS JOIN latest
           WHERE m.area_name_en = ${areaName}
             AND m.trans_group_en = 'Sales'
-            AND m.txn_month >= NOW() - INTERVAL '12 months'
+            AND m.txn_month >= latest.m - INTERVAL '11 months'
             ${typeCond}
         ),
         prev_window AS (
           SELECT SUM(txn_count * avg_price_sqm) / NULLIF(SUM(txn_count), 0) AS psm
           FROM mv_txn_monthly_unified m
+          CROSS JOIN latest
           WHERE m.area_name_en = ${areaName}
             AND m.trans_group_en = 'Sales'
-            AND m.txn_month >= NOW() - INTERVAL '24 months'
-            AND m.txn_month < NOW() - INTERVAL '12 months'
+            AND m.txn_month >= latest.m - INTERVAL '23 months'
+            AND m.txn_month < latest.m - INTERVAL '11 months'
             ${typeCond}
         )
         SELECT
