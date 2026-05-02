@@ -7,7 +7,7 @@ import { sql } from "@/lib/db"
 import { formatAreaName } from "@/lib/area-names"
 import { EmailCaptureWidget } from "@/components/terminal/email-capture-widget"
 
-export const dynamic = "force-dynamic"
+export const revalidate = 3600
 
 function toSlug(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
@@ -29,6 +29,8 @@ interface AreaDeepDiveData {
   area_name_en: string
   avg_psf: number
   prev_avg_psf: number | null
+  yoy_avg_psf: number | null
+  txn_count_12m: number
   pipeline_units: number
   distress_count: number
   price_history: SparkPoint[]
@@ -41,7 +43,7 @@ async function fetchAreaData(slug: string): Promise<AreaDeepDiveData | null> {
     // Resolve slug → DLD area name
     const areas = await sql<{ area_name_en: string }[]>`
       SELECT DISTINCT area_name_en
-      FROM mv_txn_monthly
+      FROM mv_txn_monthly_unified
       WHERE area_name_en IS NOT NULL AND trans_group_en = 'Sales'
       ORDER BY area_name_en
       LIMIT 200
@@ -51,18 +53,18 @@ async function fetchAreaData(slug: string): Promise<AreaDeepDiveData | null> {
 
     const areaName = match.area_name_en
 
-    const [psfRows, historyRows, pipelineRows, scRows, distressRows] = await Promise.all([
+    const [psfRows, historyRows, pipelineRows, scRows, distressRows, metricsRows] = await Promise.all([
       // Current + prev month avg PSF
       sql<{ avg_psf: string; prev_psf: string | null }[]>`
-        WITH latest AS (SELECT MAX(txn_month) AS m FROM mv_txn_monthly),
+        WITH latest AS (SELECT MAX(txn_month) AS m FROM mv_txn_monthly_unified),
         curr AS (
           SELECT SUM(txn_count * avg_price_sqm) / NULLIF(SUM(txn_count), 0) AS psm
-          FROM mv_txn_monthly, latest
+          FROM mv_txn_monthly_unified, latest
           WHERE txn_month = latest.m AND trans_group_en = 'Sales' AND area_name_en = ${areaName}
         ),
         prev AS (
           SELECT SUM(txn_count * avg_price_sqm) / NULLIF(SUM(txn_count), 0) AS psm
-          FROM mv_txn_monthly, latest
+          FROM mv_txn_monthly_unified, latest
           WHERE txn_month = latest.m - INTERVAL '1 month' AND trans_group_en = 'Sales' AND area_name_en = ${areaName}
         )
         SELECT
@@ -76,7 +78,7 @@ async function fetchAreaData(slug: string): Promise<AreaDeepDiveData | null> {
         SELECT
           txn_month,
           ROUND((SUM(txn_count * avg_price_sqm) / NULLIF(SUM(txn_count), 0) / 10.764)::numeric, 0) AS avg_psf
-        FROM mv_txn_monthly
+        FROM mv_txn_monthly_unified
         WHERE area_name_en = ${areaName}
           AND trans_group_en = 'Sales'
           AND txn_month >= NOW() - INTERVAL '12 months'
@@ -109,6 +111,31 @@ async function fetchAreaData(slug: string): Promise<AreaDeepDiveData | null> {
         WHERE LOWER(area_name) LIKE LOWER(${`%${areaName.split(" ")[0]}%`})
           AND disappeared_at IS NULL
       `.catch(() => [{ cnt: "0" }]),
+
+      // YoY PSF (prev 12-24 month window) + total 12m transaction count
+      sql<{ txn_count_12m: string; yoy_psf: string | null }[]>`
+        WITH curr_window AS (
+          SELECT
+            SUM(txn_count) AS cnt,
+            SUM(txn_count * avg_price_sqm) / NULLIF(SUM(txn_count), 0) AS psm
+          FROM mv_txn_monthly_unified
+          WHERE area_name_en = ${areaName}
+            AND trans_group_en = 'Sales'
+            AND txn_month >= NOW() - INTERVAL '12 months'
+        ),
+        prev_window AS (
+          SELECT SUM(txn_count * avg_price_sqm) / NULLIF(SUM(txn_count), 0) AS psm
+          FROM mv_txn_monthly_unified
+          WHERE area_name_en = ${areaName}
+            AND trans_group_en = 'Sales'
+            AND txn_month >= NOW() - INTERVAL '24 months'
+            AND txn_month < NOW() - INTERVAL '12 months'
+        )
+        SELECT
+          COALESCE(curr_window.cnt, 0) AS txn_count_12m,
+          ROUND((prev_window.psm / 10.764)::numeric, 0) AS yoy_psf
+        FROM curr_window, prev_window
+      `.catch(() => [{ txn_count_12m: "0", yoy_psf: null }]),
     ])
 
     const avgPsf = Number(psfRows[0]?.avg_psf ?? 0)
@@ -128,11 +155,15 @@ async function fetchAreaData(slug: string): Promise<AreaDeepDiveData | null> {
 
     const scAvg = scRows[0]?.avg_cost ? Number(scRows[0].avg_cost) : null
     const distressCount = Number(distressRows[0]?.cnt ?? 0)
+    const txnCount12m = Number(metricsRows[0]?.txn_count_12m ?? 0)
+    const yoyAvgPsf = metricsRows[0]?.yoy_psf ? Number(metricsRows[0].yoy_psf) : null
 
     return {
       area_name_en: areaName,
       avg_psf: avgPsf,
       prev_avg_psf: prevAvgPsf,
+      yoy_avg_psf: yoyAvgPsf,
+      txn_count_12m: txnCount12m,
       pipeline_units: pipelineUnits,
       distress_count: distressCount,
       price_history: history,
@@ -145,16 +176,16 @@ async function fetchAreaData(slug: string): Promise<AreaDeepDiveData | null> {
   }
 }
 
-// Top 20 areas by transaction volume for static generation
+// Top 50 areas by transaction volume for static generation
 export async function generateStaticParams() {
   try {
     const rows = await sql<{ area_name_en: string }[]>`
       SELECT area_name_en, SUM(txn_count) AS total
-      FROM mv_txn_monthly
+      FROM mv_txn_monthly_unified
       WHERE area_name_en IS NOT NULL AND trans_group_en = 'Sales'
       GROUP BY area_name_en
       ORDER BY total DESC
-      LIMIT 20
+      LIMIT 50
     `
     return rows.map((r) => ({ slug: toSlug(r.area_name_en) }))
   } catch {
@@ -244,6 +275,11 @@ export default async function AreaDeepDivePage({
       ? ((data.avg_psf - data.prev_avg_psf) / data.prev_avg_psf) * 100
       : null
   const momColor = momChange === null ? "" : momChange >= 0 ? "text-accent" : "text-red-400"
+  const yoyChange =
+    data.yoy_avg_psf && data.avg_psf
+      ? ((data.avg_psf - data.yoy_avg_psf) / data.yoy_avg_psf) * 100
+      : null
+  const yoyColor = yoyChange === null ? "" : yoyChange >= 0 ? "text-accent" : "text-red-400"
 
   const schema = {
     "@context": "https://schema.org",
@@ -259,11 +295,13 @@ export default async function AreaDeepDivePage({
     },
     "variableMeasured": [
       { "@type": "PropertyValue", "name": "Average Price per Sq Ft (AED)", "value": Math.round(data.avg_psf) },
+      { "@type": "PropertyValue", "name": "Transactions (Last 12 Months)", "value": data.txn_count_12m },
       { "@type": "PropertyValue", "name": "Off-Plan Pipeline Units", "value": data.pipeline_units },
+      ...(yoyChange !== null ? [{ "@type": "PropertyValue", "name": "Year-over-Year Price Change (%)", "value": Math.round(yoyChange * 10) / 10 }] : []),
       ...(data.service_charge_avg ? [{ "@type": "PropertyValue", "name": "Average Annual Service Charge (AED/sqft)", "value": Math.round(data.service_charge_avg) }] : []),
     ],
     "temporalCoverage": "2020/..",
-    "measurementTechnique": "Dubai Land Department (DLD) registered transaction records",
+    "measurementTechnique": "Dubai Land Department (DLD) registered transaction records and Bayut listing data",
     "isAccessibleForFree": true,
   }
 
@@ -293,7 +331,7 @@ export default async function AreaDeepDivePage({
         </div>
 
         {/* Stat cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <div className="rounded-lg bg-background border border-border/50 p-3">
             <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-wide mb-1">
               Current Avg PSF
@@ -310,6 +348,24 @@ export default async function AreaDeepDivePage({
               {momChange !== null
                 ? `${momChange >= 0 ? "+" : ""}${momChange.toFixed(1)}%`
                 : "—"}
+            </p>
+          </div>
+          <div className="rounded-lg bg-background border border-border/50 p-3">
+            <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-wide mb-1">
+              YoY Change
+            </p>
+            <p className={`font-mono text-base font-bold ${yoyColor || "text-muted-foreground"}`}>
+              {yoyChange !== null
+                ? `${yoyChange >= 0 ? "+" : ""}${yoyChange.toFixed(1)}%`
+                : "—"}
+            </p>
+          </div>
+          <div className="rounded-lg bg-background border border-border/50 p-3">
+            <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-wide mb-1">
+              Deals (12 Months)
+            </p>
+            <p className="font-mono text-base font-bold text-foreground">
+              {data.txn_count_12m > 0 ? formatNum(data.txn_count_12m) : "—"}
             </p>
           </div>
           <div className="rounded-lg bg-background border border-border/50 p-3">
@@ -467,7 +523,7 @@ export default async function AreaDeepDivePage({
       />
 
       <p className="text-[11px] font-mono text-muted-foreground/40 px-1">
-        Source: Dubai Land Department · Transactions, projects, and service charge registry
+        Source: Dubai Land Department · Bayut · Transactions, projects, and service charge registry
       </p>
     </div>
     </>
