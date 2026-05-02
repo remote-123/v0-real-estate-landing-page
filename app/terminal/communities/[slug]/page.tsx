@@ -59,6 +59,8 @@ async function fetchAreaData(
   serviceChargeAvg: number | null
   distressCount: number
   topProjects: { project_name_en: string; no_of_units: number; project_status: string }[]
+  yoyPsf: number | null
+  txnCount12m: number
 } | null> {
   try {
     // Type-agnostic discovery — don't 404 just because the type has no data
@@ -76,7 +78,7 @@ async function fetchAreaData(
       ? sql`AND m.property_type_en = 'Unit' AND m.property_sub_type_en = 'Flat'`
       : sql`AND m.property_type_en = 'Villa'`
 
-    const [stats, roomHistory, scRows, distressRows, topProjectRows] = await Promise.all([
+    const [stats, roomHistory, scRows, distressRows, topProjectRows, metricsRows] = await Promise.all([
       // KPI stats (aggregate over all rooms)
       sql<AreaRow[]>`
         WITH latest_month AS (
@@ -192,6 +194,33 @@ async function fetchAreaData(
         ORDER BY no_of_units DESC
         LIMIT 5
       `,
+
+      // YoY PSF (prev 12-24 month window) + 12-month transaction count
+      sql<{ txn_count_12m: string; yoy_psf: string | null }[]>`
+        WITH curr_window AS (
+          SELECT
+            SUM(txn_count) AS cnt,
+            SUM(txn_count * avg_price_sqm) / NULLIF(SUM(txn_count), 0) AS psm
+          FROM mv_txn_monthly_unified m
+          WHERE m.area_name_en = ${areaName}
+            AND m.trans_group_en = 'Sales'
+            AND m.txn_month >= NOW() - INTERVAL '12 months'
+            ${typeCond}
+        ),
+        prev_window AS (
+          SELECT SUM(txn_count * avg_price_sqm) / NULLIF(SUM(txn_count), 0) AS psm
+          FROM mv_txn_monthly_unified m
+          WHERE m.area_name_en = ${areaName}
+            AND m.trans_group_en = 'Sales'
+            AND m.txn_month >= NOW() - INTERVAL '24 months'
+            AND m.txn_month < NOW() - INTERVAL '12 months'
+            ${typeCond}
+        )
+        SELECT
+          COALESCE(curr_window.cnt, 0) AS txn_count_12m,
+          ROUND((prev_window.psm / 10.764)::numeric, 0) AS yoy_psf
+        FROM curr_window, prev_window
+      `.catch(() => [{ txn_count_12m: '0', yoy_psf: null }]),
     ])
 
     // Graceful no-data: area exists but no transactions for this type
@@ -222,8 +251,10 @@ async function fetchAreaData(
       no_of_units: Number(r.no_of_units),
       project_status: r.project_status,
     }))
+    const txnCount12m = Number(metricsRows[0]?.txn_count_12m ?? 0)
+    const yoyPsf = metricsRows[0]?.yoy_psf ? Number(metricsRows[0].yoy_psf) : null
 
-    return { area, history, noData: !stats[0], serviceChargeAvg, distressCount, topProjects }
+    return { area, history, noData: !stats[0], serviceChargeAvg, distressCount, topProjects, yoyPsf, txnCount12m }
   } catch {
     return null
   }
@@ -232,12 +263,11 @@ async function fetchAreaData(
 export async function generateStaticParams() {
   try {
     const rows = await sql<{ area_name_en: string }[]>`
-      SELECT area_name_en, SUM(txn_count) AS total
-      FROM mv_txn_monthly
+      SELECT DISTINCT area_name_en
+      FROM mv_txn_monthly_unified
       WHERE area_name_en IS NOT NULL AND trans_group_en = 'Sales'
-      GROUP BY area_name_en
-      ORDER BY total DESC
-      LIMIT 100
+      ORDER BY area_name_en
+      LIMIT 300
     `
     return rows.map((r) => ({ slug: toSlug(r.area_name_en) }))
   } catch {
@@ -283,9 +313,13 @@ export default async function CommunityPage({
   const result = await fetchAreaData(slug, type)
   if (!result) notFound()
 
-  const { area, history, noData, serviceChargeAvg, distressCount, topProjects } = result
+  const { area, history, noData, serviceChargeAvg, distressCount, topProjects, yoyPsf, txnCount12m } = result
   const momChange = Number(area.mom_change ?? 0)
   const momColor = momChange >= 0 ? 'text-accent' : 'text-red-400'
+  const yoyChange = yoyPsf && area.avg_psf
+    ? ((area.avg_psf - yoyPsf) / yoyPsf) * 100
+    : null
+  const yoyColor = yoyChange === null ? '' : yoyChange >= 0 ? 'text-accent' : 'text-red-400'
 
   const formatPrice = (n: number) => {
     if (n >= 1_000_000) return `AED ${(n / 1_000_000).toFixed(2)}M`
@@ -310,8 +344,9 @@ export default async function CommunityPage({
     },
     "variableMeasured": [
       { "@type": "PropertyValue", "name": "Average Price per Sq Ft (AED)", "value": Math.round(Number(area.avg_psf)) },
-      { "@type": "PropertyValue", "name": "Monthly Transaction Count", "value": area.txn_count },
+      { "@type": "PropertyValue", "name": "Transactions (Last 12 Months)", "value": txnCount12m },
       { "@type": "PropertyValue", "name": "Off-Plan Pipeline Units", "value": area.pipeline_units },
+      ...(yoyChange !== null ? [{ "@type": "PropertyValue", "name": "Year-over-Year Price Change (%)", "value": Math.round(yoyChange * 10) / 10 }] : []),
       ...(serviceChargeAvg ? [{ "@type": "PropertyValue", "name": "Average Annual Service Charge (AED/sqft)", "value": Math.round(Number(serviceChargeAvg)) }] : []),
     ],
     "temporalCoverage": "2020/..",
@@ -365,12 +400,14 @@ export default async function CommunityPage({
             </Link>
           </p>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {[
               { label: 'AED / sqft', value: formatNum(area.avg_psf) },
-              { label: 'Avg Sale Price', value: formatPrice(area.avg_value) },
-              { label: 'Txns (latest month)', value: formatNum(area.txn_count) },
               { label: 'MoM Change', value: `${momChange >= 0 ? '+' : ''}${momChange.toFixed(1)}%`, className: momColor },
+              { label: 'YoY Change', value: yoyChange !== null ? `${yoyChange >= 0 ? '+' : ''}${yoyChange.toFixed(1)}%` : '—', className: yoyColor || 'text-muted-foreground' },
+              { label: 'Avg Sale Price', value: formatPrice(area.avg_value) },
+              { label: 'Deals (12 Months)', value: txnCount12m > 0 ? formatNum(txnCount12m) : '—' },
+              { label: 'Txns (latest month)', value: formatNum(area.txn_count) },
             ].map(kpi => (
               <div key={kpi.label} className="rounded-lg bg-background border border-border/50 p-3">
                 <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-wide mb-1">{kpi.label}</p>
@@ -475,7 +512,7 @@ export default async function CommunityPage({
       </div>
 
       <p className="text-[11px] font-mono text-muted-foreground/40 px-1">
-        Source: Dubai Land Department · Price history based on registered sales transactions
+        Source: Dubai Land Department · Bayut · Registered sales transactions
       </p>
 
     </div>

@@ -24,9 +24,9 @@
 - [ ] **LinkedIn Sign-In** — needs LinkedIn Developer app
 
 ## P3 — Terminal Features
-- [ ] **Liquidity Scanner** `/terminal/liquidity` — not built
-- [ ] **Researcher automation** `/admin/automations/researcher` — placeholder created, spec TBD
-- [ ] **Access gating** — Phase 2 pages behind free email signup, Phase 3 behind paid/HNW
+- [x] **Liquidity Scanner** `/terminal/liquidity` — BUILT (as of 2026-05)
+- [x] **Researcher automation** `/admin/automations/researcher` — BUILT with Gemini 2.5 Flash, 8 query types (as of 2026-05-02)
+- [x] **Access gating** — Phase 2 pages gated: distress-deals, off-plan-pipeline, communities, rental-drops, floor-plan-pricer, service-charges, yield-map, area-momentum, building-comparator
 
 ## SEO (Done 2026-05-01)
 - [x] thecityregistry.com sitemap, robots.txt, meta tags, schema.org
