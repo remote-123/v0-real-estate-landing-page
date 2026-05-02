@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
 import type { LucideIcon } from 'lucide-react'
-import { Clock, Globe, Mail, MessageSquare, FileText, Zap } from 'lucide-react'
+import { Clock, Globe, Mail, MessageSquare, FileText, Zap, Heart } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import Link from 'next/link'
 
 export const metadata: Metadata = {
   title: 'Automations — Admin',
@@ -215,6 +216,24 @@ export default function AdminAutomationsPage() {
             <p className={`font-mono text-2xl font-bold mt-0.5 ${s.color}`}>{s.value}</p>
           </div>
         ))}
+      </div>
+
+      {/* Quick links */}
+      <div className="flex gap-2 flex-wrap">
+        <Link
+          href="/admin/automations/heartbeat"
+          className="inline-flex items-center gap-2 rounded-lg border border-border/50 bg-card/40 hover:bg-card/70 transition-colors px-4 py-2 text-sm"
+        >
+          <Heart className="h-4 w-4 text-accent" />
+          Configure Heartbeat
+        </Link>
+        <Link
+          href="/admin/automations/researcher"
+          className="inline-flex items-center gap-2 rounded-lg border border-border/50 bg-card/40 hover:bg-card/70 transition-colors px-4 py-2 text-sm"
+        >
+          <Zap className="h-4 w-4 text-accent" />
+          AI Researcher
+        </Link>
       </div>
 
       {/* List */}
