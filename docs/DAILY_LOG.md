@@ -7,6 +7,15 @@
 > 3. **Mandatory Signature:** Every entry must explicitly state the tool name at the start (e.g., *"Built by Antigravity"*, *"Built by Claude Code"*, or *"Built by Cursor"*).
 
 
+## 02 May 2026 — Cycle 41
+
+*Built by Claude Code*
+
+- **`lib/tools/calculations.ts`** — extracted all pure calculation logic from 4 tool components into a single testable module: `formatAED`, `formatFull`, `pctLabel`, `addMonths`, `constructionLabel`, `generateSchedule` (off-plan), `calcDldFees` (DLD fees), `calcVisaTier` (Golden Visa), `calcRentalYield` (gross/net/CoC). All types and constants exported.
+- **76 new tests** in `tests/lib/tools-calculations.test.ts` — covers all calc functions end-to-end: formatter edge cases, addMonths year boundaries, generateSchedule for all 4 presets + custom (milestone count branching, post-handover instalments, pct sum = 100), PLAN_CONFIGS integrity, DLD fees (cash, mortgage, sub-500K reg fee, feesOverPurchasePct, edge cases), visa tiers (threshold boundaries, shortfall/surplus, off-plan advisory), rental yield (grossYield, netYield, service charge, CoC, null guards). **307 total tests** (+76 from 231).
+- Components updated to import from shared module: off-plan-payment-calculator, dld-fee-calculator, golden-visa-calculator now all defer useMemo to the extracted functions.
+- **Cycle 40** (completed same session): `/tools` hub page (`app/tools/page.tsx` — ItemList JSON-LD, 6-card grid) + Golden Visa Calculator (`components/tools/golden-visa-calculator.tsx`, `app/tools/golden-visa-calculator/page.tsx` — AED 2M/750K checker, upgrade nudge, off-plan advisory, 7 FAQs). Sitemap updated both branches.
+
 ## 02 May 2026 — Cycle 39
 
 *Built by Claude Code*

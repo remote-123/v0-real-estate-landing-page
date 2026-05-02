@@ -56,7 +56,7 @@
 - [x] **Expand test coverage — snapshot-distress-listings (Cycle 35 2026-05-02)**: 22 tests covering auth, PF API failure, new listing insertion, price drop confirmation, tier-1 Telegram alert, 6 SQL field sentinels. 162 total tests passing.
 - [x] **Expand test coverage — data pipeline (Cycle 36 2026-05-02)**: fetch-rental-listings (14 tests), bayut14 lib (33 tests). **209 total tests passing** (crossed 200 milestone).
 - [x] **Expand test coverage — telegram-distress-digest (Cycle 38 2026-05-02)**: 22 tests. Auth, graceful degradation, deal filtering, offplan price logic, sort+cap, message format. **231 total tests passing.**
-- [ ] **Expand test coverage**: component tests
+- [x] **Expand test coverage — tool calculation logic (Cycle 41 2026-05-02)**: lib/tools/calculations.ts extracted + 76 tests (formatters, generateSchedule, calcDldFees, calcVisaTier, calcRentalYield). **307 total tests passing.**
 
 ## Known Risks / Tech Debt
 - `whatsapp_intents.created_at` — column existence assumed in Telegram `/leads` command handler. Test documents this assumption. Verify schema when checking whatsapp_intents table.
