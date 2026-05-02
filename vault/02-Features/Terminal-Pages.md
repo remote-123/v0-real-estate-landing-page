@@ -48,9 +48,16 @@ All pages query `mv_txn_monthly_unified` (DLD + Bayut UNION).
 | Mortgage Calculator | `/terminal/mortgage-calculator` |
 | Rental Yield | `/terminal/rental-yield` |
 
-## Phase 3 (Not Yet Built)
-- `/terminal/liquidity` — Mortgage & Liquidity Scanner
-- `/terminal/developer-track` ← actually EXISTS already
+## Dynamic Detail Pages
+| Page | Route | Data Source | Notes |
+|---|---|---|---|
+| Area Deep-Dive | `/terminal/areas/[slug]` | `mv_txn_monthly_unified` | ISR revalidate=3600; top 50 pre-rendered; 6 stat cards: PSF, MoM, YoY, Deals 12M, Distress, Pipeline |
+| Community | `/terminal/communities/[slug]` | `mv_txn_monthly_unified` | — |
+| Building | `/terminal/buildings/[...slug]` | `buildings` + `dld_buildings_registry` + `dld_service_charges` | ApartmentComplex schema |
+
+## Phase 3 (Planned)
+- `/terminal/liquidity` — Mortgage & Liquidity Scanner (EXISTS — built but gated)
+- `/terminal/developer-track` — EXISTS and live
 
 ## Sidebar Links
 Edit `sidebarLinks` array in `components/terminal/sidebar.tsx` to add new pages.
