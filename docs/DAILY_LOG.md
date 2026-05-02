@@ -7,6 +7,10 @@
 > 3. **Mandatory Signature:** Every entry must explicitly state the tool name at the start (e.g., *"Built by Antigravity"*, *"Built by Claude Code"*, or *"Built by Cursor"*).
 
 
+## 02 May 2026 — Cycle 32
+*Built by Claude Code*
+- **Telegram bot extended commands (2fb353e)**: Three new ops-monitoring commands added to `/api/telegram-webhook`. `/area [name]` — 5-CTE SQL (curr/year_ago/rolling_12m) → PSF + YoY% + 12m txn count; ILIKE search. `/distress` — top 5 from `distress_listings WHERE price_drop_confirmed = true`, distress_score DESC; PSF % vs area avg. `/price [area] [beds]` — rolling 12m weighted avg PSF + price from `mv_txn_monthly_unified`, beds normalized via `toBedLabel()` (0=Studio, 1-4=N B/R, 5+=5+ B/R). All: `waitUntil()` non-blocking, silent ignore for non-allowed users, error reply on SQL fail. 12 new tests + 3 source-code regression sentinels. 110 total tests passing.
+
 ## 02 May 2026 — Cycle 31
 *Built by Claude Code*
 - **Unit Registry /terminal/unit-registry (67c2678)**: Exposes 1.27M dld_units rows (previously untouched). 7 filters: project name (ILIKE), area (select), bedrooms, min/max floor, min/max sqm. Server prefetches area list. Results table: Unit# / Building / Floor / Beds / Type / Sqft / Sqm / Parking / Freehold / Project / Area. `BoolBadge` component for freehold/leasehold. Auth gating (5 free / 50 auth), CSV export, GatedTableOverlay. Stats bar (1.27M+ units / 300+ areas). Cross-links: Comparable Sales, Building Comparator, Floor Plan Pricer. 13 new tests (content-dispatch SQL mock, NUMERIC coercion regression guard). 98 total tests passing.

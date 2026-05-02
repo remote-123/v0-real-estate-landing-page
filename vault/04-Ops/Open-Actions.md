@@ -15,7 +15,12 @@
 
 ## P1 — Live Feature Blockers
 - [ ] **Add Bayut cron to cron-job.org**: `GET /api/cron/fetch-bayut-transactions` Bearer CRON_SECRET at 06:45 UTC — `bayut_transactions` has 0 rows because this was never added
-- [ ] **Register Telegram bot commands** via BotFather `/setcommands`: `leads`, `briefing`
+- [ ] **Register Telegram bot commands** via BotFather `/setcommands`: `leads`, `briefing`, `area`, `distress`, `price` — CODE BUILT Cycle 32 (2026-05-02). Human action: register via BotFather.
+  - `leads` — Lead report (email + WhatsApp)
+  - `briefing` — Latest market briefing preview
+  - `area [name]` — Area PSF + YoY% + 12m transactions
+  - `distress` — Top 5 confirmed distress deals
+  - `price [area] [beds]` — Rolling 12m avg PSF by area + bedroom type
 - [ ] **Test Admin Dashboard** at `/admin/dashboard?passcode=ADMIN_PASSCODE`
 
 ## P2 — Auth & OAuth
