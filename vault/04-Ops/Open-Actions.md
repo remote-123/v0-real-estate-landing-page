@@ -8,7 +8,10 @@
   - Current CSV stale (latest `instance_date` Feb 2026)
   - Goal: direct data feed / bulk export agreement with DLD
   - Ask about: API access, `dld_building_nk` key, data licensing for commercial use
-  - Blocks: market briefing, area momentum freshness, building age matching
+  - Blocks: area momentum freshness (still uses stale DLD for absolute dates), building age matching
+  - NOTE (2026-05-02): Market briefing, rental yield, ROI engine, distress deals, floor-plan pricer
+    now all migrated to mv_txn_monthly_unified — these work with fresh Bayut data. Only building-
+    level pages (building comparator trend lines) still depend on raw dld_transactions.
 
 ## P1 — Live Feature Blockers
 - [ ] **Add Bayut cron to cron-job.org**: `GET /api/cron/fetch-bayut-transactions` Bearer CRON_SECRET at 06:45 UTC — `bayut_transactions` has 0 rows because this was never added
