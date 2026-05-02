@@ -33,6 +33,7 @@ export const sidebarLinks = [
       { label: "City Intelligence", href: "/terminal", icon: LayoutDashboard },
       { label: "Distress Deals", href: "/terminal/distress-deals", icon: BarChart3 },
       { label: "Rental Drops", href: "/terminal/rental-drops", icon: Home },
+      { label: "Market Pulse", href: "/terminal/market-pulse", icon: Activity },
       { label: "Transaction Pulse", href: "/terminal/transaction-pulse", icon: Activity },
       { label: "Market Briefing", href: "/terminal/market-briefing", icon: Newspaper },
     ]
