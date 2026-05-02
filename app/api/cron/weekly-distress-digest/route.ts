@@ -197,31 +197,172 @@ function getResend(): Resend | null {
   return _resend
 }
 
-// Convert plain text body to simple HTML (preserves line breaks)
-function textToHtml(text: string, subject: string, unsubToken: string): string {
+// Minimal HTML escape for email content
+function esc(s: string | null | undefined): string {
+  if (!s) return ''
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+}
+
+function buildDealCardsHtml(deals: DigestDeal[]): string {
+  return deals.slice(0, 5).map((d) => {
+    const price = Math.round(Number(d.current_price)).toLocaleString('en-US')
+    const psf = d.psf ? Math.round(Number(d.psf)) : null
+    const areaAvg = d.dld_area_avg_psf ? Math.round(Number(d.dld_area_avg_psf)) : null
+    const discountPct =
+      psf && areaAvg && areaAvg > 0
+        ? (((areaAvg - psf) / areaAvg) * 100).toFixed(1)
+        : null
+    const tierLabel =
+      d.confidence_tier === 1 ? 'CONFIRMED DROP' : d.confidence_tier === 2 ? 'BELOW DLD AVG' : 'DOM SIGNAL'
+    const tierBg =
+      d.confidence_tier === 1 ? '#dcfce7' : d.confidence_tier === 2 ? '#fef9c3' : '#f3f4f6'
+    const tierColor =
+      d.confidence_tier === 1 ? '#15803d' : d.confidence_tier === 2 ? '#a16207' : '#6b7280'
+    const meta = [
+      d.bedrooms ? `${d.bedrooms} BR` : null,
+      d.size_sqft ? `${Math.round(Number(d.size_sqft)).toLocaleString()} sqft` : null,
+    ].filter(Boolean).join(' · ')
+
+    const psfRow = psf
+      ? `<tr>
+          <td colspan="2" style="padding-top:10px;border-top:1px solid #e5e7eb">
+            <span style="font-family:monospace;font-size:11px;color:#6b7280">
+              PSF: <b style="color:#111827">AED ${psf}/sqft</b>
+              ${areaAvg ? ` &nbsp;·&nbsp; Area avg: <b style="color:#111827">AED ${areaAvg}/sqft</b>` : ''}
+              ${discountPct ? ` &nbsp;·&nbsp; <b style="color:#15803d">${discountPct}% below market</b>` : ''}
+            </span>
+          </td>
+        </tr>`
+      : ''
+
+    return `<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px;border:1px solid #e5e7eb;border-radius:6px;background:#ffffff">
+  <tr>
+    <td style="padding:16px 20px">
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td style="vertical-align:top">
+            <span style="display:inline-block;font-family:monospace;font-size:10px;letter-spacing:0.06em;padding:2px 7px;border-radius:3px;background:${tierBg};color:${tierColor};margin-bottom:8px">${tierLabel}</span><br/>
+            <span style="font-size:14px;font-weight:700;color:#111827;font-family:-apple-system,BlinkMacSystemFont,sans-serif">${esc(d.title)}</span><br/>
+            <span style="font-size:12px;color:#6b7280;font-family:-apple-system,BlinkMacSystemFont,sans-serif">${esc(d.location)}</span>
+          </td>
+          <td style="text-align:right;vertical-align:top;white-space:nowrap;padding-left:16px">
+            <span style="font-family:monospace;font-size:15px;font-weight:700;color:#111827">AED ${price}</span><br/>
+            ${meta ? `<span style="font-family:monospace;font-size:11px;color:#9ca3af">${meta}</span>` : ''}
+            <br/><span style="font-family:monospace;font-size:11px;color:#9ca3af">Score ${d.distress_score}/100 · ${d.days_on_market}d</span>
+          </td>
+        </tr>
+        ${psfRow}
+      </table>
+    </td>
+  </tr>
+</table>`
+  }).join('')
+}
+
+// Build full institutional HTML email
+function textToHtml(text: string, subject: string, unsubToken: string, deals: DigestDeal[]): string {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.northcapitaldxb.com'
   const unsubUrl = `${baseUrl}/api/leads/unsubscribe?token=${unsubToken}`
+  const terminalUrl = `${baseUrl}/terminal/distress-deals`
+  const now = new Date()
+  const dateStr = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
+
+  // Split Gemini body at natural paragraph breaks
   const bodyHtml = text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .split('\n')
-    .map((line) => (line.trim() === '' ? '<br/>' : `<p style="margin:0 0 12px 0;line-height:1.6">${line}</p>`))
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .split(/\n{2,}/)
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .map((p) => `<p style="margin:0 0 16px 0;font-size:14px;line-height:1.75;color:#374151;font-family:-apple-system,BlinkMacSystemFont,Georgia,serif">${p}</p>`)
     .join('')
 
+  const dealCardsHtml = buildDealCardsHtml(deals)
+
   return `<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><title>${subject}</title></head>
-<body style="font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:32px 24px;color:#1a1a1a;background:#ffffff">
-  <p style="font-family:monospace;font-size:11px;color:#888;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:24px">
-    NORTH CAPITAL DXB — WEEKLY DISTRESS DIGEST
-  </p>
-  ${bodyHtml}
-  <hr style="border:none;border-top:1px solid #eee;margin:32px 0"/>
-  <p style="font-size:11px;color:#aaa;font-family:monospace">
-    Weekly only. No spam.
-    <a href="${unsubUrl}" style="color:#aaa">Unsubscribe</a>
-  </p>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>${esc(subject)}</title>
+</head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,sans-serif">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:32px 16px">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%">
+
+          <!-- Header -->
+          <tr>
+            <td style="background:#0f172a;border-radius:8px 8px 0 0;padding:28px 32px">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td>
+                    <p style="margin:0 0 4px 0;font-family:monospace;font-size:10px;letter-spacing:0.12em;color:#64748b;text-transform:uppercase">North Capital DXB · Intelligence</p>
+                    <p style="margin:0;font-size:20px;font-weight:700;color:#f8fafc;letter-spacing:-0.01em">Weekly Distress Digest</p>
+                  </td>
+                  <td style="text-align:right;vertical-align:top">
+                    <p style="margin:0;font-family:monospace;font-size:11px;color:#64748b">${dateStr}</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="background:#ffffff;padding:32px">
+
+              <!-- Analysis -->
+              <div style="margin-bottom:28px">
+                ${bodyHtml}
+              </div>
+
+              <!-- Deal cards section header -->
+              <p style="margin:0 0 12px 0;font-family:monospace;font-size:10px;letter-spacing:0.1em;color:#9ca3af;text-transform:uppercase;border-top:1px solid #f3f4f6;padding-top:24px">
+                Top Distress Signals This Week
+              </p>
+
+              <!-- Deal cards -->
+              ${dealCardsHtml}
+
+              <!-- CTA -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:28px">
+                <tr>
+                  <td align="center">
+                    <a href="${terminalUrl}" style="display:inline-block;background:#0f172a;color:#f8fafc;font-family:monospace;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;padding:12px 28px;border-radius:5px;text-decoration:none">
+                      View All Deals →
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background:#f9fafb;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 8px 8px;padding:20px 32px">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td>
+                    <p style="margin:0;font-family:monospace;font-size:10px;color:#9ca3af;line-height:1.6">
+                      North Capital DXB — RERA Broker #95133<br/>
+                      AI-generated from live DLD + Bayut data. Not financial advice.<br/>
+                      Weekly digest only. <a href="${unsubUrl}" style="color:#6b7280;text-decoration:underline">Unsubscribe</a>
+                    </p>
+                  </td>
+                  <td style="text-align:right;vertical-align:top">
+                    <p style="margin:0;font-family:monospace;font-size:10px;color:#d1d5db">NCX</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>`
 }
@@ -230,7 +371,8 @@ async function sendEmailToLead(
   email: string,
   subject: string,
   body: string,
-  unsubToken: string
+  unsubToken: string,
+  deals: DigestDeal[]
 ): Promise<{ sent: boolean; skipped?: boolean }> {
   const resend = getResend()
   if (!resend) {
@@ -243,7 +385,7 @@ async function sendEmailToLead(
       from: 'North Capital DXB <digest@northcapitaldxb.com>',
       to: email,
       subject,
-      html: textToHtml(body, subject, unsubToken),
+      html: textToHtml(body, subject, unsubToken, deals),
     })
     return { sent: true }
   } catch (err) {
@@ -292,7 +434,7 @@ async function run(): Promise<NextResponse> {
     for (const lead of leads) {
       // Unsubscribe token = base64 of email (simple, no secret needed for low-stakes opt-out)
       const unsubToken = Buffer.from(lead.email as string).toString('base64url')
-      const result = await sendEmailToLead(lead.email as string, emailSubject, emailBody, unsubToken)
+      const result = await sendEmailToLead(lead.email as string, emailSubject, emailBody, unsubToken, deals)
       if (result.sent) sentCount++
       if (result.skipped) skippedCount++
     }

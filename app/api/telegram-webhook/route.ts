@@ -63,7 +63,7 @@ async function handleLeadsCommand(chatId: string | number, threadId?: number) {
                     ARRAY(
                         SELECT email FROM email_leads
                         WHERE unsubscribed_at IS NULL
-                        ORDER BY created_at DESC
+                        ORDER BY subscribed_at DESC
                         LIMIT 5
                     ) AS last_5
                 FROM email_leads
