@@ -7,6 +7,10 @@
 > 3. **Mandatory Signature:** Every entry must explicitly state the tool name at the start (e.g., *"Built by Antigravity"*, *"Built by Claude Code"*, or *"Built by Cursor"*).
 
 
+## 02 May 2026 — Cycle 17
+*Built by Claude Code*
+- **`market_briefings` table created + initial seed**: Table was referenced in code but never created. Created `market_briefings (id, content, data_snapshot jsonb, week_label, generated_at)` with DESC index on `generated_at`. Seeded first briefing (id=1, May 2 2026) using live Neon data (top 5 areas by volume from `mv_txn_monthly_unified`) + Gemini 2.5 Flash institutional analyst prompt. `/terminal/market-briefing` page now shows real content instead of empty state. Cron wrapper at `/api/cron/generate-market-briefing` already exists — schedule Monday 06:00 UTC on cron-job.org with Bearer CRON_SECRET to automate going forward.
+
 ## 02 May 2026 — Cycle 16
 *Built by Claude Code*
 - **Sidebar: add Area Comparison + Market Briefing (ef493cd)**: Added `/terminal/compare` (Area Comparison) under Buildings & Developers and `/terminal/market-briefing` (Market Briefing) under Terminal group. Added `/terminal/compare` to sitemap for both domains. Sidebar now has 20 links across 4 groups — all built terminal pages now visible.
