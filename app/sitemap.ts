@@ -40,6 +40,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       '/tools/mortgage-calculator',
       '/tools/dld-transfer-fee-calculator',
       '/tools/off-plan-payment-calculator',
+      '/tools/golden-visa-calculator',
+      '/tools',
     ].map((route) => ({
       url: `${baseUrl}${route}`,
       lastModified: new Date(),
@@ -143,6 +145,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     '/tools/mortgage-calculator',
     '/tools/dld-transfer-fee-calculator',
     '/tools/off-plan-payment-calculator',
+    '/tools/golden-visa-calculator',
+    '/tools',
     ...terminalStaticRoutes,
   ].map((route) => ({
     url: `${baseUrl}${route}`,
