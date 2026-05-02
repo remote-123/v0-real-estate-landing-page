@@ -18,10 +18,10 @@
 | Table | Rows | Cron | Status |
 |---|---|---|---|
 | `rental_listings` | ~1,168 | Daily 06:00 UTC | ✅ Live |
-| `distress_listings` | growing | Daily 06:30 UTC | ✅ Live |
+| `distress_listings` | 0 | Daily 06:30 UTC | ⚠️ Table not yet created — run `npm run migrate:missing-tables` |
 | `bayut_transactions` | 0 | Daily 06:45 UTC | ❌ cron-job.org entry missing |
 | `market_briefings` | small | Monday 06:00 UTC | ✅ Live |
-| `email_leads` | small | On capture | ✅ Live |
+| `email_leads` | 0 | On capture | ⚠️ Table not yet created — run `npm run migrate:missing-tables` |
 | `reddit_seen_posts` | 0 | Cron | Created 2026-03-21 |
 | `reddit_voice_samples` | 0 | Cron | Created 2026-03-21 |
 
