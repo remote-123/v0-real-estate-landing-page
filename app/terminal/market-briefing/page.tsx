@@ -1,6 +1,7 @@
 import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { sql } from "@/lib/db"
-import { FileText } from "lucide-react"
+import { FileText, ChevronRight } from "lucide-react"
+import Link from "next/link"
 
 export const revalidate = 3600
 
@@ -62,7 +63,15 @@ export default async function MarketBriefingPage() {
   return (
     <div className="space-y-8 pb-24 lg:pb-10 px-6 sm:px-0">
       <div className="flex flex-col gap-2">
-        <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Intelligence</p>
+        <div className="flex items-center justify-between">
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Intelligence</p>
+          <Link
+            href="/terminal/market-briefing/archive"
+            className="text-[10px] font-mono text-accent hover:text-accent/80 transition-colors flex items-center gap-1 uppercase tracking-wider"
+          >
+            Archive <ChevronRight className="h-3 w-3" />
+          </Link>
+        </div>
         <h1 className="font-serif text-3xl font-bold tracking-tight">Weekly Market Briefing</h1>
         <p className="text-muted-foreground">
           AI-generated institutional analysis from live DLD and Bayut transaction data. Published every Monday 06:00 UTC.
