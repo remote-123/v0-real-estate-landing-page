@@ -7,6 +7,12 @@
 > 3. **Mandatory Signature:** Every entry must explicitly state the tool name at the start (e.g., *"Built by Antigravity"*, *"Built by Claude Code"*, or *"Built by Cursor"*).
 
 
+## 02 May 2026 — Cycle 38
+
+*Built by Claude Code*
+
+- **`telegram-distress-digest` cron tests** — 22 tests closing the last open testing backlog item. Covers: auth (3), graceful degradation — both sources fail→200{message}+no Telegram, Bayut-only/PF-only fallback paths (6), deal filtering — price=0/null id/null property_id all filtered (4), `offplan_details.original_price` logic — used when >current (18.2% real discount), bypassed when <current (synthetic id-based formula, no negative %) (3), sort+cap to 10 from 16 (2), Telegram message format — header/year/terminal link/`discountPct.toFixed(1)` pattern (4). **231 total tests passing** (+22).
+
 ## 02 May 2026 — Cycle 37
 
 *Built by Claude Code*
