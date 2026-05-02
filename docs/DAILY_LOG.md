@@ -7,6 +7,10 @@
 > 3. **Mandatory Signature:** Every entry must explicitly state the tool name at the start (e.g., *"Built by Antigravity"*, *"Built by Claude Code"*, or *"Built by Cursor"*).
 
 
+## 02 May 2026 — Cycle 31
+*Built by Claude Code*
+- **Unit Registry /terminal/unit-registry (67c2678)**: Exposes 1.27M dld_units rows (previously untouched). 7 filters: project name (ILIKE), area (select), bedrooms, min/max floor, min/max sqm. Server prefetches area list. Results table: Unit# / Building / Floor / Beds / Type / Sqft / Sqm / Parking / Freehold / Project / Area. `BoolBadge` component for freehold/leasehold. Auth gating (5 free / 50 auth), CSV export, GatedTableOverlay. Stats bar (1.27M+ units / 300+ areas). Cross-links: Comparable Sales, Building Comparator, Floor Plan Pricer. 13 new tests (content-dispatch SQL mock, NUMERIC coercion regression guard). 98 total tests passing.
+
 ## 02 May 2026 — Cycle 30
 *Built by Claude Code*
 - **Comparable Sales Search /terminal/transaction-search (bdd42ca)**: New terminal tool — search 1.66M+ DLD transactions for comparable sales. API route (`/api/terminal/transaction-search`): parallel COUNT + data SQL with filters (area exact-match, building ILIKE, rooms, reg_type, price range, date range), auth gating (5 rows free / 50 authenticated). Critical: uses `new URL(req.url).searchParams` not `req.nextUrl.searchParams` for test compatibility. Client component: 8-field filter form, paginated table (Date / Area / Building / Beds / Type / Reg / Price / AED/sqft / sqft / Metro), GatedTableOverlay, CSV export (authenticated only). Server page pre-fetches distinct areas from dld_transactions. Data coverage notice (DLD through Feb 2026) with cross-link to Transaction Pulse for fresh data. Cross-links: Floor Plan Pricer, Area Momentum, Building Comparator. 12 new tests (content-dispatch mock for parallel SQL); 85 total passing.
