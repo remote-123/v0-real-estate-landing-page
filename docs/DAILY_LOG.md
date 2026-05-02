@@ -7,6 +7,12 @@
 > 3. **Mandatory Signature:** Every entry must explicitly state the tool name at the start (e.g., *"Built by Antigravity"*, *"Built by Claude Code"*, or *"Built by Cursor"*).
 
 
+## 02 May 2026 — Cycle 35
+
+*Built by Claude Code*
+
+- **`snapshot-distress-listings` cron tests** — 22 tests covering the most critical untested cron (361 lines, feeds distress terminal + weekly digest + Telegram `/distress`). Auth (5), PF API failure (3), new listing insertion (4 including price=0 skip + missing property_id), existing listing update with price drop confirmation (2), tier-1 Telegram alert (2 including alert-failure resilience), source-code field sentinels (6: `price_at_first_seen`, `disappeared_at`, `price_drop_confirmed`, `canonical_key`, `.slice(-90)` cap, `LEAST/GREATEST` tracking). Total: **162 tests passing** (+22).
+
 ## 02 May 2026 — Cycle 34
 
 *Built by Claude Code*

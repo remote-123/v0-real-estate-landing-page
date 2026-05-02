@@ -53,7 +53,8 @@
 - [x] **Vitest test infrastructure** — BUILT Cycle 25: vitest.config.ts, 5 test files, 44 passing tests. `npm test` command. Coverage: lib/area-names, lib/rate-limit, api/unsubscribe, api/email-capture, api/telegram-webhook.
 - [x] **Expand test coverage — cron routes (Cycle 28 2026-05-02)**: generate-market-briefing (7), fetch-bayut-transactions (11), weekly-distress-digest (15). 73 total tests passing.
 - [x] **Expand test coverage — lib utilities (Cycle 33 2026-05-02)**: terminal-gate (13 tests), telegram (17 tests). 140 total tests passing.
-- [ ] **Expand test coverage**: component tests, db utility functions (api-budget, bayut14)
+- [x] **Expand test coverage — snapshot-distress-listings (Cycle 35 2026-05-02)**: 22 tests covering auth, PF API failure, new listing insertion, price drop confirmation, tier-1 Telegram alert, 6 SQL field sentinels. 162 total tests passing.
+- [ ] **Expand test coverage**: bayut14 lib, fetch-rental-listings cron, component tests
 
 ## Known Risks / Tech Debt
 - `whatsapp_intents.created_at` — column existence assumed in Telegram `/leads` command handler. Test documents this assumption. Verify schema when checking whatsapp_intents table.
