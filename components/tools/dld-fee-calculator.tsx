@@ -1,16 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
-
-function formatAED(n: number): string {
-  if (n >= 1_000_000) return `AED ${(n / 1_000_000).toFixed(2)}M`
-  if (n >= 1_000) return `AED ${(n / 1_000).toFixed(0)}K`
-  return `AED ${n.toLocaleString()}`
-}
-
-function formatFull(n: number): string {
-  return `AED ${new Intl.NumberFormat("en-US").format(Math.round(n))}`
-}
+import { calcDldFees, formatAED, formatFull } from "@/lib/tools/calculations"
 
 export function DldFeeCalculator() {
   const [purchasePrice, setPurchasePrice] = useState(2_000_000)
@@ -19,29 +10,10 @@ export function DldFeeCalculator() {
   const [agentCommissionPct, setAgentCommissionPct] = useState(2)
   const [valuationFee, setValuationFee] = useState(3_000)
 
-  const calc = useMemo(() => {
-    const dldTransferFee = purchasePrice * 0.04
-    const dldRegistrationFee = purchasePrice >= 500_000 ? 4_000 : 2_000
-    const agentCommission = purchasePrice * (agentCommissionPct / 100)
-    const loanAmount = isMortgage ? purchasePrice * (1 - downPaymentPct / 100) : 0
-    const mortgageRegFee = isMortgage ? loanAmount * 0.0025 : 0
-    const valFee = isMortgage ? valuationFee : 0
-    const feesTotal = dldTransferFee + dldRegistrationFee + agentCommission + mortgageRegFee + valFee
-    const totalAcquisitionCost = purchasePrice + feesTotal
-    const feesOverPurchasePct = purchasePrice > 0 ? (feesTotal / purchasePrice) * 100 : 0
-
-    return {
-      dldTransferFee,
-      dldRegistrationFee,
-      agentCommission,
-      loanAmount,
-      mortgageRegFee,
-      valFee,
-      feesTotal,
-      totalAcquisitionCost,
-      feesOverPurchasePct,
-    }
-  }, [purchasePrice, isMortgage, downPaymentPct, agentCommissionPct, valuationFee])
+  const calc = useMemo(
+    () => calcDldFees({ purchasePrice, isMortgage, downPaymentPct, agentCommissionPct, valuationFee }),
+    [purchasePrice, isMortgage, downPaymentPct, agentCommissionPct, valuationFee]
+  )
 
   const inputClass =
     "w-full rounded-md border border-border/50 bg-background/60 px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent/50"

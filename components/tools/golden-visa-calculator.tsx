@@ -1,26 +1,14 @@
 "use client"
 
 import { useState, useMemo } from "react"
-
-// ── Thresholds ────────────────────────────────────────────────────────────────
-
-const GOLDEN_VISA_THRESHOLD = 2_000_000
-const INVESTOR_VISA_THRESHOLD = 750_000
-
-type VisaTier = "golden_visa_10yr" | "investor_visa_2yr" | "not_eligible"
-type PropertyStatus = "completed" | "off-plan"
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function formatAED(n: number): string {
-  if (n >= 1_000_000) return `AED ${(n / 1_000_000).toFixed(2)}M`
-  if (n >= 1_000) return `AED ${(n / 1_000).toFixed(0)}K`
-  return `AED ${n.toLocaleString()}`
-}
-
-function formatFull(n: number): string {
-  return `AED ${new Intl.NumberFormat("en-US").format(Math.round(n))}`
-}
+import {
+  GOLDEN_VISA_THRESHOLD,
+  INVESTOR_VISA_THRESHOLD,
+  calcVisaTier,
+  formatAED,
+  formatFull,
+} from "@/lib/tools/calculations"
+import type { VisaTier, PropertyStatus } from "@/lib/tools/calculations"
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -28,31 +16,10 @@ export function GoldenVisaCalculator() {
   const [propertyPrice, setPropertyPrice] = useState(2_000_000)
   const [propertyStatus, setPropertyStatus] = useState<PropertyStatus>("completed")
 
-  const result = useMemo(() => {
-    let tier: VisaTier
-    if (propertyPrice >= GOLDEN_VISA_THRESHOLD) {
-      tier = "golden_visa_10yr"
-    } else if (propertyPrice >= INVESTOR_VISA_THRESHOLD) {
-      tier = "investor_visa_2yr"
-    } else {
-      tier = "not_eligible"
-    }
-
-    const shortfallToInvestor =
-      tier === "not_eligible" ? INVESTOR_VISA_THRESHOLD - propertyPrice : 0
-    const shortfallToGolden =
-      tier === "investor_visa_2yr" ? GOLDEN_VISA_THRESHOLD - propertyPrice : 0
-    const surplusAboveGolden =
-      tier === "golden_visa_10yr" ? propertyPrice - GOLDEN_VISA_THRESHOLD : 0
-
-    return {
-      tier,
-      shortfallToInvestor,
-      shortfallToGolden,
-      surplusAboveGolden,
-      showOffPlanAdvisory: propertyStatus === "off-plan" && tier === "golden_visa_10yr",
-    }
-  }, [propertyPrice, propertyStatus])
+  const result = useMemo(
+    () => calcVisaTier(propertyPrice, propertyStatus),
+    [propertyPrice, propertyStatus]
+  )
 
   const inputClass =
     "w-full rounded-md border border-border/50 bg-background/60 px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent/50"
