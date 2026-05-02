@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import {
   LineChart,
   Line,
@@ -10,50 +10,28 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts"
-import { TrendingUp, TrendingDown, Award } from "lucide-react"
+import { TrendingUp, Award } from "lucide-react"
 
-// Top 40 areas by DLD volume — static list for dropdowns
-const AREA_OPTIONS = [
+
+// Fallback static list used while /api/area-list loads
+const FALLBACK_AREAS = [
+  "Al Barsha South Fourth",
+  "Madinat Al Mataar",
   "Business Bay",
-  "Dubai Marina",
-  "Jumeirah Village Circle",
-  "Downtown Dubai",
-  "Dubai Hills Estate",
+  "Nad Al Shiba First",
+  "Wadi Al Safa 5",
+  "Marsa Dubai",
   "Palm Jumeirah",
-  "Jumeirah Lake Towers",
-  "Al Barsha 1",
-  "Meydan",
-  "Jumeirah Beach Residence",
-  "Dubai Silicon Oasis",
-  "International City",
-  "DIFC",
-  "Town Square",
-  "Dubai Sports City",
-  "Motor City",
-  "Arabian Ranches",
-  "Jumeirah Village Triangle",
-  "Al Jadaf",
-  "Umm Suqeim 3",
-  "Al Sufouh",
-  "DAMAC Hills 2",
-  "Dubai South",
-  "Dubai Investment Park 1",
-  "Dubai Investment Park 2",
-  "Mirdif",
-  "Al Warsan 1",
-  "Nad Al Hamar",
+  "Hadaeq Sheikh Mohammed Bin Rashid",
+  "Burj Khalifa",
+  "Al Safouh Second",
+  "Al Thanyah Fifth",
   "Ras Al Khor",
-  "Za'abeel 1",
-  "Za'abeel 2",
-  "Al Quoz 4",
-  "Jumeirah 1",
-  "Jumeirah 2",
-  "Jumeirah 3",
-  "Al Rashidiya",
-  "Palm Jebel Ali",
-  "Deira Islands",
-  "World Islands",
-  "Al Khairan",
+  "Jumeirah First",
+  "Mohammed Bin Rashid City",
+  "Al Jadaf",
+  "Mirdif",
+  "Al Barsha First",
 ]
 
 interface TrendPoint {
@@ -119,6 +97,7 @@ function mergeData(
 const COLORS = ["var(--accent, #10b981)", "#f59e0b"] // accent + amber
 
 export function CompareClient() {
+  const [areaOptions, setAreaOptions] = useState<string[]>(FALLBACK_AREAS)
   const [area1, setArea1] = useState<string>("")
   const [area2, setArea2] = useState<string>("")
   const [data1, setData1] = useState<AreaData | null>(null)
@@ -127,6 +106,17 @@ export function CompareClient() {
   const [loading2, setLoading2] = useState(false)
   const [error1, setError1] = useState<string | null>(null)
   const [error2, setError2] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetch("/api/area-list")
+      .then((r) => r.json())
+      .then((json) => {
+        if (Array.isArray(json?.areas) && json.areas.length > 0) {
+          setAreaOptions(json.areas)
+        }
+      })
+      .catch(() => { /* keep fallback */ })
+  }, [])
 
   const fetchArea = useCallback(
     async (
@@ -230,7 +220,7 @@ export function CompareClient() {
                 className="w-full rounded-lg border border-border/50 bg-card/60 px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent/50 appearance-none"
               >
                 <option value="">Select area...</option>
-                {AREA_OPTIONS.map((a) => (
+                {areaOptions.map((a) => (
                   <option key={a} value={a}>
                     {a}
                   </option>
@@ -369,8 +359,8 @@ export function CompareClient() {
                   borderRadius: "8px",
                   fontSize: "11px",
                 }}
-                formatter={(val: unknown) =>
-                  typeof val === "number" ? [`AED ${val.toLocaleString()}`, "PSF"] : [val, "PSF"]
+                formatter={(val: number | string) =>
+                  typeof val === "number" ? [`AED ${val.toLocaleString()}`, "PSF"] : [`${val}`, "PSF"]
                 }
               />
               <Legend
