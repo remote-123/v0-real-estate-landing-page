@@ -104,9 +104,10 @@ async function fetchAreaPageData(slug: string): Promise<AreaPageData | null> {
           txn_month,
           ROUND((SUM(txn_count * avg_price_sqm) / NULLIF(SUM(txn_count), 0) / 10.764)::numeric, 0) AS avg_psf
         FROM mv_txn_monthly_unified
+        CROSS JOIN (SELECT MAX(txn_month) AS max_m FROM mv_txn_monthly_unified WHERE trans_group_en = 'Sales') l
         WHERE area_name_en = ${areaName}
           AND trans_group_en = 'Sales'
-          AND txn_month >= NOW() - INTERVAL '12 months'
+          AND txn_month >= l.max_m - INTERVAL '11 months'
         GROUP BY txn_month
         ORDER BY txn_month
       `,
@@ -142,9 +143,10 @@ async function fetchAreaPageData(slug: string): Promise<AreaPageData | null> {
           SUM(txn_count)::integer AS txn_count,
           ROUND(AVG(avg_price_sqm * 80)::numeric, 0) AS avg_price
         FROM mv_txn_monthly_unified
+        CROSS JOIN (SELECT MAX(txn_month) AS max_m FROM mv_txn_monthly_unified WHERE trans_group_en = 'Sales') l
         WHERE area_name_en = ${areaName}
           AND trans_group_en = 'Sales'
-          AND txn_month >= NOW() - INTERVAL '12 months'
+          AND txn_month >= l.max_m - INTERVAL '11 months'
       `,
     ])
 

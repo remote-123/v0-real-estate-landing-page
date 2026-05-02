@@ -71,9 +71,9 @@ async function fetchAreas(): Promise<AreaRow[]> {
       ),
       vol AS (
         SELECT area_name_en, SUM(txn_count) AS total_vol
-        FROM mv_txn_monthly_unified
+        FROM mv_txn_monthly_unified, latest
         WHERE trans_group_en = 'Sales'
-          AND txn_month >= NOW() - INTERVAL '12 months'
+          AND txn_month >= latest.m - INTERVAL '11 months'
         GROUP BY area_name_en
       )
       SELECT
