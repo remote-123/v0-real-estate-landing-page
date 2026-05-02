@@ -1,5 +1,6 @@
 import { notFound, redirect } from "next/navigation"
 import type { Metadata } from "next"
+import { getTerminalSiteInfo } from "@/lib/terminal-metadata"
 import Link from "next/link"
 import { ArrowLeft, Building2, Calendar, Layers, MapPin, DollarSign, Activity } from "lucide-react"
 import { sql } from "@/lib/db"
@@ -183,12 +184,25 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params
   const globalSlug = slug.join("/")
-  const b = await fetchByGlobalSlug(globalSlug)
+  const [b, { siteName, base }] = await Promise.all([
+    fetchByGlobalSlug(globalSlug),
+    getTerminalSiteInfo(),
+  ])
   if (!b) return {}
+  const areaLabel = b.area_name_en ? `, ${b.area_name_en}` : ""
   return {
-    title: `${b.building_name_en} — Building Profile | North Capital DXB`,
-    description: `DLD transaction history, price per sqft trend, and building data for ${b.building_name_en}${b.area_name_en ? `, ${b.area_name_en}` : ""}.`,
-    alternates: { canonical: `/terminal/buildings/${globalSlug}` },
+    title: `${b.building_name_en} — Building Profile | ${siteName}`,
+    description: `DLD transaction history, price per sqft trend, and building data for ${b.building_name_en}${areaLabel}, Dubai.`,
+    metadataBase: new URL(base),
+    alternates: { canonical: `${base}/terminal/buildings/${globalSlug}` },
+    openGraph: {
+      title: `${b.building_name_en}${areaLabel} | ${siteName}`,
+      description: `DLD transaction history, PSF trend, and building data for ${b.building_name_en}${areaLabel}.`,
+      url: `${base}/terminal/buildings/${globalSlug}`,
+      siteName,
+      images: [{ url: "/images/terminal-social.png", width: 1200, height: 630 }],
+    },
+    twitter: { card: "summary_large_image", images: ["/images/terminal-social.png"] },
   }
 }
 
@@ -226,15 +240,36 @@ export default async function BuildingDetailPage({
   const building = await fetchByGlobalSlug(globalSlug)
   if (!building) notFound()
 
-  const [trendData, txns, sc] = await Promise.all([
+  const [trendData, txns, sc, { siteName, base }] = await Promise.all([
     fetchPSFTrend(building.building_name_en),
     fetchRecentTxns(building.building_name_en),
     fetchServiceCharge(building.area_name_en, building.project_name_en),
+    getTerminalSiteInfo(),
   ])
 
   const status = building.propsearch_status ? STATUS_MAP[building.propsearch_status] : null
 
+  const schema: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "ApartmentComplex",
+    "name": building.building_name_en,
+    "description": `${building.building_name_en} is a ${building.primary_sub_type ?? "residential"} development in ${building.area_name_en ?? "Dubai"}, UAE. Data includes DLD transaction history and price per sqft trends.`,
+    "url": `${base}/terminal/buildings/${globalSlug}`,
+    ...(building.area_name_en && {
+      "address": { "@type": "PostalAddress", "streetAddress": building.building_name_en, "addressLocality": building.area_name_en, "addressRegion": "Dubai", "addressCountry": "AE" },
+    }),
+    ...(building.developer_name && { "creator": { "@type": "Organization", "name": building.developer_name } }),
+    ...(building.completion_year && { "yearBuilt": building.completion_year }),
+    ...(building.total_floors && { "numberOfFloors": building.total_floors }),
+    ...(building.total_units && { "numberOfAccommodationUnits": building.total_units }),
+    ...(building.osm_lat && building.osm_lng && { "geo": { "@type": "GeoCoordinates", "latitude": building.osm_lat, "longitude": building.osm_lng } }),
+    "containedInPlace": { "@type": "Place", "name": `${building.area_name_en ?? "Dubai"}, UAE` },
+    "amenityFeature": building.is_free_hold ? [{ "@type": "LocationFeatureSpecification", "name": "Freehold", "value": true }] : [],
+  }
+
   return (
+    <>
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
     <div className="flex w-full flex-col px-0 sm:px-8 xl:px-12 py-0 sm:py-6 space-y-6 max-w-5xl mx-auto pb-24 lg:pb-12">
 
       {/* Back */}
@@ -443,5 +478,6 @@ export default async function BuildingDetailPage({
       </p>
 
     </div>
+    </>
   )
 }

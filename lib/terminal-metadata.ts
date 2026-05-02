@@ -13,6 +13,17 @@
 import { headers } from "next/headers"
 import type { Metadata } from "next"
 
+/** Lightweight helper for pages that need site info without full metadata construction. */
+export async function getTerminalSiteInfo(): Promise<{ siteName: string; base: string; isCR: boolean }> {
+  const h = await headers()
+  const isCR = (h.get("x-site") ?? "") === "cityregistry"
+  return {
+    isCR,
+    siteName: isCR ? "The City Registry" : "North Capital DXB",
+    base: isCR ? "https://thecityregistry.com" : "https://www.northcapitaldxb.com",
+  }
+}
+
 export async function terminalPageMeta(opts: {
   title: string       // page-specific part only — site suffix added automatically
   description: string

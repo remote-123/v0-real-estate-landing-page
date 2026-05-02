@@ -43,20 +43,35 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }))
 
     let communityUrls: MetadataRoute.Sitemap = []
+    let areaDeepDiveUrls: MetadataRoute.Sitemap = []
     try {
-      const areaRows = await sql<{ area_name_en: string }[]>`
-        SELECT DISTINCT area_name_en FROM mv_txn_monthly
-        WHERE area_name_en IS NOT NULL ORDER BY area_name_en
-      `
+      const [areaRows, topAreas] = await Promise.all([
+        sql<{ area_name_en: string }[]>`
+          SELECT DISTINCT area_name_en FROM mv_txn_monthly
+          WHERE area_name_en IS NOT NULL ORDER BY area_name_en
+        `,
+        sql<{ area_name_en: string }[]>`
+          SELECT area_name_en, SUM(txn_count) AS total
+          FROM mv_txn_monthly
+          WHERE area_name_en IS NOT NULL AND trans_group_en = 'Sales'
+          GROUP BY area_name_en ORDER BY total DESC LIMIT 60
+        `,
+      ])
       communityUrls = areaRows.map((row) => ({
         url: `${baseUrl}/terminal/communities/${toSlug(row.area_name_en)}`,
         lastModified: new Date(),
         changeFrequency: 'daily' as const,
         priority: 0.75,
       }))
+      areaDeepDiveUrls = topAreas.map((row) => ({
+        url: `${baseUrl}/terminal/areas/${toSlug(row.area_name_en)}`,
+        lastModified: new Date(),
+        changeFrequency: 'daily' as const,
+        priority: 0.80,
+      }))
     } catch { /* skip if DB unavailable */ }
 
-    return [...terminalRoutes, ...communityUrls]
+    return [...terminalRoutes, ...communityUrls, ...areaDeepDiveUrls]
   }
 
   // 1. Fetch live projects directly from Sanity

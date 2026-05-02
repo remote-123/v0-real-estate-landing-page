@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
+import { getTerminalSiteInfo } from "@/lib/terminal-metadata"
 import { ArrowLeft, BarChart3, Layers } from 'lucide-react'
 import Link from 'next/link'
 import { sql } from '@/lib/db'
@@ -246,15 +247,23 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
-  const result = await fetchAreaData(slug, 'flat')
+  const [result, { siteName, base }] = await Promise.all([
+    fetchAreaData(slug, 'flat'),
+    getTerminalSiteInfo(),
+  ])
   if (!result) return {}
   const name = formatAreaName(result.area.area_name_en)
   return {
-    title: `${name} — Community Intelligence | North Capital DXB`,
-    description: `Price per sqft, transaction volume, and supply pipeline for ${name}, Dubai.`,
-    alternates: { canonical: `/terminal/communities/${slug}` },
+    title: `${name} — Community Intelligence | ${siteName}`,
+    description: `Price per sqft, transaction volume, and supply pipeline for ${name}, Dubai. Powered by DLD and Bayut data.`,
+    metadataBase: new URL(base),
+    alternates: { canonical: `${base}/terminal/communities/${slug}` },
     openGraph: {
-      images: [{ url: '/images/terminal-communities-social.png', width: 1200, height: 630, alt: `${name} Community Intelligence — North Capital DXB` }],
+      title: `${name} — Community Intelligence | ${siteName}`,
+      description: `Price per sqft, transaction volume, and supply pipeline for ${name}, Dubai.`,
+      url: `${base}/terminal/communities/${slug}`,
+      siteName,
+      images: [{ url: '/images/terminal-communities-social.png', width: 1200, height: 630, alt: `${name} — ${siteName}` }],
     },
     twitter: { card: 'summary_large_image', images: ['/images/terminal-communities-social.png'] },
   }
@@ -284,9 +293,35 @@ export default async function CommunityPage({
     return `AED ${n}`
   }
 
+  const { siteName, base } = await getTerminalSiteInfo()
   const displayName = formatAreaName(area.area_name_en)
 
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": `${displayName} — Dubai Community Intelligence`,
+    "description": `Price per sqft, transaction volume, and investment data for ${displayName}, Dubai. Powered by DLD and Bayut registered records.`,
+    "url": `${base}/terminal/communities/${slug}`,
+    "creator": { "@type": "Organization", "name": siteName, "url": base },
+    "spatialCoverage": {
+      "@type": "Place",
+      "name": `${displayName}, Dubai, UAE`,
+      "address": { "@type": "PostalAddress", "addressLocality": displayName, "addressRegion": "Dubai", "addressCountry": "AE" },
+    },
+    "variableMeasured": [
+      { "@type": "PropertyValue", "name": "Average Price per Sq Ft (AED)", "value": Math.round(Number(area.avg_psf)) },
+      { "@type": "PropertyValue", "name": "Monthly Transaction Count", "value": area.txn_count },
+      { "@type": "PropertyValue", "name": "Off-Plan Pipeline Units", "value": area.pipeline_units },
+      ...(serviceChargeAvg ? [{ "@type": "PropertyValue", "name": "Average Annual Service Charge (AED/sqft)", "value": Math.round(Number(serviceChargeAvg)) }] : []),
+    ],
+    "temporalCoverage": "2020/..",
+    "measurementTechnique": "Dubai Land Department and Bayut registered transaction records",
+    "isAccessibleForFree": true,
+  }
+
   return (
+    <>
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
     <div className="flex w-full flex-col px-0 sm:px-8 xl:px-12 py-0 sm:py-6 space-y-6 max-w-7xl mx-auto pb-24 lg:pb-12">
 
       <div className="flex items-center px-4 sm:px-0">
@@ -444,5 +479,6 @@ export default async function CommunityPage({
       </p>
 
     </div>
+    </>
   )
 }

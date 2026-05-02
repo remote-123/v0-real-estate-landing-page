@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
+import { getTerminalSiteInfo } from "@/lib/terminal-metadata"
 import Link from "next/link"
 import { ArrowLeft, BarChart3, Building2, Layers, TrendingUp } from "lucide-react"
 import { sql } from "@/lib/db"
@@ -167,22 +168,23 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>
 }): Promise<Metadata> {
   const { slug } = await params
-  const data = await fetchAreaData(slug)
+  const [data, { siteName, base }] = await Promise.all([
+    fetchAreaData(slug),
+    getTerminalSiteInfo(),
+  ])
   if (!data) return {}
   const name = formatAreaName(data.area_name_en)
   return {
-    title: `${name} Area Deep-Dive — Price, Pipeline & Distress | North Capital DXB`,
-    description: `Full investment profile for ${name}: price per sqft trend, off-plan pipeline, service charges, and active distress deals.`,
-    alternates: { canonical: `/terminal/areas/${slug}` },
+    title: `${name} Area Deep-Dive — Price, Pipeline & Distress | ${siteName}`,
+    description: `Full investment profile for ${name}: price per sqft trend, off-plan pipeline, service charges, and active distress deals. Data from Dubai Land Department.`,
+    metadataBase: new URL(base),
+    alternates: { canonical: `${base}/terminal/areas/${slug}` },
     openGraph: {
-      images: [
-        {
-          url: "/images/terminal-communities-social.png",
-          width: 1200,
-          height: 630,
-          alt: `${name} Area Analysis — North Capital DXB`,
-        },
-      ],
+      title: `${name} Area Deep-Dive | ${siteName}`,
+      description: `Price per sqft trend, off-plan pipeline, and distress signals for ${name}, Dubai.`,
+      url: `${base}/terminal/areas/${slug}`,
+      siteName,
+      images: [{ url: "/images/terminal-communities-social.png", width: 1200, height: 630, alt: `${name} Area Analysis` }],
     },
     twitter: { card: "summary_large_image", images: ["/images/terminal-communities-social.png"] },
   }
@@ -235,6 +237,7 @@ export default async function AreaDeepDivePage({
   const data = await fetchAreaData(slug)
   if (!data) notFound()
 
+  const { siteName, base } = await getTerminalSiteInfo()
   const displayName = formatAreaName(data.area_name_en)
   const momChange =
     data.prev_avg_psf && data.avg_psf
@@ -242,7 +245,31 @@ export default async function AreaDeepDivePage({
       : null
   const momColor = momChange === null ? "" : momChange >= 0 ? "text-accent" : "text-red-400"
 
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": `${displayName} — Dubai Property Market Data`,
+    "description": `Price per sqft trend, transaction history, off-plan pipeline, and investment metrics for ${displayName}, Dubai.`,
+    "url": `${base}/terminal/areas/${slug}`,
+    "creator": { "@type": "Organization", "name": siteName, "url": base },
+    "spatialCoverage": {
+      "@type": "Place",
+      "name": `${displayName}, Dubai, UAE`,
+      "address": { "@type": "PostalAddress", "addressLocality": displayName, "addressRegion": "Dubai", "addressCountry": "AE" },
+    },
+    "variableMeasured": [
+      { "@type": "PropertyValue", "name": "Average Price per Sq Ft (AED)", "value": Math.round(data.avg_psf) },
+      { "@type": "PropertyValue", "name": "Off-Plan Pipeline Units", "value": data.pipeline_units },
+      ...(data.service_charge_avg ? [{ "@type": "PropertyValue", "name": "Average Annual Service Charge (AED/sqft)", "value": Math.round(data.service_charge_avg) }] : []),
+    ],
+    "temporalCoverage": "2020/..",
+    "measurementTechnique": "Dubai Land Department (DLD) registered transaction records",
+    "isAccessibleForFree": true,
+  }
+
   return (
+    <>
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
     <div className="flex w-full flex-col px-0 sm:px-8 xl:px-12 py-0 sm:py-6 space-y-6 max-w-6xl mx-auto pb-24 lg:pb-12">
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 sm:px-0">
@@ -443,5 +470,6 @@ export default async function AreaDeepDivePage({
         Source: Dubai Land Department · Transactions, projects, and service charge registry
       </p>
     </div>
+    </>
   )
 }
