@@ -24,6 +24,18 @@ Same codebase, same Vercel project, same Neon DB.
 | Schema.org type | DataCatalog (5 datasets) | Dataset |
 | Canonical URL | thecityregistry.com | northcapitaldxb.com |
 
+## D3 Refinitiv Theme (Implemented 2026-05-02)
+Design: Charcoal #1C1C1E bg, #252527 card, #2c2c2e border, **#00BFA5 teal accent**, #000 accent-foreground.
+
+**CSS system**: `.cityregistry` class in `globals.css` overrides all CSS vars. `CityRegistryTheme` client component sets class on `<html>` (not just layout div) so portalled elements (Sheet, createPortal modals) also inherit.
+
+**Theme coverage** (commit 6cf7934): All ~120 hardcoded `emerald-*` / `#10b981` references across 38 files migrated to `text-accent` / `bg-accent` / `var(--accent, #10b981)`. NorthCapital unaffected — Recharts colors use CSS var with `#10b981` fallback.
+
+**Invariant**: Never hardcode `#10b981` or `emerald-*` in unconditional (shared-site) code again. Use:
+- Tailwind: `text-accent`, `bg-accent`, `border-accent`, `bg-accent/{opacity}`
+- Recharts props: `"var(--accent, #10b981)"`
+- Focus rings: `focus:ring-ring/50` (not `focus:ring-emerald-*`)
+
 ## SEO (Added 2026-05-01)
 - `app/terminal/layout.tsx` → `generateMetadata()` — dynamic per domain
 - `app/robots.ts` — domain-aware, points sitemap to correct host
