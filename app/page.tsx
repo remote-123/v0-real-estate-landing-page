@@ -27,13 +27,15 @@ async function fetchCityStats(): Promise<{ communities: number; transactions: nu
         WHERE area_name_en IS NOT NULL
       `,
       sql<{ gross_yield_pct: string; area_name_en: string }[]>`
-        WITH sales AS (
+        WITH latest AS (SELECT MAX(txn_month) AS m FROM mv_txn_monthly_unified WHERE trans_group_en = 'Sales'),
+        sales AS (
           SELECT area_name_en, rooms_en,
             SUM(txn_count * avg_price) / NULLIF(SUM(txn_count), 0) AS avg_sale_price,
             SUM(txn_count) AS sale_txns
           FROM mv_txn_monthly_unified
+          CROSS JOIN latest
           WHERE trans_group_en = 'Sales' AND property_type_en = 'Unit'
-            AND txn_month >= NOW() - INTERVAL '12 months'
+            AND txn_month >= latest.m - INTERVAL '11 months'
             AND area_name_en IS NOT NULL AND rooms_en IS NOT NULL
           GROUP BY area_name_en, rooms_en
         ),
@@ -42,8 +44,9 @@ async function fetchCityStats(): Promise<{ communities: number; transactions: nu
             SUM(txn_count * avg_rent) / NULLIF(SUM(txn_count), 0) AS avg_annual_rent,
             SUM(txn_count) AS rent_txns
           FROM mv_txn_monthly_unified
+          CROSS JOIN latest
           WHERE trans_group_en = 'Rent' AND property_type_en = 'Unit'
-            AND txn_month >= NOW() - INTERVAL '12 months'
+            AND txn_month >= latest.m - INTERVAL '11 months'
             AND area_name_en IS NOT NULL AND rooms_en IS NOT NULL
           GROUP BY area_name_en, rooms_en
         )

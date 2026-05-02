@@ -74,13 +74,15 @@ async function runQuery(queryType: string): Promise<unknown[]> {
 
     case 'momentum': {
       const rows = await sql`
-        WITH base AS (
+        WITH latest AS (SELECT MAX(txn_month) AS m FROM mv_txn_monthly_unified WHERE trans_group_en = 'Sales'),
+        base AS (
           SELECT area_name_en,
-            SUM(CASE WHEN txn_month = DATE_TRUNC('month', NOW() - INTERVAL '1 month') THEN txn_count ELSE 0 END) AS cur_vol,
-            SUM(CASE WHEN txn_month = DATE_TRUNC('month', NOW() - INTERVAL '13 months') THEN txn_count ELSE 0 END) AS prev_vol,
-            AVG(CASE WHEN txn_month >= NOW() - INTERVAL '3 months' THEN avg_price ELSE NULL END) AS cur_psf,
-            AVG(CASE WHEN txn_month BETWEEN NOW() - INTERVAL '15 months' AND NOW() - INTERVAL '12 months' THEN avg_price ELSE NULL END) AS prev_psf
+            SUM(CASE WHEN txn_month = latest.m - INTERVAL '1 month' THEN txn_count ELSE 0 END) AS cur_vol,
+            SUM(CASE WHEN txn_month = latest.m - INTERVAL '13 months' THEN txn_count ELSE 0 END) AS prev_vol,
+            AVG(CASE WHEN txn_month >= latest.m - INTERVAL '2 months' THEN avg_price ELSE NULL END) AS cur_psf,
+            AVG(CASE WHEN txn_month BETWEEN latest.m - INTERVAL '14 months' AND latest.m - INTERVAL '11 months' THEN avg_price ELSE NULL END) AS prev_psf
           FROM mv_txn_monthly_unified
+          CROSS JOIN latest
           WHERE trans_group_en = 'Sales' AND property_type_en = 'Unit' AND area_name_en IS NOT NULL
           GROUP BY area_name_en
           HAVING SUM(txn_count) > 10
@@ -122,7 +124,8 @@ async function runQuery(queryType: string): Promise<unknown[]> {
             SUM(CASE WHEN trans_group_en = 'Sales' THEN txn_count ELSE 0 END)::integer AS sales_txns,
             ROUND(AVG(CASE WHEN trans_group_en = 'Sales' THEN avg_price ELSE NULL END)::numeric, 0)::integer AS avg_psf
           FROM mv_txn_monthly_unified
-          WHERE txn_month >= NOW() - INTERVAL '3 months' AND area_name_en IS NOT NULL
+          CROSS JOIN (SELECT MAX(txn_month) AS m FROM mv_txn_monthly_unified WHERE trans_group_en = 'Sales') l
+          WHERE txn_month >= l.m - INTERVAL '2 months' AND area_name_en IS NOT NULL
           GROUP BY area_name_en
           HAVING SUM(CASE WHEN trans_group_en = 'Sales' THEN txn_count ELSE 0 END) > 0
           ORDER BY sales_txns DESC
@@ -138,7 +141,8 @@ async function runQuery(queryType: string): Promise<unknown[]> {
           SUM(txn_count)::integer AS deals,
           ROUND((SUM(total_value) / 1e9)::numeric, 2) AS value_bn
         FROM mv_txn_monthly_unified
-        WHERE txn_month >= NOW() - INTERVAL '12 months'
+        CROSS JOIN (SELECT MAX(txn_month) AS m FROM mv_txn_monthly_unified) l
+        WHERE txn_month >= l.m - INTERVAL '11 months'
           AND trans_group_en IN ('Sales', 'Mortgages', 'Rent')
           AND area_name_en IS NOT NULL
         GROUP BY txn_month, trans_group_en
@@ -182,7 +186,8 @@ async function runQuery(queryType: string): Promise<unknown[]> {
           SUM(CASE WHEN trans_group_en = 'Sales' THEN txn_count ELSE 0 END)::integer AS sales,
           ROUND((SUM(CASE WHEN trans_group_en = 'Mortgages' THEN txn_count ELSE 0 END)::numeric / NULLIF(SUM(CASE WHEN trans_group_en = 'Sales' THEN txn_count ELSE 0 END), 0) * 100)::numeric, 1) AS leverage_ratio_pct
         FROM mv_txn_monthly_unified
-        WHERE txn_month >= NOW() - INTERVAL '6 months' AND area_name_en IS NOT NULL
+        CROSS JOIN (SELECT MAX(txn_month) AS m FROM mv_txn_monthly_unified WHERE trans_group_en = 'Sales') l
+        WHERE txn_month >= l.m - INTERVAL '5 months' AND area_name_en IS NOT NULL
         GROUP BY area_name_en
         HAVING SUM(CASE WHEN trans_group_en = 'Mortgages' THEN txn_count ELSE 0 END) > 0
         ORDER BY mortgages DESC
@@ -198,7 +203,8 @@ async function runQuery(queryType: string): Promise<unknown[]> {
           SUM(CASE WHEN trans_group_en = 'Sales' THEN txn_count ELSE 0 END)::integer AS sales_txns,
           ROUND(AVG(CASE WHEN trans_group_en = 'Sales' THEN avg_price ELSE NULL END)::numeric, 0)::integer AS avg_psf
         FROM mv_txn_monthly_unified
-        WHERE txn_month >= NOW() - INTERVAL '3 months' AND area_name_en IS NOT NULL
+        CROSS JOIN (SELECT MAX(txn_month) AS m FROM mv_txn_monthly_unified WHERE trans_group_en = 'Sales') l
+        WHERE txn_month >= l.m - INTERVAL '2 months' AND area_name_en IS NOT NULL
         GROUP BY area_name_en
         HAVING SUM(CASE WHEN trans_group_en = 'Sales' THEN txn_count ELSE 0 END) > 0
         ORDER BY sales_txns DESC
