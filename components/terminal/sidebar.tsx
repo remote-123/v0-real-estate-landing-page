@@ -48,6 +48,7 @@ export const sidebarLinks = [
       { label: "Service Charges", href: "/terminal/service-charges", icon: FileText },
       { label: "Mortgage & Liquidity", href: "/terminal/liquidity", icon: Landmark },
       { label: "Bear Case Screener", href: "/terminal/bear-cases", icon: AlertTriangle },
+      { label: "Bull Case Screener", href: "/terminal/bull-cases", icon: TrendingUp },
     ]
   },
   {

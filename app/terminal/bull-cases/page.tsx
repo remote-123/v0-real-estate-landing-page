@@ -5,39 +5,41 @@ import { auth } from "@/auth"
 import { isTerminalUnlocked } from "@/lib/terminal-gate"
 import { GatedTableOverlay } from "@/components/auth/gated-table-overlay"
 import Link from "next/link"
-import { AlertTriangle, TrendingDown, Building2, BarChart3 } from "lucide-react"
+import { TrendingUp, Zap, BarChart3, Flame } from "lucide-react"
 
 export const dynamic = "force-dynamic"
 
 export async function generateMetadata() {
   return terminalPageMeta({
-    title: "Bear Case Screener — Areas to Avoid",
+    title: "Bull Case Screener — Strongest Buy Signals",
     description:
-      "Data-driven analysis of Dubai areas showing supply pressure, price decline, or distress concentration. Institutional-grade risk signals from live DLD and Bayut data.",
-    path: "/terminal/bear-cases",
+      "Data-driven analysis of Dubai areas showing price appreciation, volume strength, and supply scarcity. Institutional-grade positive signals from live DLD and Bayut data.",
+    path: "/terminal/bull-cases",
   })
 }
 
-interface BearCaseRow {
+interface BullCaseRow {
   area_name_en: string
   txn_12m: number
   avg_psf: number
   yoy_pct: number | null
+  mom_pct: number | null
   pipeline_units: number
-  distress_count: number
-  bear_score: number
+  supply_months: number
+  bull_score: number
 }
 
-async function fetchBearCases(): Promise<BearCaseRow[]> {
+async function fetchBullCases(): Promise<BullCaseRow[]> {
   try {
     const rows = await sql<{
       area_name_en: string
       txn_12m: string
       avg_psf: string
       yoy_pct: string | null
+      mom_pct: string | null
       pipeline_units: string
-      distress_count: string
-      bear_score: string
+      supply_months: string
+      bull_score: string
     }[]>`
       WITH
         latest AS (
@@ -56,9 +58,9 @@ async function fetchBearCases(): Promise<BearCaseRow[]> {
             AND txn_month >= max_m - INTERVAL '11 months'
             AND area_name_en IS NOT NULL
           GROUP BY area_name_en
-          HAVING SUM(txn_count) >= 15
+          HAVING SUM(txn_count) >= 20
         ),
-        prev AS (
+        prev_year AS (
           SELECT
             area_name_en,
             SUM(txn_count * avg_price_sqm) / NULLIF(SUM(txn_count), 0) AS psm
@@ -70,50 +72,77 @@ async function fetchBearCases(): Promise<BearCaseRow[]> {
             AND area_name_en IS NOT NULL
           GROUP BY area_name_en
         ),
+        curr_month AS (
+          SELECT
+            area_name_en,
+            SUM(txn_count * avg_price_sqm) / NULLIF(SUM(txn_count), 0) AS psm
+          FROM mv_txn_monthly_unified
+          CROSS JOIN latest
+          WHERE trans_group_en = 'Sales'
+            AND txn_month = max_m
+            AND area_name_en IS NOT NULL
+          GROUP BY area_name_en
+        ),
+        prev_month AS (
+          SELECT
+            area_name_en,
+            SUM(txn_count * avg_price_sqm) / NULLIF(SUM(txn_count), 0) AS psm
+          FROM mv_txn_monthly_unified
+          CROSS JOIN latest
+          WHERE trans_group_en = 'Sales'
+            AND txn_month = max_m - INTERVAL '1 month'
+            AND area_name_en IS NOT NULL
+          GROUP BY area_name_en
+        ),
         pipeline AS (
           SELECT area_name_en, SUM(COALESCE(no_of_units, 0)) AS units
           FROM dld_projects
           WHERE project_status IN ('ACTIVE','NOT_STARTED','PENDING')
             AND area_name_en IS NOT NULL
           GROUP BY area_name_en
-        ),
-        distress_agg AS (
-          SELECT LOWER(area_name) AS area_key, COUNT(*) AS cnt
-          FROM distress_listings
-          WHERE disappeared_at IS NULL
-            AND price_drop_confirmed = true
-          GROUP BY LOWER(area_name)
         )
       SELECT
         c.area_name_en,
         c.txn_12m,
-        ROUND((c.psm / 10.764)::numeric, 0)                                        AS avg_psf,
+        ROUND((c.psm / 10.764)::numeric, 0)                                                  AS avg_psf,
+        -- YoY price change
         CASE
-          WHEN p.psm IS NOT NULL AND p.psm > 0
-          THEN ROUND(((c.psm - p.psm) / p.psm * 100)::numeric, 1)
+          WHEN py.psm IS NOT NULL AND py.psm > 0
+          THEN ROUND(((c.psm - py.psm) / py.psm * 100)::numeric, 1)
           ELSE NULL
-        END                                                                          AS yoy_pct,
-        COALESCE(pip.units, 0)                                                       AS pipeline_units,
-        COALESCE(d.cnt, 0)                                                           AS distress_count,
+        END                                                                                    AS yoy_pct,
+        -- MoM price change
+        CASE
+          WHEN pm.psm IS NOT NULL AND pm.psm > 0
+          THEN ROUND(((cm.psm - pm.psm) / pm.psm * 100)::numeric, 1)
+          ELSE NULL
+        END                                                                                    AS mom_pct,
+        COALESCE(pip.units, 0)                                                                AS pipeline_units,
+        -- Supply months = pipeline units / monthly sales rate
+        ROUND(COALESCE(pip.units, 0)::numeric / GREATEST(c.txn_12m / 12.0, 1), 1)           AS supply_months,
+        -- Bull Score (0-100)
         ROUND(LEAST(100, GREATEST(0,
-          -- Price decline component (0-40 pts): -5% YoY → +10 pts, -20% → +40 pts (cap)
-          GREATEST(0, LEAST(40,
+          -- Price appreciation component (0-35 pts): +5% YoY → +10 pts, +20% → +35 pts
+          GREATEST(0, LEAST(35,
             CASE
-              WHEN p.psm IS NOT NULL AND p.psm > 0
-              THEN -(c.psm - p.psm) / p.psm * 200
+              WHEN py.psm IS NOT NULL AND py.psm > 0
+              THEN (c.psm - py.psm) / py.psm * 175
               ELSE 0
             END
           ))
-          -- Oversupply pressure (0-35 pts): pipeline units vs monthly sales rate
-          + LEAST(35, COALESCE(pip.units, 0)::float / GREATEST(c.txn_12m / 12.0, 1) * 2.5)
-          -- Distress density (0-25 pts): confirmed price drops vs transaction volume
-          + LEAST(25, COALESCE(d.cnt, 0)::float / GREATEST(c.txn_12m, 1) * 200)
-        ))::numeric, 0)                                                              AS bear_score
+          -- Volume strength component (0-35 pts): txn_12m ranked against median
+          -- Uses sqrt scaling so outlier areas don't dominate
+          + LEAST(35, SQRT(c.txn_12m::float) * 0.7)
+          -- Supply scarcity component (0-30 pts): low pipeline = high scarcity
+          -- 0 pipeline → full 30 pts; 6m supply → 15 pts; 24m+ → 0 pts
+          + GREATEST(0, LEAST(30, 30 - COALESCE(pip.units, 0)::float / GREATEST(c.txn_12m / 12.0, 1) * 1.25))
+        ))::numeric, 0)                                                                        AS bull_score
       FROM curr c
-      LEFT JOIN prev p             ON p.area_name_en = c.area_name_en
-      LEFT JOIN pipeline pip       ON pip.area_name_en = c.area_name_en
-      LEFT JOIN distress_agg d     ON d.area_key = LOWER(c.area_name_en)
-      ORDER BY bear_score DESC, c.txn_12m DESC
+      LEFT JOIN prev_year py    ON py.area_name_en = c.area_name_en
+      LEFT JOIN curr_month cm   ON cm.area_name_en = c.area_name_en
+      LEFT JOIN prev_month pm   ON pm.area_name_en = c.area_name_en
+      LEFT JOIN pipeline pip    ON pip.area_name_en = c.area_name_en
+      ORDER BY bull_score DESC, c.txn_12m DESC
       LIMIT 25
     `
 
@@ -122,39 +151,35 @@ async function fetchBearCases(): Promise<BearCaseRow[]> {
       txn_12m: Number(r.txn_12m),
       avg_psf: Number(r.avg_psf),
       yoy_pct: r.yoy_pct !== null ? Number(r.yoy_pct) : null,
+      mom_pct: r.mom_pct !== null ? Number(r.mom_pct) : null,
       pipeline_units: Number(r.pipeline_units),
-      distress_count: Number(r.distress_count),
-      bear_score: Number(r.bear_score),
+      supply_months: Number(r.supply_months),
+      bull_score: Number(r.bull_score),
     }))
   } catch (err) {
-    console.error("[bear-cases] fetchBearCases error:", err)
+    console.error("[bull-cases] fetchBullCases error:", err)
     return []
   }
 }
 
-function bearLabel(score: number): { label: string; color: string; bg: string } {
-  if (score >= 65) return { label: "EXTREME", color: "#ef4444", bg: "#7f1d1d22" }
-  if (score >= 40) return { label: "HIGH",    color: "#f97316", bg: "#7c2d1222" }
-  if (score >= 20) return { label: "MODERATE",color: "#eab308", bg: "#71350122" }
-  return                  { label: "CAUTION", color: "#6b7280", bg: "#37415122" }
-}
-
-function pipelineMonths(units: number, txn12m: number): number {
-  const monthly = Math.max(txn12m / 12, 1)
-  return Math.round(units / monthly)
+function bullLabel(score: number): { label: string; color: string; bg: string } {
+  if (score >= 70) return { label: "STRONG",   color: "#10b981", bg: "#05966922" }
+  if (score >= 50) return { label: "POSITIVE", color: "#34d399", bg: "#06524422" }
+  if (score >= 30) return { label: "MILD",     color: "#6ee7b7", bg: "#04403422" }
+  return                  { label: "NEUTRAL",  color: "#6b7280", bg: "#37415122" }
 }
 
 const FREE_ROWS = 5
 
-export default async function BearCasesPage() {
-  const [session, rows] = await Promise.all([auth(), fetchBearCases()])
+export default async function BullCasesPage() {
+  const [session, rows] = await Promise.all([auth(), fetchBullCases()])
   const isAuthenticated = await isTerminalUnlocked(session)
   const display = isAuthenticated ? rows : rows.slice(0, FREE_ROWS)
 
   const totalAnalyzed = rows.length
-  const decliningCount = rows.filter((r) => r.yoy_pct !== null && r.yoy_pct < -2).length
-  const oversupplyCount = rows.filter((r) => r.pipeline_units > r.txn_12m).length
-  const totalDistress = rows.reduce((s, r) => s + r.distress_count, 0)
+  const appreciatingCount = rows.filter((r) => r.yoy_pct !== null && r.yoy_pct > 5).length
+  const scarceSupplyCount = rows.filter((r) => r.supply_months < 6).length
+  const highVolumeCount = rows.filter((r) => r.txn_12m > 100).length
 
   const toSlug = (name: string) =>
     name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
@@ -168,27 +193,27 @@ export default async function BearCasesPage() {
             Intelligence
           </p>
           <Link
-            href="/terminal/bull-cases"
+            href="/terminal/bear-cases"
             className="text-[10px] font-mono text-muted-foreground/60 hover:text-muted-foreground transition-colors"
           >
-            Bull Case Screener →
+            Bear Case Screener →
           </Link>
         </div>
-        <h1 className="font-serif text-3xl font-bold tracking-tight">Bear Case Screener</h1>
+        <h1 className="font-serif text-3xl font-bold tracking-tight">Bull Case Screener</h1>
         <p className="text-sm text-muted-foreground max-w-2xl leading-relaxed">
-          Areas ranked by negative signal density — oversupply pressure, price decline, and distress
-          concentration. Data from live DLD transactions, off-plan pipeline, and confirmed price-drop
-          listings. Higher score = stronger case for caution.
+          Areas ranked by positive signal density — price appreciation, transaction volume strength,
+          and supply scarcity. Data from live DLD transactions and off-plan pipeline. Higher score =
+          stronger quantitative case for consideration.
         </p>
       </div>
 
       {/* Summary stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: "Areas Analyzed", value: totalAnalyzed, icon: BarChart3, color: "text-foreground" },
-          { label: "Price Declining", value: decliningCount, icon: TrendingDown, color: "text-red-400" },
-          { label: "Oversupply Risk", value: oversupplyCount, icon: Building2, color: "text-orange-400" },
-          { label: "Distress Signals", value: totalDistress, icon: AlertTriangle, color: "text-yellow-400" },
+          { label: "Areas Analyzed", value: totalAnalyzed,      icon: BarChart3,  color: "text-foreground" },
+          { label: "Price Rising >5%", value: appreciatingCount, icon: TrendingUp, color: "text-accent" },
+          { label: "Scarce Supply",   value: scarceSupplyCount,  icon: Flame,      color: "text-orange-400" },
+          { label: "High Volume",     value: highVolumeCount,    icon: Zap,        color: "text-yellow-400" },
         ].map(({ label, value, icon: Icon, color }) => (
           <div key={label} className="rounded-xl border border-border/40 bg-card/40 p-4">
             <div className="flex items-center gap-2 mb-2">
@@ -203,7 +228,7 @@ export default async function BearCasesPage() {
       {/* Ranked list */}
       {rows.length === 0 ? (
         <div className="rounded-xl border border-border/40 bg-card/40 p-12 text-center">
-          <AlertTriangle className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
+          <BarChart3 className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
           <p className="text-sm text-muted-foreground">No data available — database initializing.</p>
         </div>
       ) : (
@@ -211,11 +236,11 @@ export default async function BearCasesPage() {
           {display.map((row, i) => {
             const name = formatAreaName(row.area_name_en)
             const slug = toSlug(row.area_name_en)
-            const { label, color, bg } = bearLabel(row.bear_score)
-            const pipelineMo = pipelineMonths(row.pipeline_units, row.txn_12m)
-            const declining = row.yoy_pct !== null && row.yoy_pct < -2
-            const oversupply = pipelineMo > 18
-            const hasDistress = row.distress_count > 0
+            const { label, color, bg } = bullLabel(row.bull_score)
+            const appreciating = row.yoy_pct !== null && row.yoy_pct > 5
+            const scarceSup = row.supply_months < 6
+            const highVol = row.txn_12m > 100
+            const momUp = row.mom_pct !== null && row.mom_pct > 0
 
             return (
               <div
@@ -240,25 +265,32 @@ export default async function BearCasesPage() {
 
                       {/* Signal badges */}
                       <div className="flex flex-wrap gap-1.5">
-                        {declining && (
+                        {appreciating && (
                           <span className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wider"
-                            style={{ background: "#7f1d1d22", color: "#f87171" }}>
-                            <TrendingDown className="h-2.5 w-2.5" />
-                            {row.yoy_pct!.toFixed(1)}% YoY
+                            style={{ background: "#05966922", color: "#34d399" }}>
+                            <TrendingUp className="h-2.5 w-2.5" />
+                            +{row.yoy_pct!.toFixed(1)}% YoY
                           </span>
                         )}
-                        {oversupply && (
+                        {momUp && (
+                          <span className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wider"
+                            style={{ background: "#05966922", color: "#6ee7b7" }}>
+                            <Zap className="h-2.5 w-2.5" />
+                            +{row.mom_pct!.toFixed(1)}% MoM
+                          </span>
+                        )}
+                        {scarceSup && (
                           <span className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wider"
                             style={{ background: "#7c2d1222", color: "#fb923c" }}>
-                            <Building2 className="h-2.5 w-2.5" />
-                            {pipelineMo}m supply
+                            <Flame className="h-2.5 w-2.5" />
+                            {row.supply_months.toFixed(1)}m supply
                           </span>
                         )}
-                        {hasDistress && (
+                        {highVol && (
                           <span className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wider"
                             style={{ background: "#71350122", color: "#fbbf24" }}>
-                            <AlertTriangle className="h-2.5 w-2.5" />
-                            {row.distress_count} distress
+                            <BarChart3 className="h-2.5 w-2.5" />
+                            {row.txn_12m.toLocaleString()} deals
                           </span>
                         )}
                       </div>
@@ -270,25 +302,33 @@ export default async function BearCasesPage() {
                         <span>PSF: <span className="text-foreground">AED {row.avg_psf.toLocaleString()}</span></span>
                       )}
                       {row.pipeline_units > 0 && (
-                        <span>Pipeline: <span className="text-orange-400">+{row.pipeline_units.toLocaleString()} units</span></span>
+                        <span>Pipeline: <span className="text-muted-foreground">+{row.pipeline_units.toLocaleString()} units</span></span>
+                      )}
+                      {row.pipeline_units === 0 && (
+                        <span>Pipeline: <span className="text-accent">None ✓</span></span>
                       )}
                       <span>Vol (12m): <span className="text-foreground">{row.txn_12m.toLocaleString()} txns</span></span>
                       {row.yoy_pct !== null && (
-                        <span>YoY: <span className={row.yoy_pct < 0 ? "text-red-400" : "text-accent"}>
+                        <span>YoY: <span className={row.yoy_pct >= 0 ? "text-accent" : "text-red-400"}>
                           {row.yoy_pct >= 0 ? "+" : ""}{row.yoy_pct.toFixed(1)}%
+                        </span></span>
+                      )}
+                      {row.mom_pct !== null && (
+                        <span>MoM: <span className={row.mom_pct >= 0 ? "text-accent" : "text-red-400"}>
+                          {row.mom_pct >= 0 ? "+" : ""}{row.mom_pct.toFixed(1)}%
                         </span></span>
                       )}
                     </div>
                   </div>
 
-                  {/* Bear score */}
+                  {/* Bull score */}
                   <div className="shrink-0 text-right">
                     <div
                       className="rounded-lg px-3 py-2 text-center mb-1"
                       style={{ background: bg, border: `1px solid ${color}33` }}
                     >
                       <p className="font-mono text-lg font-bold leading-none" style={{ color }}>
-                        {row.bear_score}
+                        {row.bull_score}
                       </p>
                       <p className="font-mono text-[8px] uppercase tracking-widest mt-0.5" style={{ color }}>
                         {label}
@@ -312,25 +352,25 @@ export default async function BearCasesPage() {
               freeRows={FREE_ROWS}
               totalRows={rows.length}
               noun="areas"
-              callbackUrl="/terminal/bear-cases"
+              callbackUrl="/terminal/bull-cases"
             />
           )}
         </div>
       )}
 
-      {/* Cross-link to bull cases */}
+      {/* Cross-link to bear cases */}
       <div className="rounded-xl border border-border/40 bg-secondary/20 p-4 flex items-center justify-between">
         <div>
           <p className="text-sm font-medium text-foreground">See the other side</p>
           <p className="text-[11px] text-muted-foreground font-mono mt-0.5">
-            Areas with price appreciation, high volume, and supply scarcity
+            Areas with oversupply, price decline, or distress signals
           </p>
         </div>
         <Link
-          href="/terminal/bull-cases"
+          href="/terminal/bear-cases"
           className="text-xs font-mono text-muted-foreground hover:text-foreground transition-colors shrink-0"
         >
-          Bull Case Screener →
+          Bear Case Screener →
         </Link>
       </div>
 
@@ -338,10 +378,11 @@ export default async function BearCasesPage() {
       <div className="rounded-xl border border-border/40 bg-secondary/20 p-4 space-y-2">
         <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-mono">Methodology</p>
         <p className="text-[11px] text-muted-foreground/70 leading-relaxed">
-          Bear Score (0–100) = weighted sum of three signals: price decline vs prior 12 months (0–40 pts),
-          off-plan pipeline supply months vs current sales rate (0–35 pts), and confirmed distress listing
-          density per transaction volume (0–25 pts). Minimum 15 transactions per area to qualify. Data from
-          Dubai Land Department, Bayut, and PropertyFinder. Not financial advice.
+          Bull Score (0–100) = weighted sum of three signals: price appreciation vs prior 12 months
+          (0–35 pts), transaction volume strength relative to active market depth (0–35 pts), and
+          supply scarcity — low off-plan pipeline relative to current sales rate (0–30 pts).
+          Minimum 20 transactions per area to qualify. Data from Dubai Land Department and Bayut.
+          Not financial advice.
         </p>
       </div>
     </div>
