@@ -8,19 +8,18 @@ import {
   BarChart3,
   Building2,
   Calculator,
-  Compass,
   FileText,
   Home,
   LayoutDashboard,
   Map,
-  Newspaper,
   Percent,
-  Settings,
-  ShieldCheck,
   TrendingDown,
   TrendingUp,
   Users,
   Landmark,
+  Activity,
+  Layers,
+  Wrench,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -31,24 +30,27 @@ export const sidebarLinks = [
       { label: "City Intelligence", href: "/terminal", icon: LayoutDashboard },
       { label: "Distress Deals", href: "/terminal/distress-deals", icon: BarChart3 },
       { label: "Rental Drops", href: "/terminal/rental-drops", icon: Home },
+      { label: "Transaction Pulse", href: "/terminal/transaction-pulse", icon: Activity },
     ]
   },
   {
-    title: "Intelligence",
+    title: "Market Screeners",
     links: [
       { label: "Community Screener", href: "/terminal/communities", icon: Map },
+      { label: "Yield Map", href: "/terminal/yield-map", icon: TrendingUp },
+      { label: "Area Momentum", href: "/terminal/area-momentum", icon: TrendingUp },
+      { label: "Floor Plan Pricer", href: "/terminal/floor-plan-pricer", icon: Layers },
+      { label: "Off-Plan Pipeline", href: "/terminal/off-plan-pipeline", icon: Building2 },
+      { label: "Service Charges", href: "/terminal/service-charges", icon: FileText },
       { label: "Mortgage & Liquidity", href: "/terminal/liquidity", icon: Landmark },
-      { label: "Buildings", href: "/terminal/buildings", icon: Building2 },
-      // { label: "Price Index", href: "/terminal/price-index", icon: TrendingUp },
-      // { label: "Supply Pipeline", href: "/terminal/supply-pipeline", icon: BarChart3 },
-      // { label: "Service Charges", href: "/terminal/service-charges", icon: FileText },
+    ]
+  },
+  {
+    title: "Buildings & Developers",
+    links: [
       { label: "Building Comparator", href: "/terminal/building-comparator", icon: Building2 },
-      // { label: "Developer Track", href: "/terminal/developer-track", icon: Users },
-      // { label: "Off-Plan Pipeline", href: "/terminal/off-plan-pipeline", icon: Building2 },
-      // { label: "Market Briefing", href: "/terminal/market-briefing", icon: Newspaper },
-      // { label: "Yield Decay", href: "/terminal/rental-yield-decay", icon: TrendingDown }, // hidden — insufficient data
-      // { label: "Project Screener", href: "/investor-terminal/screener", icon: Compass },
-      // { label: "Investment Theses", href: "/investor-terminal/theses", icon: FileText },
+      { label: "Buildings", href: "/terminal/buildings", icon: Building2 },
+      { label: "Developer Track Record", href: "/terminal/developer-track", icon: Users },
     ]
   },
   {
@@ -57,15 +59,10 @@ export const sidebarLinks = [
       { label: "ROI Engine", href: "/terminal/roi-engine", icon: Calculator },
       { label: "Mortgage Calculator", href: "/terminal/mortgage-calculator", icon: Calculator },
       { label: "Rental Yield", href: "/terminal/rental-yield", icon: Percent },
+      { label: "Yield Calculator", href: "/tools/rental-yield-calculator", icon: TrendingDown },
+      { label: "Service Charge Est.", href: "/tools/service-charge-estimator", icon: Wrench },
     ]
   },
-  {
-    title: "Support",
-    links: [
-      // { label: "Golden Visa", href: "/investor-terminal/golden-visa", icon: ShieldCheck },
-      // { label: "Settings", href: "/investor-terminal/settings", icon: Settings },
-    ]
-  }
 ]
 
 export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
