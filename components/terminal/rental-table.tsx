@@ -281,7 +281,7 @@ export function RentalTable({ listings, isAuthenticated, totalRows }: { listings
     </div>
 
       {!isAuthenticated && totalRows !== undefined && (
-        <GatedTableOverlay freeRows={listings.length} totalRows={totalRows} />
+        <GatedTableOverlay freeRows={listings.length} totalRows={totalRows} noun="listings" callbackUrl="/terminal/rental-drops" />
       )}
     </div>
   )

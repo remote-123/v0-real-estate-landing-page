@@ -228,7 +228,7 @@ export function YieldMapTable({ rows, isAuthenticated, totalRows }: Props) {
       </div>
 
       {!isAuthenticated && totalRows !== undefined && (
-        <GatedTableOverlay freeRows={rows.length} totalRows={totalRows} />
+        <GatedTableOverlay freeRows={rows.length} totalRows={totalRows} noun="yield combinations" callbackUrl="/terminal/yield-map" />
       )}
     </div>
   )

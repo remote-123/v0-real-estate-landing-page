@@ -297,7 +297,7 @@ export function ServiceChargesTable({ rows, isAuthenticated, totalRows }: Props)
       )}
 
       {!isAuthenticated && totalRows !== undefined && (
-        <GatedTableOverlay freeRows={rows.length} totalRows={totalRows} />
+        <GatedTableOverlay freeRows={rows.length} totalRows={totalRows} noun="buildings" callbackUrl="/terminal/service-charges" />
       )}
     </div>
   )

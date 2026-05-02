@@ -198,7 +198,7 @@ export function PricerControls({ data, isAuthenticated, totalRows }: Props) {
       </div>
 
       {!isAuthenticated && totalRows !== undefined && (
-        <GatedTableOverlay freeRows={data.length} totalRows={totalRows} />
+        <GatedTableOverlay freeRows={data.length} totalRows={totalRows} noun="floor plans" callbackUrl="/terminal/floor-plan-pricer" />
       )}
     </div>
   )

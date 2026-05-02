@@ -355,7 +355,7 @@ export function CommunitiesTable({ data, isAuthenticated = true, totalRows }: Pr
 
         {/* Gated overlay sits over the bottom of the table */}
         {!isAuthenticated && totalRows !== undefined && (
-          <GatedTableOverlay freeRows={data.length} totalRows={totalRows} />
+          <GatedTableOverlay freeRows={data.length} totalRows={totalRows} noun="communities" callbackUrl="/terminal/communities" />
         )}
       </div>
     </div>

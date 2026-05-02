@@ -268,7 +268,7 @@ export default async function AreaMomentumPage() {
       </div>
 
       {!isAuthenticated && allDisplay.length > FREE_ROWS && (
-        <GatedTableOverlay freeRows={display.length} totalRows={allDisplay.length} />
+        <GatedTableOverlay freeRows={display.length} totalRows={allDisplay.length} noun="areas" callbackUrl="/terminal/area-momentum" />
       )}
       </div>
 

@@ -3,6 +3,8 @@ import { sql } from "@/lib/db"
 import { formatAreaName } from "@/lib/area-names"
 import { StatCard } from "@/components/terminal/stat-card"
 import { Building2, BarChart3, Map } from "lucide-react"
+import { auth } from "@/auth"
+import { GatedTableOverlay } from "@/components/auth/gated-table-overlay"
 
 export const revalidate = 3600
 
@@ -130,11 +132,16 @@ function formatYear(dateStr: string | null): string {
   }
 }
 
+const FREE_ROWS = 5
+
 export default async function OffPlanPipelinePage() {
-  const [areas, stats] = await Promise.all([
+  const [session, areas, stats] = await Promise.all([
+    auth(),
     fetchPipelineByArea(),
     fetchPipelineStats(),
   ])
+  const isAuthenticated = !!session
+  const display = isAuthenticated ? areas : areas.slice(0, FREE_ROWS)
 
   const totalUnits = stats?.total_off_plan_units ?? 0
   const activeProjects = stats?.active_projects ?? 0
@@ -195,65 +202,76 @@ export default async function OffPlanPipelinePage() {
         {areas.length === 0 ? (
           <p className="text-sm text-muted-foreground">Pipeline data loading from DLD project registry.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border/40 text-muted-foreground text-xs uppercase tracking-wider">
-                  <th className="pb-3 text-left font-medium">Area</th>
-                  <th className="pb-3 text-right font-medium">Active Units</th>
-                  <th className="pb-3 text-right font-medium">Total Units</th>
-                  <th className="pb-3 text-right font-medium">Projects</th>
-                  <th className="pb-3 text-right font-medium">Earliest Due</th>
-                  <th className="pb-3 text-right font-medium">Latest Due</th>
-                  <th className="pb-3 text-right font-medium">% Complete</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/20">
-                {areas.map(area => {
-                  const completedPct = area.total_units > 0
-                    ? Math.round((area.completed_units / area.total_units) * 100)
-                    : 0
-                  return (
-                    <tr key={area.area_name_en} className="hover:bg-secondary/30 transition-colors">
-                      <td className="py-2.5 pr-4 font-medium text-foreground">
-                        {formatAreaName(area.area_name_en)}
-                      </td>
-                      <td className="py-2.5 px-2 text-right tabular-nums text-accent font-medium">
-                        {area.active_units.toLocaleString()}
-                      </td>
-                      <td className="py-2.5 px-2 text-right tabular-nums text-muted-foreground">
-                        {area.total_units.toLocaleString()}
-                      </td>
-                      <td className="py-2.5 px-2 text-right tabular-nums text-muted-foreground">
-                        {area.total_projects}
-                      </td>
-                      <td className="py-2.5 px-2 text-right tabular-nums text-muted-foreground">
-                        {formatYear(area.earliest_completion)}
-                      </td>
-                      <td className="py-2.5 px-2 text-right tabular-nums text-muted-foreground">
-                        {formatYear(area.latest_completion)}
-                      </td>
-                      <td className="py-2.5 pl-2 text-right tabular-nums">
-                        <div className="inline-flex items-center gap-2">
-                          <div className="w-16 h-1.5 rounded-full bg-secondary overflow-hidden">
-                            <div
-                              className="h-full rounded-full bg-accent"
-                              style={{ width: `${completedPct}%` }}
-                            />
+          <div className="relative">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border/40 text-muted-foreground text-xs uppercase tracking-wider">
+                    <th className="pb-3 text-left font-medium">Area</th>
+                    <th className="pb-3 text-right font-medium">Active Units</th>
+                    <th className="pb-3 text-right font-medium">Total Units</th>
+                    <th className="pb-3 text-right font-medium">Projects</th>
+                    <th className="pb-3 text-right font-medium">Earliest Due</th>
+                    <th className="pb-3 text-right font-medium">Latest Due</th>
+                    <th className="pb-3 text-right font-medium">% Complete</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/20">
+                  {display.map(area => {
+                    const completedPct = area.total_units > 0
+                      ? Math.round((area.completed_units / area.total_units) * 100)
+                      : 0
+                    return (
+                      <tr key={area.area_name_en} className="hover:bg-secondary/30 transition-colors">
+                        <td className="py-2.5 pr-4 font-medium text-foreground">
+                          {formatAreaName(area.area_name_en)}
+                        </td>
+                        <td className="py-2.5 px-2 text-right tabular-nums text-accent font-medium">
+                          {area.active_units.toLocaleString()}
+                        </td>
+                        <td className="py-2.5 px-2 text-right tabular-nums text-muted-foreground">
+                          {area.total_units.toLocaleString()}
+                        </td>
+                        <td className="py-2.5 px-2 text-right tabular-nums text-muted-foreground">
+                          {area.total_projects}
+                        </td>
+                        <td className="py-2.5 px-2 text-right tabular-nums text-muted-foreground">
+                          {formatYear(area.earliest_completion)}
+                        </td>
+                        <td className="py-2.5 px-2 text-right tabular-nums text-muted-foreground">
+                          {formatYear(area.latest_completion)}
+                        </td>
+                        <td className="py-2.5 pl-2 text-right tabular-nums">
+                          <div className="inline-flex items-center gap-2">
+                            <div className="w-16 h-1.5 rounded-full bg-secondary overflow-hidden">
+                              <div
+                                className="h-full rounded-full bg-accent"
+                                style={{ width: `${completedPct}%` }}
+                              />
+                            </div>
+                            <span className="text-muted-foreground text-xs">{completedPct}%</span>
                           </div>
-                          <span className="text-muted-foreground text-xs">{completedPct}%</span>
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {!isAuthenticated && areas.length > FREE_ROWS && (
+              <GatedTableOverlay
+                freeRows={FREE_ROWS}
+                totalRows={areas.length}
+                noun="pipeline areas"
+                callbackUrl="/terminal/off-plan-pipeline"
+              />
+            )}
           </div>
         )}
 
         <p className="mt-4 text-[10px] text-muted-foreground/60">
-          Source: DLD Projects Registry · {areas.length} areas shown · Showing areas with active pipeline only
+          Source: DLD Projects Registry · {display.length} areas shown · Showing areas with active pipeline only
         </p>
       </div>
     </div>
