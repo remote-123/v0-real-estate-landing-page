@@ -636,9 +636,208 @@ export default function DesignPreviewPage() {
         </div>
       </section>
 
+      {/* ── CITY REGISTRY — PROPTECH / GEO DIRECTIONS ──────────────────── */}
+      <section className="space-y-4">
+        <h2 className="text-xs font-mono uppercase tracking-widest text-muted-foreground border-b border-border/40 pb-2">
+          The City Registry — 3 PropTech / Geo Directions (Glassmorphism · Map Intelligence · Spatial Data)
+        </h2>
+        <p className="text-[11px] text-muted-foreground">
+          Sourced from Dribbble/Behance 2025 PropTech trends: glassmorphism, geo-first heatmaps, architectural spatial UI.
+        </p>
+
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+
+          {/* E1 — Glassmorphism Dark */}
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-foreground">E1 · Glassmorphism Dark</p>
+            <p className="text-[11px] text-muted-foreground">#1 PropTech UI trend on Dribbble 2025. Frosted glass cards over dark gradient. Feels premium, modern, startup-grade. Strong contrast for data readability.</p>
+            <div className="rounded-xl overflow-hidden border shadow-lg" style={{
+              background: 'linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%)',
+              borderColor: 'rgba(255,255,255,0.08)',
+            }}>
+              {/* Header */}
+              <div className="flex items-center justify-between px-5 py-3.5 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(20px)' }}>
+                <div className="flex items-center gap-2">
+                  <div className="h-6 w-6 rounded-full" style={{ background: 'linear-gradient(135deg, #667eea, #764ba2)' }} />
+                  <span className="text-sm font-bold text-white">The City Registry</span>
+                </div>
+                <div className="flex gap-3 text-[11px]" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                  <span>Terminal</span><span>Insights</span><span>API</span>
+                </div>
+              </div>
+              {/* Glass cards */}
+              <div className="p-4 space-y-3">
+                <div className="grid grid-cols-3 gap-2">
+                  {[['Transactions', '1.66M', '#a78bfa'], ['Avg PSF', '1,247', '#34d399'], ['Distress', '847', '#f87171']].map(([l, v, c]) => (
+                    <div key={l} className="rounded-xl p-3" style={{
+                      background: 'rgba(255,255,255,0.06)',
+                      backdropFilter: 'blur(20px)',
+                      border: '1px solid rgba(255,255,255,0.10)',
+                    }}>
+                      <p className="text-[9px] mb-1" style={{ color: 'rgba(255,255,255,0.4)' }}>{l}</p>
+                      <p className="text-base font-bold" style={{ color: c as string }}>{v}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="rounded-xl p-4" style={{
+                  background: 'rgba(255,255,255,0.05)',
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                }}>
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-xs font-semibold text-white">Yield by Community</p>
+                    <span className="text-[9px] rounded-full px-2 py-0.5" style={{ background: 'rgba(167,139,250,0.15)', color: '#a78bfa' }}>Live</span>
+                  </div>
+                  {[['Dubai Marina', '6.9%', 75], ['JVC', '8.2%', 90], ['Business Bay', '7.1%', 78]].map(([a, y, w]) => (
+                    <div key={a} className="space-y-1 mb-2">
+                      <div className="flex justify-between text-[10px]">
+                        <span style={{ color: 'rgba(255,255,255,0.5)' }}>{a}</span>
+                        <span style={{ color: '#a78bfa' }}>{y}</span>
+                      </div>
+                      <div className="h-1 rounded-full" style={{ background: 'rgba(255,255,255,0.08)' }}>
+                        <div className="h-1 rounded-full" style={{ background: 'linear-gradient(90deg, #667eea, #764ba2)', width: `${w}%` }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-1.5 text-[10px]">
+              {['Purple gradient bg', 'Frosted glass cards', 'Blur backdrop', '#a78bfa accent', 'Dribbble #1 2025'].map(t => (
+                <span key={t} className="rounded border border-border/40 px-2 py-0.5 text-muted-foreground">{t}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* E2 — Map Intelligence */}
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-foreground">E2 · Map Intelligence</p>
+            <p className="text-[11px] text-muted-foreground">Geo-first design — map is the hero, data overlays on top. MapBox / Urban Planning aesthetic. Dubai-specific spatial identity. Unique in PropTech data space.</p>
+            <div className="rounded-xl overflow-hidden border shadow-lg" style={{ background: '#0e1117', borderColor: '#1e2533' }}>
+              {/* Header */}
+              <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: '#1e2533', background: '#141820' }}>
+                <span className="text-sm font-bold" style={{ color: '#e2e8f0' }}>City Registry</span>
+                <div className="flex items-center gap-2">
+                  <div className="h-1.5 w-1.5 rounded-full" style={{ background: '#22d3ee' }} />
+                  <span className="text-[10px] font-mono" style={{ color: '#22d3ee' }}>LIVE MAP</span>
+                </div>
+              </div>
+              {/* Simulated dark map with overlays */}
+              <div className="relative" style={{ background: '#141820', height: '140px' }}>
+                {/* Grid lines simulating map */}
+                <svg width="100%" height="100%" style={{ position: 'absolute', opacity: 0.15 }}>
+                  {[20, 40, 60, 80].map(y => <line key={y} x1="0" y1={`${y}%`} x2="100%" y2={`${y}%`} stroke="#22d3ee" strokeWidth="0.5" />)}
+                  {[10, 20, 30, 40, 50, 60, 70, 80, 90].map(x => <line key={x} x1={`${x}%`} y1="0" x2={`${x}%`} y2="100%" stroke="#22d3ee" strokeWidth="0.5" />)}
+                </svg>
+                {/* Heatmap blobs */}
+                <div className="absolute rounded-full" style={{ width: 60, height: 60, top: 20, left: '25%', background: 'radial-gradient(circle, rgba(239,68,68,0.6) 0%, transparent 70%)' }} />
+                <div className="absolute rounded-full" style={{ width: 80, height: 80, top: 30, left: '55%', background: 'radial-gradient(circle, rgba(34,211,238,0.5) 0%, transparent 70%)' }} />
+                <div className="absolute rounded-full" style={{ width: 45, height: 45, top: 50, left: '70%', background: 'radial-gradient(circle, rgba(251,191,36,0.5) 0%, transparent 70%)' }} />
+                {/* Area labels */}
+                {[['Marina', '25%', '25px'], ['Downtown', '53%', '35px'], ['JVC', '68%', '60px']].map(([l, x, y]) => (
+                  <span key={l} className="absolute text-[9px] font-mono font-bold" style={{ left: x, top: y, color: 'rgba(226,232,240,0.8)' }}>{l}</span>
+                ))}
+                {/* Legend */}
+                <div className="absolute bottom-2 right-3 flex items-center gap-2">
+                  {[['High', '#ef4444'], ['Med', '#22d3ee'], ['Watch', '#fbbf24']].map(([l, c]) => (
+                    <div key={l} className="flex items-center gap-1">
+                      <div className="h-2 w-2 rounded-full" style={{ background: c }} />
+                      <span className="text-[8px] font-mono" style={{ color: 'rgba(226,232,240,0.5)' }}>{l}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {/* Stats below map */}
+              <div className="grid grid-cols-3 divide-x p-0" style={{ borderTop: '1px solid #1e2533', borderColor: '#1e2533' }}>
+                {[['HOTSPOTS', '3', '#ef4444'], ['DEALS', '4,284', '#22d3ee'], ['AVG PSF', '1,247', '#fbbf24']].map(([l, v, c]) => (
+                  <div key={l} className="p-3 text-center">
+                    <p className="text-[9px] font-mono mb-1" style={{ color: '#334155' }}>{l}</p>
+                    <p className="text-sm font-bold font-mono" style={{ color: c as string }}>{v}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-1.5 text-[10px]">
+              {['Map-first hero', '#22d3ee cyan', 'Heatmap overlays', 'Grid lines', 'Geo identity'].map(t => (
+                <span key={t} className="rounded border border-border/40 px-2 py-0.5 text-muted-foreground">{t}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* E3 — Spatial Data / Architectural */}
+          <div className="space-y-2 xl:col-span-2 xl:max-w-lg">
+            <p className="text-xs font-semibold text-foreground">E3 · Spatial / Architectural</p>
+            <p className="text-[11px] text-muted-foreground">Inspired by "Realto" — top Dribbble PropTech 2025. Architectural floor plan aesthetic fused with institutional data. White + deep navy, precise grid, premium data readability. Most design-forward in the set.</p>
+            <div className="rounded-xl overflow-hidden border shadow-lg" style={{ background: '#FFFFFF', borderColor: '#e2e8f0' }}>
+              {/* Header */}
+              <div className="flex items-center justify-between px-5 py-3.5" style={{ background: '#F8FAFF', borderBottom: '1px solid #e2e8f0' }}>
+                <div>
+                  <span className="text-sm font-bold" style={{ color: '#0F2550', fontFamily: 'serif', letterSpacing: '-0.01em' }}>The City Registry</span>
+                </div>
+                <div className="flex items-center gap-3 text-[11px]" style={{ color: '#94a3b8' }}>
+                  <span>Terminal</span><span>Research</span>
+                  <div className="rounded-sm px-2 py-0.5 text-[9px] font-mono" style={{ background: '#0F2550', color: '#FFFFFF' }}>BETA</div>
+                </div>
+              </div>
+              {/* Grid layout — architectural feel */}
+              <div className="grid grid-cols-5" style={{ borderBottom: '1px solid #e2e8f0' }}>
+                {/* Left — data column */}
+                <div className="col-span-2 p-4 space-y-4" style={{ borderRight: '1px solid #e2e8f0' }}>
+                  <div>
+                    <p className="text-[9px] uppercase tracking-widest mb-1" style={{ color: '#94a3b8' }}>Transaction Volume</p>
+                    <p className="text-3xl font-bold" style={{ color: '#0F2550' }}>1.66M</p>
+                    <p className="text-[10px] mt-0.5" style={{ color: '#22c55e' }}>↑ 18.3% QoQ</p>
+                  </div>
+                  <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '1rem' }}>
+                    <p className="text-[9px] uppercase tracking-widest mb-1" style={{ color: '#94a3b8' }}>Avg PSF</p>
+                    <p className="text-2xl font-bold" style={{ color: '#0F2550' }}>1,247</p>
+                    <p className="text-[9px] font-mono" style={{ color: '#94a3b8' }}>AED / sqft</p>
+                  </div>
+                  <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '1rem' }}>
+                    <p className="text-[9px] uppercase tracking-widest mb-2" style={{ color: '#94a3b8' }}>Top Yield Areas</p>
+                    {[['JVC', '8.2%'], ['Marina', '6.9%']].map(([a, y]) => (
+                      <div key={a} className="flex justify-between text-xs py-1" style={{ borderBottom: '1px solid #f1f5f9' }}>
+                        <span style={{ color: '#0F2550' }}>{a}</span>
+                        <span style={{ color: '#0F2550', fontWeight: 600 }}>{y}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {/* Right — blueprint grid */}
+                <div className="col-span-3 relative" style={{ background: '#F0F4FC', minHeight: 200 }}>
+                  <svg width="100%" height="100%" style={{ position: 'absolute', opacity: 0.3 }}>
+                    {[10, 20, 30, 40, 50, 60, 70, 80, 90].map(y => <line key={`h${y}`} x1="0" y1={`${y}%`} x2="100%" y2={`${y}%`} stroke="#0F2550" strokeWidth="0.5" />)}
+                    {[10, 20, 30, 40, 50, 60, 70, 80, 90].map(x => <line key={`v${x}`} x1={`${x}%`} y1="0" x2={`${x}%`} y2="100%" stroke="#0F2550" strokeWidth="0.5" />)}
+                  </svg>
+                  {/* Building footprint shapes */}
+                  <svg width="100%" height="100%" style={{ position: 'absolute' }}>
+                    <rect x="15%" y="15%" width="20%" height="30%" fill="none" stroke="#0F2550" strokeWidth="1.5" opacity="0.5" />
+                    <rect x="45%" y="20%" width="15%" height="20%" fill="none" stroke="#0F2550" strokeWidth="1.5" opacity="0.5" />
+                    <rect x="65%" y="35%" width="20%" height="35%" fill="none" stroke="#1d4ed8" strokeWidth="2" opacity="0.7" />
+                    <rect x="66%" y="36%" width="18%" height="33%" fill="#1d4ed8" opacity="0.08" />
+                    <text x="67%" y="55%" fontSize="8" fill="#1d4ed8" opacity="0.8" fontFamily="monospace">SELECTED</text>
+                    <text x="67%" y="63%" fontSize="7" fill="#1d4ed8" opacity="0.6" fontFamily="monospace">BIZ BAY</text>
+                  </svg>
+                  {/* Coordinate labels */}
+                  <div className="absolute bottom-2 right-2 text-[8px] font-mono" style={{ color: '#94a3b8' }}>
+                    25.197°N · 55.274°E
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-1.5 text-[10px]">
+              {['#F0F4FC blueprint', '#0F2550 navy', 'Architectural grid', 'Floor plan overlay', 'Spatial identity', 'Serif + data fusion'].map(t => (
+                <span key={t} className="rounded border border-border/40 px-2 py-0.5 text-muted-foreground">{t}</span>
+              ))}
+            </div>
+          </div>
+
+        </div>
+      </section>
+
       <div className="rounded-lg border border-border/40 bg-muted/20 p-4 text-xs text-muted-foreground space-y-1">
         <p className="font-semibold text-foreground text-[11px]">VC/acquisition picks: C2 Capital Navy or C1 Registry Dark (institutional signal) · D2 Intelligence Layer (Palantir feel) · D3 Refinitiv (most acquirer-legible)</p>
-        <p>Pick one City Registry concept (C1–C5, D1–D3) and one North Capital concept (A or B) — I'll implement across all pages.</p>
+        <p>Pick one City Registry concept (A–E3) and one North Capital concept (A or B) — I'll implement across all pages.</p>
       </div>
     </div>
   )
