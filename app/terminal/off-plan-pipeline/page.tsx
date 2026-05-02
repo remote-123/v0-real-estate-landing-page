@@ -5,6 +5,7 @@ import { StatCard } from "@/components/terminal/stat-card"
 import { Building2, BarChart3, Map } from "lucide-react"
 import { auth } from "@/auth"
 import { GatedTableOverlay } from "@/components/auth/gated-table-overlay"
+import { isTerminalUnlocked } from "@/lib/terminal-gate"
 
 export const revalidate = 3600
 
@@ -134,7 +135,7 @@ export default async function OffPlanPipelinePage() {
     fetchPipelineByArea(),
     fetchPipelineStats(),
   ])
-  const isAuthenticated = !!session
+  const isAuthenticated = await isTerminalUnlocked(session)
   const display = isAuthenticated ? areas : areas.slice(0, FREE_ROWS)
 
   const totalUnits = stats?.total_off_plan_units ?? 0

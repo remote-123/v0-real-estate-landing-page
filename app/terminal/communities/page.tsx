@@ -5,6 +5,7 @@ import { type Community } from '@/lib/types/community'
 import { sql } from '@/lib/db'
 import { formatAreaName } from '@/lib/area-names'
 import { auth } from '@/auth'
+import { isTerminalUnlocked } from '@/lib/terminal-gate'
 
 export const dynamic = 'force-dynamic'
 
@@ -142,7 +143,7 @@ const FREE_ROWS = 3
 
 export default async function CommunitiesPage() {
   const [session, allData] = await Promise.all([auth(), fetchCommunities()])
-  const isAuthenticated = !!session
+  const isAuthenticated = await isTerminalUnlocked(session)
   const data = isAuthenticated ? allData : allData.slice(0, FREE_ROWS)
 
   const totalTxns = allData.reduce((s, c) => s + (c.transactions30d || 0), 0)

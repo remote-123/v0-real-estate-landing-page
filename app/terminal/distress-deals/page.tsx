@@ -5,6 +5,7 @@ import { DistressFilters } from "@/components/terminal/distress-filters"
 import { EmailCaptureWidget } from "@/components/terminal/email-capture-widget"
 import { sql } from "@/lib/db"
 import { auth } from "@/auth"
+import { isTerminalUnlocked } from "@/lib/terminal-gate"
 
 
 async function fetchPropertyFinderDeals() {
@@ -242,7 +243,7 @@ export default async function DistressDealsPage(props: {
         fetchAreaBenchmarks(),
         auth(),
     ])
-    const isAuthenticated = !!session
+    const isAuthenticated = await isTerminalUnlocked(session)
 
     let rawDeals = rawFetched.map((deal: any) => {
         const psf = deal.sizeSqft > 0 ? Math.round(deal.currentPrice / deal.sizeSqft) : 0

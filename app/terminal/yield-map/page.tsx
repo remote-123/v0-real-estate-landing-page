@@ -6,6 +6,7 @@ import { YieldMapTable } from "@/components/terminal/yield-map-table"
 import type { YieldRow } from "@/components/terminal/yield-map-table"
 import { formatAreaName } from "@/lib/area-names"
 import { auth } from "@/auth"
+import { isTerminalUnlocked } from "@/lib/terminal-gate"
 
 export const dynamic = 'force-dynamic'
 
@@ -81,7 +82,7 @@ const FREE_ROWS = 5
 
 export default async function YieldMapPage() {
   const [session, allRows] = await Promise.all([auth(), fetchYieldData()])
-  const isAuthenticated = !!session
+  const isAuthenticated = await isTerminalUnlocked(session)
   const rows = isAuthenticated ? allRows : allRows.slice(0, FREE_ROWS)
 
   const topYield = allRows[0]?.gross_yield_pct ?? null

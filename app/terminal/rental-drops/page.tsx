@@ -2,6 +2,7 @@ import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { RentalTable, type RentalListing } from "@/components/terminal/rental-table"
 import { sql } from "@/lib/db"
 import { auth } from "@/auth"
+import { isTerminalUnlocked } from "@/lib/terminal-gate"
 
 export const dynamic = 'force-dynamic'
 
@@ -83,7 +84,7 @@ const FREE_ROWS = 3
 export default async function RentalDropsPage() {
     const [session, raw] = await Promise.all([auth(), fetchListingsFromDB()])
     const allListings = await enrichWithBuildingAge(raw)
-    const isAuthenticated = !!session
+    const isAuthenticated = await isTerminalUnlocked(session)
     const listings = isAuthenticated ? allListings : allListings.slice(0, FREE_ROWS)
 
     const bayutCount = allListings.filter(l => l.source === "bayut").length

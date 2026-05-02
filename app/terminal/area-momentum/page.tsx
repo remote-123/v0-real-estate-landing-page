@@ -5,6 +5,7 @@ import { StatCard } from "@/components/terminal/stat-card"
 import { formatAreaName } from "@/lib/area-names"
 import { auth } from "@/auth"
 import { GatedTableOverlay } from "@/components/auth/gated-table-overlay"
+import { isTerminalUnlocked } from "@/lib/terminal-gate"
 
 export const dynamic = 'force-dynamic'
 
@@ -90,7 +91,7 @@ const FREE_ROWS = 5
 
 export default async function AreaMomentumPage() {
   const [session, areas] = await Promise.all([auth(), fetchAreas()])
-  const isAuthenticated = !!session
+  const isAuthenticated = await isTerminalUnlocked(session)
   const allDisplay = areas.slice(0, 60).map((a) => ({
     ...a,
     curr_psf: Number(a.curr_psf),

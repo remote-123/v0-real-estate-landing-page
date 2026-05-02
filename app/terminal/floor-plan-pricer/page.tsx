@@ -2,6 +2,7 @@ import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { sql } from "@/lib/db"
 import { PricerControls } from "@/components/terminal/pricer-controls"
 import { auth } from "@/auth"
+import { isTerminalUnlocked } from "@/lib/terminal-gate"
 
 export const dynamic = 'force-dynamic'
 
@@ -58,7 +59,7 @@ const FREE_ROWS = 3
 
 export default async function FloorPlanPricerPage() {
   const [session, allRows] = await Promise.all([auth(), fetchPricerData()])
-  const isAuthenticated = !!session
+  const isAuthenticated = await isTerminalUnlocked(session)
   const rows = isAuthenticated ? allRows : allRows.slice(0, FREE_ROWS)
 
   const totalTxns = allRows.reduce((sum, r) => sum + r.txn_count, 0)

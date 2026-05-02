@@ -4,6 +4,7 @@ import { Building2, Calendar, MapPin, Layers } from "lucide-react"
 import { StatCard } from "@/components/terminal/stat-card"
 import { ServiceChargesTable } from "@/components/terminal/service-charges-table"
 import { auth } from "@/auth"
+import { isTerminalUnlocked } from "@/lib/terminal-gate"
 
 export const dynamic = 'force-dynamic'
 
@@ -52,7 +53,7 @@ const FREE_ROWS = 5
 
 export default async function ServiceChargesPage() {
   const [session, allRows] = await Promise.all([auth(), fetchServiceCharges()])
-  const isAuthenticated = !!session
+  const isAuthenticated = await isTerminalUnlocked(session)
   const rows = isAuthenticated ? allRows : allRows.slice(0, FREE_ROWS)
 
   // Headline stats
