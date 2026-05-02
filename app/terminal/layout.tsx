@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { SITE_CONFIG } from "@/lib/constants"
 import { UserNav } from "@/components/auth/user-nav"
 import { headers } from "next/headers"
+import { CityRegistryTheme } from "@/components/city-registry-theme"
 
 export async function generateMetadata(): Promise<Metadata> {
     const headersList = await headers()
@@ -99,6 +100,7 @@ export default async function InvestorTerminalLayout({
 
     return (
         <div className={`min-h-screen bg-background text-foreground${isCityRegistry ? ' cityregistry' : ''}`}>
+            <CityRegistryTheme enabled={isCityRegistry} />
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(getTerminalSchema(isCityRegistry)) }}

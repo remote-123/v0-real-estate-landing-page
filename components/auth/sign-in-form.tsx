@@ -8,9 +8,10 @@ import { authClient } from "@/lib/auth-client"
 
 interface Props {
   callbackUrl?: string
+  isCityRegistry?: boolean
 }
 
-export function SignInForm({ callbackUrl = "/terminal/communities" }: Props) {
+export function SignInForm({ callbackUrl = "/terminal/communities", isCityRegistry = false }: Props) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -33,9 +34,15 @@ export function SignInForm({ callbackUrl = "/terminal/communities" }: Props) {
       {/* Logo / brand */}
       <div className="text-center space-y-2">
         <Link href="/" className="inline-block">
-          <span className="font-mono text-xs tracking-widest uppercase text-muted-foreground">
-            North Capital DXB
-          </span>
+          {isCityRegistry ? (
+            <span className="font-mono text-xs tracking-[0.2em] uppercase" style={{ color: '#00BFA5' }}>
+              THE CITY REGISTRY
+            </span>
+          ) : (
+            <span className="font-mono text-xs tracking-widest uppercase text-muted-foreground">
+              North Capital DXB
+            </span>
+          )}
         </Link>
         <h1 className="text-2xl font-bold text-foreground">Unlock the Terminal</h1>
         <p className="text-sm text-muted-foreground">
@@ -52,7 +59,7 @@ export function SignInForm({ callbackUrl = "/terminal/communities" }: Props) {
           "Distress deal scanner with discount %%",
         ].map(b => (
           <li key={b} className="flex items-start gap-2">
-            <span className="text-emerald-500 mt-0.5">✓</span>
+            <span className="mt-0.5" style={isCityRegistry ? { color: '#00BFA5' } : { color: '#10b981' }}>✓</span>
             <span>{b}</span>
           </li>
         ))}

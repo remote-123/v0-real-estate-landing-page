@@ -13,6 +13,7 @@ function generateCaptcha() {
 
 export function FeedbackModal() {
   const [open, setOpen] = useState(false)
+  const [isCityRegistry, setIsCityRegistry] = useState(false)
   const [idea, setIdea] = useState("")
   const [email, setEmail] = useState("")
   const [captchaAnswer, setCaptchaAnswer] = useState("")
@@ -20,6 +21,10 @@ export function FeedbackModal() {
   const [hp, setHp] = useState("") // honeypot
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle")
   const [errorMsg, setErrorMsg] = useState("")
+
+  useEffect(() => {
+    setIsCityRegistry(window.location.hostname.includes("cityregistry") || new URLSearchParams(window.location.search).get("site") === "cityregistry")
+  }, [])
 
   // Reset state when modal opens
   useEffect(() => {
@@ -166,7 +171,7 @@ export function FeedbackModal() {
                     maxLength={500}
                     required
                     placeholder="e.g. Show yield by building age, or add a mortgage calculator…"
-                    className="w-full rounded-md border border-border/50 bg-background px-3 py-2 text-base sm:text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/50 resize-none"
+                    className="w-full rounded-md border border-border/50 bg-background px-3 py-2 text-base sm:text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-ring/50 resize-none"
                   />
                   <p className="text-right font-mono text-[10px] text-muted-foreground/50">
                     {idea.length}/500
@@ -183,7 +188,7 @@ export function FeedbackModal() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@example.com"
-                    className="w-full rounded-md border border-border/50 bg-background px-3 py-2 text-base sm:text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
+                    className="w-full rounded-md border border-border/50 bg-background px-3 py-2 text-base sm:text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-ring/50"
                   />
                 </div>
 
@@ -199,7 +204,7 @@ export function FeedbackModal() {
                     onChange={(e) => setCaptchaAnswer(e.target.value)}
                     required
                     placeholder="Answer"
-                    className="w-28 rounded-md border border-border/50 bg-background px-3 py-2 text-base sm:text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
+                    className="w-28 rounded-md border border-border/50 bg-background px-3 py-2 text-base sm:text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-ring/50"
                   />
                 </div>
 
@@ -212,7 +217,8 @@ export function FeedbackModal() {
                 <Button
                   type="submit"
                   disabled={status === "loading" || idea.trim().length < 10}
-                  className="w-full gap-2 bg-emerald-600 hover:bg-emerald-500 text-white"
+                  className="w-full gap-2 text-white"
+                  style={isCityRegistry ? { background: '#00BFA5', color: '#000' } : { background: '#059669' }}
                 >
                   {status === "loading" ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
