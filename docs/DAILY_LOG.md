@@ -7,6 +7,10 @@
 > 3. **Mandatory Signature:** Every entry must explicitly state the tool name at the start (e.g., *"Built by Antigravity"*, *"Built by Claude Code"*, or *"Built by Cursor"*).
 
 
+## 02 May 2026 — Cycle 21
+*Built by Claude Code*
+- **CityRegistry feature grid expanded to 17 cards + vault sync (8ee1866)**: Added Developer Track Record, Buildings Directory, Area Comparison, Market Briefing, Rental Drops to `city-registry-landing.tsx` FEATURES array. New icons: Users, GitCompare, Newspaper, Home. Updated `vault/Open-Actions.md` — marked all gating, market briefing, area-list, and service charge estimator as complete.
+
 ## 02 May 2026 — Cycle 20
 *Built by Claude Code*
 - **Email gate complete — buildings + liquidity (20a3c72)**: `buildings` → 5 free / 200 total, GatedTableOverlay. `liquidity` → KPI cards visible to all; 24-month mortgage chart blurred with overlay; area table row-gated (5 free / 40 total). All 12 data terminal pages now consistently gated.
