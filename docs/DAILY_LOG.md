@@ -7,6 +7,10 @@
 > 3. **Mandatory Signature:** Every entry must explicitly state the tool name at the start (e.g., *"Built by Antigravity"*, *"Built by Claude Code"*, or *"Built by Cursor"*).
 
 
+## 02 May 2026 — Cycle 19
+*Built by Claude Code*
+- **Email gate on 3 more terminal pages (db1a8ef)**: `supply-pipeline` → 5 free projects / GatedTableOverlay (3,039 total). `developer-track` → 5 free developers / GatedTableOverlay (60 total). `transaction-pulse` → stat cards visible to all, 24-month chart and daily heatmap blurred/hidden with overlay for unauthenticated. All pages: `force-dynamic` + `isTerminalUnlocked()`. Now 11 of 12 data terminal pages are gated.
+
 ## 02 May 2026 — Cycle 18
 *Built by Claude Code*
 - **Area Comparison: dynamic area list from DB (d4454f6)**: Created `/api/area-list` endpoint (top 100 DLD areas by 12m sales volume, `revalidate=86400`). `CompareClient` now fetches on mount and replaces the hardcoded 40-item list. Fixes: `Al Barsha South Fourth` (#1 area, 749 sales) and `Madinat Al Mataar` (#2, 582 sales) were missing from the old static list. Also fixed pre-existing Recharts Tooltip TS error.
