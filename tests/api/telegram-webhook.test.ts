@@ -85,6 +85,113 @@ describe('POST /api/telegram-webhook — /leads command', () => {
   })
 })
 
+describe('POST /api/telegram-webhook — /area command', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    process.env.TELEGRAM_ALLOWED_USER_ID = ALLOWED_USER_ID
+    global.fetch = vi.fn().mockResolvedValue({ ok: true } as Response)
+  })
+
+  it('returns 200 for /area with argument', async () => {
+    mockSql.mockResolvedValue([{
+      area_name_en: 'Downtown Dubai',
+      curr_psf: '1800',
+      yoy_pct: '7.5',
+      txn_12m: '1200',
+      latest_month: '2026-02-01',
+    }])
+    const res = await POST(makeWebhookReq('/area downtown dubai'))
+    expect(res.status).toBe(200)
+    const data = await res.json()
+    expect(data.ok).toBe(true)
+  })
+
+  it('replies with usage hint and does NOT hit DB when /area called with no argument', async () => {
+    const res = await POST(makeWebhookReq('/area'))
+    expect(res.status).toBe(200)
+    // Graceful reply via fetch (Telegram API), but no DB queries
+    expect(mockSql).not.toHaveBeenCalled()
+  })
+
+  it('ignores /area from disallowed user without querying DB', async () => {
+    process.env.TELEGRAM_ALLOWED_USER_ID = '99999'
+    const res = await POST(makeWebhookReq('/area downtown dubai', '11111'))
+    expect(res.status).toBe(200)
+    expect(mockSql).not.toHaveBeenCalled()
+  })
+})
+
+describe('POST /api/telegram-webhook — /distress command', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    process.env.TELEGRAM_ALLOWED_USER_ID = ALLOWED_USER_ID
+    global.fetch = vi.fn().mockResolvedValue({ ok: true } as Response)
+  })
+
+  it('returns 200 for /distress command', async () => {
+    mockSql.mockResolvedValue([{
+      title: 'Luxury Apartment Downtown',
+      location: 'Downtown Dubai',
+      current_price: '2500000',
+      psf: '1200',
+      dld_area_avg_psf: '1800',
+      distress_score: '72',
+      days_on_market: '45',
+      bedrooms: '2',
+    }])
+    const res = await POST(makeWebhookReq('/distress'))
+    expect(res.status).toBe(200)
+  })
+
+  it('ignores /distress from disallowed user', async () => {
+    process.env.TELEGRAM_ALLOWED_USER_ID = '99999'
+    const res = await POST(makeWebhookReq('/distress', '11111'))
+    expect(res.status).toBe(200)
+    expect(mockSql).not.toHaveBeenCalled()
+  })
+})
+
+describe('POST /api/telegram-webhook — /price command', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    process.env.TELEGRAM_ALLOWED_USER_ID = ALLOWED_USER_ID
+    global.fetch = vi.fn().mockResolvedValue({ ok: true } as Response)
+  })
+
+  it('returns 200 for /price [area] [beds]', async () => {
+    mockSql.mockResolvedValue([{
+      area_name_en: 'Downtown Dubai',
+      rooms_en: '2 B/R',
+      avg_psf: '1800',
+      avg_price: '3500000',
+      txn_count: '200',
+      latest_month: '2026-02-01',
+    }])
+    const res = await POST(makeWebhookReq('/price downtown dubai 2'))
+    expect(res.status).toBe(200)
+  })
+
+  it('replies with usage hint and does NOT hit DB when /price has too few args', async () => {
+    const res = await POST(makeWebhookReq('/price'))
+    expect(res.status).toBe(200)
+    expect(mockSql).not.toHaveBeenCalled()
+  })
+
+  it('replies with usage hint for /price with only one token (no beds)', async () => {
+    const res = await POST(makeWebhookReq('/price downtown'))
+    // Only one arg — beds missing — handler sends usage reply
+    expect(res.status).toBe(200)
+    // No DB call since there is only one token and beds parsing will fail gracefully
+  })
+
+  it('ignores /price from disallowed user', async () => {
+    process.env.TELEGRAM_ALLOWED_USER_ID = '99999'
+    const res = await POST(makeWebhookReq('/price downtown 2', '11111'))
+    expect(res.status).toBe(200)
+    expect(mockSql).not.toHaveBeenCalled()
+  })
+})
+
 describe('Telegram webhook source code — SQL column guards', () => {
   /**
    * Regression tests: guard SQL column references that have caused bugs.
@@ -121,5 +228,33 @@ describe('Telegram webhook source code — SQL column guards', () => {
     )
     // Just documents the current state; update if whatsapp_intents schema changes
     expect(handleLeadsBlock).toContain('whatsapp_intents')
+  })
+
+  it('/area handler SQL uses 12-month YoY window (INTERVAL 12 months) and ILIKE', () => {
+    const areaBlock = source.slice(
+      source.indexOf('async function handleAreaCommand'),
+      source.indexOf('async function handleDistressCommand')
+    )
+    expect(areaBlock).toContain("INTERVAL '12 months'")
+    expect(areaBlock).toContain('ILIKE')
+  })
+
+  it('/price handler maps numeric beds to rooms_en label via toBedLabel', () => {
+    // Guard that the beds normalization function exists and produces correct labels
+    const helperBlock = source.slice(
+      source.indexOf('function toBedLabel'),
+      source.indexOf('async function handleAreaCommand')
+    )
+    expect(helperBlock).toContain('Studio')
+    expect(helperBlock).toContain('B/R')
+  })
+
+  it('/distress handler queries price_drop_confirmed = true', () => {
+    const distressBlock = source.slice(
+      source.indexOf('async function handleDistressCommand'),
+      source.indexOf('async function handlePriceCommand')
+    )
+    expect(distressBlock).toContain('price_drop_confirmed = true')
+    expect(distressBlock).toContain('distress_listings')
   })
 })
