@@ -94,7 +94,7 @@ export default async function MarketBriefingArchivePage() {
           {display.map((b) => (
             <Link
               key={b.id}
-              href="/terminal/market-briefing"
+              href={`/terminal/market-briefing/${b.id}`}
               className="block rounded-xl border border-border/40 bg-card/40 p-5 hover:bg-card/70 transition-colors group"
             >
               <div className="flex items-start justify-between gap-4">
