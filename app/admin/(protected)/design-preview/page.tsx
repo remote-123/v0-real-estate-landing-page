@@ -835,9 +835,170 @@ export default function DesignPreviewPage() {
         </div>
       </section>
 
+      {/* ── E1 GLASSMORPHISM — COLOR VARIATIONS ─────────────────────────── */}
+      <section className="space-y-4">
+        <h2 className="text-xs font-mono uppercase tracking-widest text-muted-foreground border-b border-border/40 pb-2">
+          E1 Glassmorphism — 3 Colour Variations (same frosted glass, different base)
+        </h2>
+        <p className="text-[11px] text-muted-foreground">
+          Same frosted glass cards and layout as E1 — just the gradient and accent colour changed.
+        </p>
+
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+
+          {/* E1-B — Midnight Teal */}
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-foreground">E1-B · Midnight Teal</p>
+            <p className="text-[11px] text-muted-foreground">Dark navy → deep teal. Serious data platform feel. Closer to institutional without being stuffy.</p>
+            <div className="rounded-xl overflow-hidden border shadow-lg" style={{
+              background: 'linear-gradient(135deg, #0a0f1e 0%, #0d2b3e 50%, #0a1628 100%)',
+              borderColor: 'rgba(0,188,188,0.15)',
+            }}>
+              <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: 'rgba(0,188,188,0.1)', background: 'rgba(255,255,255,0.03)' }}>
+                <div className="flex items-center gap-2">
+                  <div className="h-5 w-5 rounded-full" style={{ background: 'linear-gradient(135deg, #00BCD4, #00838F)' }} />
+                  <span className="text-sm font-bold text-white">The City Registry</span>
+                </div>
+                <div className="flex gap-3 text-[11px]" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                  <span>Terminal</span><span>Insights</span><span>API</span>
+                </div>
+              </div>
+              <div className="p-4 space-y-3">
+                <div className="grid grid-cols-3 gap-2">
+                  {[['Transactions', '1.66M', '#00BCD4'], ['Avg PSF', '1,247', '#4DD0E1'], ['Yield', '7.4%', '#80DEEA']].map(([l, v, c]) => (
+                    <div key={l} className="rounded-xl p-3" style={{ background: 'rgba(0,188,212,0.07)', backdropFilter: 'blur(20px)', border: '1px solid rgba(0,188,212,0.15)' }}>
+                      <p className="text-[9px] mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>{l}</p>
+                      <p className="text-base font-bold" style={{ color: c as string }}>{v}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="rounded-xl p-3" style={{ background: 'rgba(0,188,212,0.05)', backdropFilter: 'blur(20px)', border: '1px solid rgba(0,188,212,0.1)' }}>
+                  <p className="text-xs font-semibold text-white mb-2">Top Yield Areas</p>
+                  {[['JVC', '8.2%', 90], ['Dubai Marina', '6.9%', 75], ['Business Bay', '7.1%', 78]].map(([a, y, w]) => (
+                    <div key={a} className="space-y-0.5 mb-2">
+                      <div className="flex justify-between text-[10px]">
+                        <span style={{ color: 'rgba(255,255,255,0.45)' }}>{a}</span>
+                        <span style={{ color: '#00BCD4' }}>{y}</span>
+                      </div>
+                      <div className="h-1 rounded-full" style={{ background: 'rgba(0,188,212,0.15)' }}>
+                        <div className="h-1 rounded-full" style={{ background: 'linear-gradient(90deg, #00BCD4, #00838F)', width: `${w}%` }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-1.5 text-[10px]">
+              {['Navy gradient', '#00BCD4 teal', 'Frosted glass', 'Data-serious'].map(t => (
+                <span key={t} className="rounded border border-border/40 px-2 py-0.5 text-muted-foreground">{t}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* E1-C — Carbon Blue */}
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-foreground">E1-C · Carbon Blue</p>
+            <p className="text-[11px] text-muted-foreground">Near-black → electric blue. Crisp, modern, tech-forward. Vercel/Linear aesthetic applied to real estate data.</p>
+            <div className="rounded-xl overflow-hidden border shadow-lg" style={{
+              background: 'linear-gradient(135deg, #080808 0%, #0a0f1a 50%, #0d0d1a 100%)',
+              borderColor: 'rgba(59,130,246,0.2)',
+            }}>
+              <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: 'rgba(59,130,246,0.1)', background: 'rgba(255,255,255,0.02)' }}>
+                <div className="flex items-center gap-2">
+                  <div className="h-5 w-5 rounded" style={{ background: '#3B82F6' }} />
+                  <span className="text-sm font-bold text-white">The City Registry</span>
+                </div>
+                <div className="flex gap-3 text-[11px]" style={{ color: 'rgba(255,255,255,0.25)' }}>
+                  <span>Terminal</span><span>Insights</span><span>API</span>
+                </div>
+              </div>
+              <div className="p-4 space-y-3">
+                <div className="grid grid-cols-3 gap-2">
+                  {[['Transactions', '1.66M', '#60A5FA'], ['Avg PSF', '1,247', '#93C5FD'], ['Yield', '7.4%', '#34D399']].map(([l, v, c]) => (
+                    <div key={l} className="rounded-xl p-3" style={{ background: 'rgba(59,130,246,0.07)', backdropFilter: 'blur(20px)', border: '1px solid rgba(59,130,246,0.15)' }}>
+                      <p className="text-[9px] mb-1" style={{ color: 'rgba(255,255,255,0.3)' }}>{l}</p>
+                      <p className="text-base font-bold" style={{ color: c as string }}>{v}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="rounded-xl p-3" style={{ background: 'rgba(59,130,246,0.05)', backdropFilter: 'blur(20px)', border: '1px solid rgba(59,130,246,0.1)' }}>
+                  <p className="text-xs font-semibold text-white mb-2">Top Yield Areas</p>
+                  {[['JVC', '8.2%', 90], ['Dubai Marina', '6.9%', 75], ['Business Bay', '7.1%', 78]].map(([a, y, w]) => (
+                    <div key={a} className="space-y-0.5 mb-2">
+                      <div className="flex justify-between text-[10px]">
+                        <span style={{ color: 'rgba(255,255,255,0.4)' }}>{a}</span>
+                        <span style={{ color: '#60A5FA' }}>{y}</span>
+                      </div>
+                      <div className="h-1 rounded-full" style={{ background: 'rgba(59,130,246,0.15)' }}>
+                        <div className="h-1 rounded-full" style={{ background: 'linear-gradient(90deg, #3B82F6, #60A5FA)', width: `${w}%` }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-1.5 text-[10px]">
+              {['Near-black bg', '#3B82F6 electric blue', 'Frosted glass', 'Vercel/Linear feel'].map(t => (
+                <span key={t} className="rounded border border-border/40 px-2 py-0.5 text-muted-foreground">{t}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* E1-D — Onyx Gold */}
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-foreground">E1-D · Onyx Gold</p>
+            <p className="text-[11px] text-muted-foreground">Deep charcoal → amber gold. Premium, institutional. Dubai identity embedded in the palette. Distinctive without being flashy.</p>
+            <div className="rounded-xl overflow-hidden border shadow-lg" style={{
+              background: 'linear-gradient(135deg, #0d0c0a 0%, #1a1508 50%, #120f08 100%)',
+              borderColor: 'rgba(201,160,76,0.2)',
+            }}>
+              <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: 'rgba(201,160,76,0.1)', background: 'rgba(255,255,255,0.02)' }}>
+                <div className="flex items-center gap-2">
+                  <div className="h-5 w-5 rounded-full" style={{ background: 'linear-gradient(135deg, #C9A84C, #8B6914)' }} />
+                  <span className="text-sm font-bold" style={{ color: '#F5E6C8' }}>The City Registry</span>
+                </div>
+                <div className="flex gap-3 text-[11px]" style={{ color: 'rgba(245,230,200,0.25)' }}>
+                  <span>Terminal</span><span>Insights</span><span>API</span>
+                </div>
+              </div>
+              <div className="p-4 space-y-3">
+                <div className="grid grid-cols-3 gap-2">
+                  {[['Transactions', '1.66M', '#C9A84C'], ['Avg PSF', '1,247', '#D4B86A'], ['Yield', '7.4%', '#4FC47A']].map(([l, v, c]) => (
+                    <div key={l} className="rounded-xl p-3" style={{ background: 'rgba(201,160,76,0.07)', backdropFilter: 'blur(20px)', border: '1px solid rgba(201,160,76,0.15)' }}>
+                      <p className="text-[9px] mb-1" style={{ color: 'rgba(245,230,200,0.3)' }}>{l}</p>
+                      <p className="text-base font-bold" style={{ color: c as string }}>{v}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="rounded-xl p-3" style={{ background: 'rgba(201,160,76,0.05)', backdropFilter: 'blur(20px)', border: '1px solid rgba(201,160,76,0.1)' }}>
+                  <p className="text-xs font-semibold mb-2" style={{ color: '#F5E6C8' }}>Top Yield Areas</p>
+                  {[['JVC', '8.2%', 90], ['Dubai Marina', '6.9%', 75], ['Business Bay', '7.1%', 78]].map(([a, y, w]) => (
+                    <div key={a} className="space-y-0.5 mb-2">
+                      <div className="flex justify-between text-[10px]">
+                        <span style={{ color: 'rgba(245,230,200,0.4)' }}>{a}</span>
+                        <span style={{ color: '#C9A84C' }}>{y}</span>
+                      </div>
+                      <div className="h-1 rounded-full" style={{ background: 'rgba(201,160,76,0.12)' }}>
+                        <div className="h-1 rounded-full" style={{ background: 'linear-gradient(90deg, #C9A84C, #8B6914)', width: `${w}%` }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-1.5 text-[10px]">
+              {['Charcoal gradient', '#C9A84C gold', 'Frosted glass', 'Dubai premium'].map(t => (
+                <span key={t} className="rounded border border-border/40 px-2 py-0.5 text-muted-foreground">{t}</span>
+              ))}
+            </div>
+          </div>
+
+        </div>
+      </section>
+
       <div className="rounded-lg border border-border/40 bg-muted/20 p-4 text-xs text-muted-foreground space-y-1">
         <p className="font-semibold text-foreground text-[11px]">VC/acquisition picks: C2 Capital Navy or C1 Registry Dark (institutional signal) · D2 Intelligence Layer (Palantir feel) · D3 Refinitiv (most acquirer-legible)</p>
-        <p>Pick one City Registry concept (A–E3) and one North Capital concept (A or B) — I'll implement across all pages.</p>
+        <p>Pick one City Registry concept (A–E3, E1-B/C/D) and one North Capital concept (A or B) — I'll implement across all pages.</p>
       </div>
     </div>
   )
