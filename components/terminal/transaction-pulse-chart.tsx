@@ -69,7 +69,7 @@ export function TransactionPulseChart({ data }: Props) {
           Monthly Deal Volume — Last 24 Months
         </p>
         <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={pivoted} margin={{ top: 4, right: 8, left: 0, bottom: 0 }} barSize={8}>
+          <BarChart data={pivoted} margin={{ top: 4, right: 8, left: 0, bottom: 0 }} barSize={8} barCategoryGap="20%">
             <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
             <XAxis
               dataKey="label"
@@ -80,7 +80,7 @@ export function TransactionPulseChart({ data }: Props) {
               dy={6}
             />
             <YAxis axisLine={false} tickLine={false} tick={TICK} width={40} />
-            <Tooltip contentStyle={TOOLTIP_STYLE} />
+            <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: "transparent" }} />
             <Legend iconType="square" iconSize={8} wrapperStyle={{ fontSize: "10px", paddingTop: "8px" }} />
             <Bar dataKey="Sales" stackId="a" fill="var(--accent, #10b981)" radius={[0, 0, 0, 0]} />
             <Bar dataKey="Mortgages" stackId="a" fill="#60a5fa" />
@@ -114,6 +114,7 @@ export function TransactionPulseChart({ data }: Props) {
             />
             <Tooltip
               contentStyle={TOOLTIP_STYLE}
+              cursor={{ stroke: "hsl(var(--border))", strokeWidth: 1, strokeDasharray: "3 3" }}
               formatter={(v: number, name: string) => [`AED ${Number(v).toFixed(2)}bn`, name]}
             />
             <Legend iconType="square" iconSize={8} wrapperStyle={{ fontSize: "10px", paddingTop: "8px" }} />
