@@ -14,6 +14,7 @@ import { FaqSection } from "@/components/faq-section"
 import { FeaturedProjects } from "@/components/featured-projects"
 import { MarketIntelligenceTeaser } from "@/components/market-intelligence-teaser"
 import { CityRegistryLanding } from "@/components/city-registry-landing"
+import { CityRegistryTheme } from "@/components/city-registry-theme"
 import { sql } from "@/lib/db"
 
 async function fetchCityStats(): Promise<{ communities: number; transactions: number; topYield: number; topYieldArea: string }> {
@@ -162,7 +163,12 @@ export default async function Home() {
 
   if (isCityRegistry) {
     const liveStats = await fetchCityStats()
-    return <CityRegistryLanding liveStats={liveStats} />
+    return (
+      <>
+        <CityRegistryTheme enabled={true} />
+        <CityRegistryLanding liveStats={liveStats} />
+      </>
+    )
   }
 
   return (
