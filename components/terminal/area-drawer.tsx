@@ -5,6 +5,7 @@ import Link from "next/link"
 import { X, ChevronRight, TrendingUp, TrendingDown, Minus, BarChart2 } from "lucide-react"
 import { AreaChart, Area, ResponsiveContainer, Tooltip, XAxis } from "recharts"
 import { formatAreaName } from "@/lib/area-names"
+import { getAreaDescription } from "@/lib/area-descriptions"
 
 interface AreaSummary {
   name: string
@@ -84,6 +85,12 @@ export function AreaDrawer({ slug, onClose }: AreaDrawerProps) {
             <h3 className="text-base font-bold text-foreground leading-tight">
               {data ? formatAreaName(data.name) : <span className="text-muted-foreground animate-pulse">Loading…</span>}
             </h3>
+            {data && (() => {
+              const desc = getAreaDescription(data.name)
+              return desc ? (
+                <p className="mt-1 text-[11px] text-muted-foreground leading-relaxed max-w-sm line-clamp-2">{desc}</p>
+              ) : null
+            })()}
           </div>
           <div className="flex items-center gap-2">
             {data && (

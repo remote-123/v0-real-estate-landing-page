@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { getTerminalSiteInfo } from "@/lib/terminal-metadata"
 import { ArrowLeft, BarChart3, Layers } from 'lucide-react'
 import Link from 'next/link'
+import { getAreaDescription } from '@/lib/area-descriptions'
 import { sql } from '@/lib/db'
 import { CommunityCharts, type MultiPricePoint } from '@/components/terminal/community-charts'
 import { CommunityFilters } from '@/components/terminal/community-filters'
@@ -373,11 +374,17 @@ export default async function CommunityPage({
 
       <section className="border-y sm:border border-border/50 rounded-none sm:rounded-2xl p-6 bg-card space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-          <div>
+          <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
               <span className="font-mono text-xs text-muted-foreground uppercase tracking-widest">Dubai</span>
             </div>
             <h1 className="font-serif text-3xl sm:text-4xl font-bold text-foreground">{displayName}</h1>
+            {(() => {
+              const desc = getAreaDescription(area.area_name_en)
+              return desc ? (
+                <p className="mt-3 text-sm text-muted-foreground leading-relaxed max-w-2xl">{desc}</p>
+              ) : null
+            })()}
           </div>
           {!noData && (
             <div className="flex items-center gap-2">
