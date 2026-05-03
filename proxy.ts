@@ -15,7 +15,9 @@ export function proxy(req: NextRequest) {
 
   // Dev preview: ?site=cityregistry on localhost bypasses host check
   const devSite = process.env.NODE_ENV === "development" ? searchParams.get("site") : null
-  const isCityRegistry = devSite === "cityregistry" || CITY_REGISTRY_HOSTS.some((h) => host.includes(h))
+  // Vercel preview deployments (*.vercel.app) are treated as cityregistry for testing
+  const isVercelPreview = host.endsWith(".vercel.app")
+  const isCityRegistry = devSite === "cityregistry" || isVercelPreview || CITY_REGISTRY_HOSTS.some((h) => host.includes(h))
 
   if (isCityRegistry) {
     // City Registry root → landing page (handled by app/page.tsx with isCityRegistry check)
@@ -24,12 +26,20 @@ export function proxy(req: NextRequest) {
     if (isNorthCapitalPath) {
       return NextResponse.redirect(`https://www.northcapitaldxb.com${pathname}`)
     }
-  } else if (!devSite) {
+  } else if (process.env.NODE_ENV !== "development") {
     // NorthCapital: redirect /terminal/* → thecityregistry.com/terminal/*
-    // (skip in dev preview mode so terminal pages remain accessible locally)
+    // Skipped in dev so terminal pages are accessible on localhost without query params
     const isTerminalPath = CITYREGISTRY_ONLY_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"))
     if (isTerminalPath) {
       return NextResponse.redirect(`https://thecityregistry.com${pathname}`)
+    }
+  } else {
+    // Dev: serve terminal with cityregistry theme (no redirect, correct branding)
+    const isTerminalPath = CITYREGISTRY_ONLY_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"))
+    if (isTerminalPath) {
+      const res = NextResponse.next()
+      res.headers.set("x-site", "cityregistry")
+      return res
     }
   }
 
