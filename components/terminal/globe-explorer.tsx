@@ -54,6 +54,7 @@ export function GlobeExplorer() {
   const [size, setSize] = useState({ w: 800, h: 600 })
   const [hoveredArea, setHoveredArea] = useState<AreaMarker | null>(null)
   const [ready, setReady] = useState(false)
+  const [currentAltitude, setCurrentAltitude] = useState(2.2)
 
   // Responsive sizing
   useEffect(() => {
@@ -70,19 +71,38 @@ export function GlobeExplorer() {
       globeRef.current.pointOfView({ lat: 25.2, lng: 55.27, altitude: 2.2 }, 1200)
       globeRef.current.controls().autoRotate = true
       globeRef.current.controls().autoRotateSpeed = 0.3
-      globeRef.current.controls().enableZoom = false
+      globeRef.current.controls().enableZoom = true
+      globeRef.current.controls().minDistance = 101  // ~0.01 altitude
+      globeRef.current.controls().maxDistance = 800  // ~2.5 altitude
+      // Track altitude changes from user scroll/pinch
+      globeRef.current.controls().addEventListener("change", () => {
+        const pov = globeRef.current?.pointOfView()
+        if (pov?.altitude !== undefined) setCurrentAltitude(pov.altitude)
+      })
     }
   }, [])
 
   const handleCountryClick = useCallback((d: any) => {
     if (!d.active) return
-    // Stop auto-rotate, zoom into Dubai
+    // Stop auto-rotate, zoom tight into Dubai
     if (globeRef.current) {
       globeRef.current.controls().autoRotate = false
-      globeRef.current.pointOfView({ lat: 25.15, lng: 55.25, altitude: 0.45 }, 1400)
+      globeRef.current.pointOfView({ lat: 25.15, lng: 55.25, altitude: 0.12 }, 1400)
+      setCurrentAltitude(0.12)
     }
     setTimeout(() => setStage("city"), 1500)
   }, [])
+
+  const handleZoom = useCallback((direction: "in" | "out") => {
+    if (!globeRef.current) return
+    const pov = globeRef.current.pointOfView()
+    const current = pov.altitude ?? currentAltitude
+    const next = direction === "in"
+      ? Math.max(0.04, current * 0.6)
+      : Math.min(3.0, current * 1.6)
+    globeRef.current.pointOfView({ ...pov, altitude: next }, 400)
+    setCurrentAltitude(next)
+  }, [currentAltitude])
 
   const handleAreaClick = useCallback((area: AreaMarker) => {
     router.push(`/terminal/communities/${area.slug}`)
@@ -90,6 +110,7 @@ export function GlobeExplorer() {
 
   const handleBack = useCallback(() => {
     setStage("globe")
+    setCurrentAltitude(2.2)
     if (globeRef.current) {
       globeRef.current.pointOfView({ lat: 25.2, lng: 55.27, altitude: 2.2 }, 1000)
       globeRef.current.controls().autoRotate = true
@@ -194,6 +215,22 @@ export function GlobeExplorer() {
             </div>
           </div>
         </>
+      )}
+
+      {/* Zoom controls — always visible */}
+      {ready && (
+        <div className="absolute bottom-6 right-4 flex flex-col gap-1">
+          <button
+            onClick={() => handleZoom("in")}
+            className="flex h-8 w-8 items-center justify-center rounded border border-[#00BFA533] bg-[#050a0f]/90 text-[#00BFA5] hover:bg-[#00BFA5]/10 transition-colors backdrop-blur-sm text-base font-mono leading-none"
+            aria-label="Zoom in"
+          >+</button>
+          <button
+            onClick={() => handleZoom("out")}
+            className="flex h-8 w-8 items-center justify-center rounded border border-[#00BFA533] bg-[#050a0f]/90 text-[#00BFA5] hover:bg-[#00BFA5]/10 transition-colors backdrop-blur-sm text-base font-mono leading-none"
+            aria-label="Zoom out"
+          >−</button>
+        </div>
       )}
     </div>
   )
