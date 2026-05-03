@@ -1,9 +1,14 @@
 "use client"
 
-import { useEffect, useRef, useState, useCallback } from "react"
+import { useEffect, useRef, useState, useCallback, forwardRef, useImperativeHandle } from "react"
 import { useRouter } from "next/navigation"
 import dynamic from "next/dynamic"
 import { DubaiMap } from "./dubai-map"
+
+export interface GlobeExplorerHandle {
+  zoomToCity: (lat: number, lng: number, active: boolean) => void
+  resetGlobe: () => void
+}
 
 // Dubai communities with lat/lng for markers
 const DUBAI_AREAS = [
@@ -47,7 +52,7 @@ const GlobeGL = dynamic(() => import("react-globe.gl"), {
   ),
 })
 
-export function GlobeExplorer() {
+export const GlobeExplorer = forwardRef<GlobeExplorerHandle>(function GlobeExplorer(_, ref) {
   const router = useRouter()
   const globeRef = useRef<any>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -118,6 +123,24 @@ export function GlobeExplorer() {
       globeRef.current.controls().autoRotateSpeed = 0.3
     }
   }, [])
+
+  // Expose imperative API to parent for city card clicks
+  useImperativeHandle(ref, () => ({
+    zoomToCity: (lat: number, lng: number, active: boolean) => {
+      if (!globeRef.current) return
+      globeRef.current.controls().autoRotate = false
+      if (active) {
+        globeRef.current.pointOfView({ lat, lng, altitude: 0.12 }, 1400)
+        setCurrentAltitude(0.12)
+        setTimeout(() => setStage("city"), 1500)
+      } else {
+        // Coming soon — just zoom to country, no map transition
+        globeRef.current.pointOfView({ lat, lng, altitude: 0.7 }, 1400)
+        setCurrentAltitude(0.7)
+      }
+    },
+    resetGlobe: handleBack,
+  }), [handleBack])
 
   // Globe point data — countries
   const countryPoints = COUNTRIES.map(c => ({
@@ -202,4 +225,4 @@ export function GlobeExplorer() {
       )}
     </div>
   )
-}
+})
