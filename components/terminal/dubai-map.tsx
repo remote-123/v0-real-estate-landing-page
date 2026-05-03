@@ -136,6 +136,90 @@ async function fetchHighwaysFromOverpass(): Promise<GeoJSON.FeatureCollection | 
   }
 }
 
+const DISTRICT_COLOR = "#f59e0b"  // amber — distinct from highway green
+
+// slug → OSM search name override (for areas where OSM name differs)
+const OSM_NAME_MAP: Record<string, string> = {
+  "downtown-dubai": "Downtown Dubai",
+  "dubai-marina": "Dubai Marina",
+  "business-bay": "Business Bay",
+  "palm-jumeirah": "Palm Jumeirah",
+  "jumeirah-village-circle": "Jumeirah Village Circle",
+  "dubai-hills-estate": "Dubai Hills Estate",
+  "arabian-ranches": "Arabian Ranches",
+  "damac-hills": "DAMAC Hills",
+  "al-barsha": "Al Barsha",
+  "deira": "Deira",
+  "bur-dubai": "Bur Dubai",
+  "dubai-creek-harbour": "Dubai Creek Harbour",
+  "difc": "Dubai International Financial Centre",
+  "jumeirah-lake-towers": "Jumeirah Lake Towers",
+  "meydan": "Meydan",
+  "sobha-hartland": "Sobha Hartland",
+}
+
+/** Assemble OSM way sequences into a closed ring of [lng, lat] */
+function waysToRing(ways: any[]): [number, number][] | null {
+  if (!ways.length) return null
+  const coords = ways.flatMap((w: any) =>
+    (w.geometry ?? []).map((p: any) => [p.lon, p.lat] as [number, number])
+  )
+  if (coords.length < 3) return null
+  // Close the ring
+  const first = coords[0], last = coords[coords.length - 1]
+  if (first[0] !== last[0] || first[1] !== last[1]) coords.push(first)
+  return coords
+}
+
+async function fetchDistrictPolygons(): Promise<GeoJSON.FeatureCollection | null> {
+  const names = Object.values(OSM_NAME_MAP).join("|")
+  const query = `[out:json][timeout:30];(relation["boundary"="suburb"]["name"~"${names}"](24.5,54.7,25.6,56.0);relation["place"~"suburb|neighbourhood|quarter"]["name"~"${names}"](24.5,54.7,25.6,56.0);way["boundary"="suburb"]["name"~"${names}"](24.5,54.7,25.6,56.0););out geom;`
+  try {
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), 20000)
+    const res = await fetch(
+      `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`,
+      { signal: controller.signal }
+    )
+    clearTimeout(timer)
+    if (!res.ok) return null
+    const data = await res.json()
+
+    const features: GeoJSON.Feature[] = []
+
+    for (const el of data.elements ?? []) {
+      const name: string = el.tags?.name ?? ""
+      if (!name) continue
+
+      // Find matching slug
+      const slug = Object.entries(OSM_NAME_MAP).find(([, n]) => n === name)?.[0]
+        ?? Object.keys(OSM_NAME_MAP).find(k => name.toLowerCase().includes(k.replace(/-/g, " ")))
+      if (!slug) continue
+
+      let ring: [number, number][] | null = null
+
+      if (el.type === "way" && el.geometry?.length > 2) {
+        ring = waysToRing([el])
+      } else if (el.type === "relation" && el.members) {
+        const outerWays = el.members.filter((m: any) => m.role === "outer" && m.geometry)
+        ring = waysToRing(outerWays)
+      }
+
+      if (ring && ring.length >= 4) {
+        features.push({
+          type: "Feature",
+          properties: { name, slug },
+          geometry: { type: "Polygon", coordinates: [ring] },
+        })
+      }
+    }
+
+    return features.length > 0 ? { type: "FeatureCollection", features } : null
+  } catch {
+    return null
+  }
+}
+
 interface DubaiMapProps {
   onBack: () => void
 }
@@ -303,6 +387,58 @@ export function DubaiMap({ onBack }: DubaiMapProps) {
         // Upgrade with Overpass data if available
         fetchHighwaysFromOverpass().then(highways => {
           if (highways && mapRef.current) addHighwayLayers(highways)
+        })
+
+        // Fetch district polygons async — amber perimeter highlight
+        fetchDistrictPolygons().then(districts => {
+          if (!districts || !mapRef.current) return
+          try {
+            map.addSource("districts", { type: "geojson", data: districts })
+
+            // Subtle fill
+            map.addLayer({
+              id: "district-fill",
+              type: "fill",
+              source: "districts",
+              paint: {
+                "fill-color": DISTRICT_COLOR,
+                "fill-opacity": 0.06,
+              },
+            }, "highway-glow")
+
+            // Perimeter stroke
+            map.addLayer({
+              id: "district-border",
+              type: "line",
+              source: "districts",
+              layout: { "line-join": "round" },
+              paint: {
+                "line-color": DISTRICT_COLOR,
+                "line-width": 1.5,
+                "line-opacity": 0.6,
+              },
+            }, "highway-glow")
+
+            // Hover: brighten fill
+            map.on("mouseenter", "district-fill", () => {
+              map.getCanvas().style.cursor = "pointer"
+              map.setPaintProperty("district-fill", "fill-opacity", 0.15)
+            })
+            map.on("mouseleave", "district-fill", () => {
+              map.getCanvas().style.cursor = ""
+              map.setPaintProperty("district-fill", "fill-opacity", 0.06)
+            })
+
+            // Click district → navigate to area page
+            map.on("click", "district-fill", (e) => {
+              const slug = e.features?.[0]?.properties?.slug
+              if (slug) {
+                window.location.href = `/terminal/areas/${slug}`
+              }
+            })
+          } catch {
+            // ignore if map unmounted
+          }
         })
       })
     })
