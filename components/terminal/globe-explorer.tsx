@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import dynamic from "next/dynamic"
+import { DubaiMap } from "./dubai-map"
 
 // Dubai communities with lat/lng for markers
 const DUBAI_AREAS = [
@@ -177,48 +178,15 @@ export function GlobeExplorer() {
         </div>
       )}
 
-      {/* Overlay: city stage — area list + back button */}
+      {/* City stage — MapLibre Dubai map overlaid on globe with fade-in */}
       {stage === "city" && (
-        <>
-          <button
-            onClick={handleBack}
-            className="absolute top-4 left-4 flex items-center gap-2 rounded-md border border-[#00BFA533] bg-[#050a0f]/90 px-3 py-1.5 text-[10px] font-mono uppercase tracking-widest text-[#00BFA5] hover:bg-[#00BFA5]/10 transition-colors backdrop-blur-sm"
-          >
-            ← Globe
-          </button>
-
-          <div className="absolute top-4 right-4 rounded-lg border border-[#00BFA533] bg-[#050a0f]/90 backdrop-blur-sm p-3 max-w-[180px] max-h-[400px] overflow-y-auto">
-            <p className="text-[9px] font-mono uppercase tracking-widest text-[#00BFA5] mb-2 pb-1 border-b border-[#00BFA522]">Dubai Areas</p>
-            <div className="space-y-0.5">
-              {DUBAI_AREAS.map(a => (
-                <button
-                  key={a.slug}
-                  onClick={() => handleAreaClick(a)}
-                  onMouseEnter={() => setHoveredArea(a)}
-                  onMouseLeave={() => setHoveredArea(null)}
-                  className={`w-full text-left text-[10px] font-mono px-2 py-1 rounded transition-colors ${
-                    hoveredArea?.slug === a.slug
-                      ? "bg-[#00BFA5]/20 text-[#00BFA5]"
-                      : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
-                  }`}
-                >
-                  {a.name}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 pointer-events-none">
-            <div className="flex items-center gap-2 rounded-full border border-[#00BFA533] bg-[#050a0f]/80 px-4 py-2 backdrop-blur-sm">
-              <div className="h-1.5 w-1.5 rounded-full bg-[#00BFA5] animate-pulse" />
-              <span className="text-[10px] font-mono uppercase tracking-widest text-[#00BFA5]">Click an area to explore</span>
-            </div>
-          </div>
-        </>
+        <div className="absolute inset-0 animate-in fade-in duration-500">
+          <DubaiMap onBack={handleBack} />
+        </div>
       )}
 
-      {/* Zoom controls — always visible */}
-      {ready && (
+      {/* Zoom controls — globe stage only */}
+      {stage === "globe" && ready && (
         <div className="absolute bottom-6 right-4 flex flex-col gap-1">
           <button
             onClick={() => handleZoom("in")}
