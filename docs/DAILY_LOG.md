@@ -7,6 +7,14 @@
 > 3. **Mandatory Signature:** Every entry must explicitly state the tool name at the start (e.g., *"Built by Antigravity"*, *"Built by Claude Code"*, or *"Built by Cursor"*).
 
 
+## 03 May 2026 — Auth.js v5 Migration
+
+*Built by Claude Code*
+
+- **Migrated auth from `better-auth` → `next-auth@beta` (Auth.js v5)** with `@auth/pg-adapter`. User data now fully owned in Neon (`users`, `accounts`, `sessions`, `verification_tokens` tables created). API route moved from `/api/auth/[...all]` → `/api/auth/[...nextauth]`. `auth.ts` exports `{ handlers, auth, signIn, signOut }`. Client: `lib/auth-client.ts` re-exports from `next-auth/react`. `SessionProvider` wired up in root layout.
+- **proxy.ts fixes**: dev mode no longer redirects `/terminal` to prod (serves with cityregistry theme directly); Vercel preview (`*.vercel.app`) treated as cityregistry — fixes mobile/preview testing. Sidebar: removed duplicate service-charges link, fixed yield/service-charge tools pointing to `/tools/` instead of `/terminal/` routes.
+- **Action required**: add `AUTH_SECRET` env var to Vercel (generate with `openssl rand -base64 32`); add `/api/auth/callback/google` redirect URI to Google OAuth console for prod + preview domains.
+
 ## 02 May 2026 — Cycle 41
 
 *Built by Claude Code*

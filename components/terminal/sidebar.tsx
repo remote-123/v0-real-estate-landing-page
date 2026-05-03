@@ -70,8 +70,6 @@ export const sidebarLinks = [
       { label: "ROI Engine", href: "/terminal/roi-engine", icon: Calculator },
       { label: "Mortgage Calculator", href: "/terminal/mortgage-calculator", icon: Calculator },
       { label: "Rental Yield", href: "/terminal/rental-yield", icon: Percent },
-      { label: "Yield Calculator", href: "/tools/rental-yield-calculator", icon: TrendingDown },
-      { label: "Service Charge Est.", href: "/tools/service-charge-estimator", icon: Wrench },
     ]
   },
 ]

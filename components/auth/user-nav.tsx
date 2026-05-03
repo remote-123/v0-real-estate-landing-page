@@ -13,13 +13,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
-import { authClient } from "@/lib/auth-client"
+import { useSession, signOut } from "next-auth/react"
 
 export function UserNav() {
-  const { data: session, isPending } = authClient.useSession()
+  const { data: session, status } = useSession()
   const pathname = usePathname()
 
-  if (isPending) {
+  if (status === "loading") {
     return <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
   }
 
@@ -56,7 +56,7 @@ export function UserNav() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          onClick={() => authClient.signOut({ fetchOptions: { onSuccess: () => { window.location.href = "/" } } })}
+          onClick={() => signOut({ callbackUrl: "/" })}
           className="text-red-400 focus:text-red-400 cursor-pointer"
         >
           <LogOut className="mr-2 h-4 w-4" />

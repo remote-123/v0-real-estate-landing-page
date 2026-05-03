@@ -1,10 +1,9 @@
 "use client"
 
-import Image from "next/image"
 import Link from "next/link"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { authClient } from "@/lib/auth-client"
+import { signIn } from "next-auth/react"
 
 interface Props {
   callbackUrl?: string
@@ -18,15 +17,12 @@ export function SignInForm({ callbackUrl = "/terminal/communities", isCityRegist
   async function handleGoogleSignIn() {
     setLoading(true)
     setError(null)
-    const { error } = await authClient.signIn.social({
-      provider: "google",
-      callbackURL: callbackUrl,
-    })
-    if (error) {
-      setError(error.message ?? "Sign in failed. Please try again.")
+    try {
+      await signIn("google", { callbackUrl })
+    } catch {
+      setError("Sign in failed. Please try again.")
       setLoading(false)
     }
-    // On success, Better Auth redirects — loading state stays until navigation
   }
 
   return (
@@ -56,7 +52,7 @@ export function SignInForm({ callbackUrl = "/terminal/communities", isCityRegist
           "80+ Dubai communities ranked by yield & velocity",
           "Building-level PSF trends and service charges",
           "Off-plan pipeline and supply forecasts",
-          "Distress deal scanner with discount %%",
+          "Distress deal scanner with discount %",
         ].map(b => (
           <li key={b} className="flex items-start gap-2">
             <span className="mt-0.5" style={isCityRegistry ? { color: '#00BFA5' } : { color: '#10b981' }}>✓</span>
@@ -92,9 +88,6 @@ export function SignInForm({ callbackUrl = "/terminal/communities", isCityRegist
           )}
           Continue with Google
         </Button>
-
-        {/* TODO: Add Apple Sign-In — needs AUTH_APPLE_ID + AUTH_APPLE_SECRET (JWT) */}
-        {/* TODO: Add LinkedIn Sign-In — needs AUTH_LINKEDIN_ID + AUTH_LINKEDIN_SECRET */}
       </div>
 
       <p className="text-center text-[11px] text-muted-foreground/60">

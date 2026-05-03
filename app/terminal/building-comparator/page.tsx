@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import { cn } from "@/lib/utils"
+import { useSession } from "@/lib/auth-client"
 import Link from "next/link"
 import { Lock } from "lucide-react"
 import {
@@ -163,9 +164,13 @@ const BEDROOM_TABS = [
 ]
 
 export default function BuildingComparatorPage() {
-  // Auth gating disabled — all users have full access
-  const isPending = false
-  const isAuthenticated = true
+  const { data: session, status } = useSession()
+  const isPending = status === "loading"
+  const [emailUnlocked, setEmailUnlocked] = useState(false)
+  useEffect(() => {
+    setEmailUnlocked(document.cookie.split(";").some(c => c.trim() === "terminal_email_unlocked=1"))
+  }, [])
+  const isAuthenticated = !!session || emailUnlocked
 
   const [buildingA, setBuildingA] = useState("")
   const [buildingB, setBuildingB] = useState("")
