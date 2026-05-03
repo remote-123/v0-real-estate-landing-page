@@ -1,8 +1,8 @@
 "use client"
 
-import { useEffect, useRef, useCallback } from "react"
-import { useRouter } from "next/navigation"
+import { useEffect, useRef, useCallback, useState } from "react"
 import type { Map as MapLibreMap, GeoJSONSource } from "maplibre-gl"
+import { AreaDrawer } from "./area-drawer"
 
 // Dubai communities — same as globe
 const DUBAI_AREAS = [
@@ -141,9 +141,9 @@ interface DubaiMapProps {
 }
 
 export function DubaiMap({ onBack }: DubaiMapProps) {
-  const router = useRouter()
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
+  const [activeSlug, setActiveSlug] = useState<string | null>(null)
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return
@@ -254,7 +254,7 @@ export function DubaiMap({ onBack }: DubaiMapProps) {
         map.on("click", "community-dot", (e) => {
           const props = e.features?.[0]?.properties
           if (props?.slug) {
-            router.push(`/terminal/communities/${props.slug}`)
+            setActiveSlug(props.slug ?? null)
           }
         })
 
@@ -333,17 +333,22 @@ export function DubaiMap({ onBack }: DubaiMapProps) {
         ← Globe
       </button>
 
-      {/* Legend */}
-      <div className="absolute bottom-4 left-4 z-10 rounded-lg border border-[#00BFA533] bg-[#050a0f]/90 backdrop-blur-sm px-3 py-2 flex flex-col gap-1.5">
-        <div className="flex items-center gap-2">
-          <div className="h-[2px] w-5 rounded" style={{ background: ACCENT, opacity: 0.6 }} />
-          <span className="text-[9px] font-mono uppercase tracking-widest text-slate-400">Major Arteries</span>
+      {/* Legend — hide when drawer is open */}
+      {!activeSlug && (
+        <div className="absolute bottom-4 left-4 z-10 rounded-lg border border-[#00BFA533] bg-[#050a0f]/90 backdrop-blur-sm px-3 py-2 flex flex-col gap-1.5">
+          <div className="flex items-center gap-2">
+            <div className="h-[2px] w-5 rounded" style={{ background: ACCENT, opacity: 0.6 }} />
+            <span className="text-[9px] font-mono uppercase tracking-widest text-slate-400">Major Arteries</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 rounded-full" style={{ background: ACCENT }} />
+            <span className="text-[9px] font-mono uppercase tracking-widest text-slate-400">Communities · Click to explore</span>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="h-2 w-2 rounded-full" style={{ background: ACCENT }} />
-          <span className="text-[9px] font-mono uppercase tracking-widest text-slate-400">Communities · Click to explore</span>
-        </div>
-      </div>
+      )}
+
+      {/* Area drawer — slides up from bottom on community click */}
+      <AreaDrawer slug={activeSlug} onClose={() => setActiveSlug(null)} />
     </div>
   )
 }
