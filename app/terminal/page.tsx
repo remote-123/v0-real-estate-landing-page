@@ -1,11 +1,12 @@
 import Link from "next/link"
 import { terminalPageMeta } from "@/lib/terminal-metadata"
-import { ChevronRight, Globe, MapPin, Zap, Twitter, Lightbulb } from "lucide-react"
+import { ChevronRight, Globe, MapPin, Twitter, Lightbulb, FileText } from "lucide-react"
 import { StatCard } from "@/components/terminal/stat-card"
 import { TerminalTickerCards } from "@/components/terminal/ticker-cards"
 import { FeatureRequestForm } from "@/components/terminal/feature-request-form"
 import { client } from "@/sanity/lib/client"
 import { TERMINAL_ICONS, SanityTerminalCategory } from "@/lib/terminal"
+import { sql } from "@/lib/db"
 
 export const dynamic = 'force-dynamic'
 
@@ -15,6 +16,26 @@ export async function generateMetadata() {
     description: "Aggregated macro-economic datasets for the Dubai real estate market. Institutional-grade analysis of yields, pricing, and occupancy.",
     path: "/terminal",
   })
+}
+
+interface Briefing {
+  content: string
+  generated_at: string
+  week_label: string
+}
+
+async function getLatestBriefing(): Promise<Briefing | null> {
+  try {
+    const rows = await sql<Briefing[]>`
+      SELECT content, generated_at, week_label
+      FROM market_briefings
+      ORDER BY generated_at DESC
+      LIMIT 1
+    `
+    return rows[0] ?? null
+  } catch {
+    return null
+  }
 }
 
 async function getTerminalData(): Promise<SanityTerminalCategory[]> {
@@ -33,7 +54,7 @@ async function getTerminalData(): Promise<SanityTerminalCategory[]> {
 }
 
 export default async function InvestorTerminalPage() {
-    const categories = await getTerminalData()
+    const [categories, briefing] = await Promise.all([getTerminalData(), getLatestBriefing()])
 
     return (
         <div className="space-y-10 max-w-[1600px] mx-auto pb-24 lg:pb-10 px-4 sm:px-0">
@@ -115,6 +136,40 @@ export default async function InvestorTerminalPage() {
                     )
                 })}
             </div>
+
+            {/* Latest Market Briefing */}
+            {briefing && (
+              <div className="rounded-xl border border-border/40 bg-card/40 p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="rounded-lg bg-accent/10 p-1.5">
+                      <FileText className="h-3.5 w-3.5 text-accent" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Latest Briefing</p>
+                      <h3 className="text-sm font-bold text-foreground">{briefing.week_label}</h3>
+                    </div>
+                  </div>
+                  <Link
+                    href="/terminal/market-briefing"
+                    className="flex items-center gap-1 text-[10px] font-mono uppercase tracking-wider text-accent hover:text-accent/80 transition-colors"
+                  >
+                    Read Full Briefing <ChevronRight className="h-3 w-3" />
+                  </Link>
+                </div>
+                <div className="space-y-2 text-sm text-muted-foreground leading-relaxed border-t border-border/30 pt-4">
+                  {briefing.content
+                    .split(/\n{2,}/)
+                    .map(p => p.trim())
+                    .filter(p => p && p !== '---' && !/^[A-Z][A-Z\s:\/]+$/.test(p))
+                    .slice(0, 2)
+                    .map((p, i) => (
+                      <p key={i}>{p}</p>
+                    ))
+                  }
+                </div>
+              </div>
+            )}
 
             {/* Bottom rail: X follow CTA + Feature Request */}
             <div className="grid gap-6 md:grid-cols-2 border-t border-border/30 pt-10">

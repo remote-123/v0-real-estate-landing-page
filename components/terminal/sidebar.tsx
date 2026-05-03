@@ -4,64 +4,46 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
 import {
-  AlertTriangle,
   ArrowLeft,
   BarChart3,
   Building2,
   Calculator,
-  FileText,
-  Home,
   LayoutDashboard,
   Map,
-  Newspaper,
   Percent,
   Search,
-  TrendingDown,
   TrendingUp,
   Users,
-  Landmark,
   Activity,
-  GitCompare,
   Layers,
-  Wrench,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 export const sidebarLinks = [
   {
-    title: "Terminal",
+    title: "Overview",
     links: [
-      { label: "City Intelligence", href: "/terminal", icon: LayoutDashboard },
-      { label: "Distress Deals", href: "/terminal/distress-deals", icon: BarChart3 },
-      { label: "Rental Drops", href: "/terminal/rental-drops", icon: Home },
-      { label: "Market Pulse", href: "/terminal/market-pulse", icon: Activity },
+      { label: "Dashboard", href: "/terminal", icon: LayoutDashboard },
       { label: "Transaction Pulse", href: "/terminal/transaction-pulse", icon: Activity },
-      { label: "Comparable Sales", href: "/terminal/transaction-search", icon: Search },
-      { label: "Market Briefing", href: "/terminal/market-briefing", icon: Newspaper },
     ]
   },
   {
-    title: "Market Screeners",
+    title: "Market Analysis",
     links: [
       { label: "Community Screener", href: "/terminal/communities", icon: Map },
       { label: "Yield Map", href: "/terminal/yield-map", icon: TrendingUp },
       { label: "Area Momentum", href: "/terminal/area-momentum", icon: TrendingUp },
-      { label: "Floor Plan Pricer", href: "/terminal/floor-plan-pricer", icon: Layers },
+      { label: "Distress Deals", href: "/terminal/distress-deals", icon: BarChart3 },
       { label: "Off-Plan Pipeline", href: "/terminal/off-plan-pipeline", icon: Building2 },
-      { label: "Service Charges", href: "/terminal/service-charges", icon: FileText },
-      { label: "Mortgage & Liquidity", href: "/terminal/liquidity", icon: Landmark },
-      { label: "Bear Case Screener", href: "/terminal/bear-cases", icon: AlertTriangle },
-      { label: "Bull Case Screener", href: "/terminal/bull-cases", icon: TrendingUp },
     ]
   },
   {
-    title: "Buildings & Developers",
+    title: "Property Research",
     links: [
       { label: "Building Comparator", href: "/terminal/building-comparator", icon: Building2 },
-      { label: "Unit Registry", href: "/terminal/unit-registry", icon: Layers },
-      { label: "Buildings", href: "/terminal/buildings", icon: Building2 },
+      { label: "Floor Plan Pricer", href: "/terminal/floor-plan-pricer", icon: Layers },
+      { label: "Comparable Sales", href: "/terminal/transaction-search", icon: Search },
       { label: "Developer Track Record", href: "/terminal/developer-track", icon: Users },
-      { label: "Area Comparison", href: "/terminal/compare", icon: GitCompare },
     ]
   },
   {
