@@ -27,30 +27,110 @@ const DUBAI_AREAS = [
 const ACCENT = "#00BFA5"
 const BG = "#050a0f"
 
-// Overpass query — Dubai motorways + trunk roads
+// Static Dubai highway polylines — instant, no API dependency
+// Approximate coordinates for the 5 major arteries
+const STATIC_HIGHWAYS: GeoJSON.FeatureCollection = {
+  type: "FeatureCollection",
+  features: [
+    {
+      // Sheikh Zayed Road (E11) — main coastal spine
+      type: "Feature",
+      properties: { name: "Sheikh Zayed Road (E11)" },
+      geometry: {
+        type: "LineString",
+        coordinates: [
+          [55.0612, 25.0260], [55.0890, 25.0478], [55.1152, 25.0628],
+          [55.1367, 25.0819], [55.1540, 25.0970], [55.1720, 25.1100],
+          [55.1900, 25.1230], [55.2100, 25.1380], [55.2350, 25.1620],
+          [55.2540, 25.1830], [55.2720, 25.2000], [55.2900, 25.2200],
+          [55.3100, 25.2450], [55.3270, 25.2680],
+        ],
+      },
+    },
+    {
+      // E311 (Sheikh Mohammed Bin Zayed Road) — inland parallel
+      type: "Feature",
+      properties: { name: "E311 Sheikh Mohammed Bin Zayed Road" },
+      geometry: {
+        type: "LineString",
+        coordinates: [
+          [55.1200, 24.9900], [55.1450, 25.0150], [55.1700, 25.0400],
+          [55.1950, 25.0700], [55.2150, 25.0950], [55.2400, 25.1200],
+          [55.2650, 25.1500], [55.2900, 25.1800], [55.3100, 25.2000],
+          [55.3350, 25.2250], [55.3600, 25.2500], [55.3850, 25.2700],
+          [55.4100, 25.2900],
+        ],
+      },
+    },
+    {
+      // Al Khail Road (D68)
+      type: "Feature",
+      properties: { name: "Al Khail Road" },
+      geometry: {
+        type: "LineString",
+        coordinates: [
+          [55.1600, 25.0050], [55.1800, 25.0300], [55.2000, 25.0600],
+          [55.2150, 25.0900], [55.2300, 25.1200], [55.2450, 25.1500],
+          [55.2600, 25.1800], [55.2750, 25.2100], [55.2900, 25.2400],
+          [55.3050, 25.2700],
+        ],
+      },
+    },
+    {
+      // Emirates Road (E611)
+      type: "Feature",
+      properties: { name: "Emirates Road (E611)" },
+      geometry: {
+        type: "LineString",
+        coordinates: [
+          [55.2900, 24.9600], [55.3100, 24.9900], [55.3300, 25.0200],
+          [55.3500, 25.0600], [55.3700, 25.1000], [55.3900, 25.1400],
+          [55.4100, 25.1800], [55.4250, 25.2200], [55.4400, 25.2600],
+          [55.4550, 25.3000],
+        ],
+      },
+    },
+    {
+      // Dubai-Al Ain Road (E66)
+      type: "Feature",
+      properties: { name: "Dubai–Al Ain Road (E66)" },
+      geometry: {
+        type: "LineString",
+        coordinates: [
+          [55.2400, 25.1600], [55.2700, 25.1350], [55.3000, 25.1100],
+          [55.3300, 25.0850], [55.3600, 25.0600], [55.3900, 25.0350],
+          [55.4200, 25.0100],
+        ],
+      },
+    },
+  ],
+}
+
+// Overpass query — Dubai motorways + trunk roads (async enhancement)
 const OVERPASS_QUERY = `[out:json][timeout:20];(way["highway"~"motorway|trunk"](24.7,54.8,25.5,55.6););out geom;`
 
-async function fetchHighways(): Promise<GeoJSON.FeatureCollection | null> {
+async function fetchHighwaysFromOverpass(): Promise<GeoJSON.FeatureCollection | null> {
   try {
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), 12000)
     const res = await fetch(
       `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(OVERPASS_QUERY)}`,
-      { signal: AbortSignal.timeout(15000) }
+      { signal: controller.signal }
     )
+    clearTimeout(timer)
     if (!res.ok) return null
     const data = await res.json()
-
     const features: GeoJSON.Feature[] = (data.elements ?? [])
-      .filter((el: any) => el.type === "way" && el.geometry)
+      .filter((el: any) => el.type === "way" && el.geometry?.length > 1)
       .map((el: any) => ({
         type: "Feature" as const,
-        properties: { name: el.tags?.name ?? "", highway: el.tags?.highway ?? "" },
+        properties: { name: el.tags?.name ?? "" },
         geometry: {
           type: "LineString" as const,
           coordinates: el.geometry.map((pt: any) => [pt.lon, pt.lat]),
         },
       }))
-
-    return { type: "FeatureCollection", features }
+    return features.length > 0 ? { type: "FeatureCollection", features } : null
   } catch {
     return null
   }
@@ -178,12 +258,16 @@ export function DubaiMap({ onBack }: DubaiMapProps) {
           }
         })
 
-        // Load highways async — non-blocking
-        fetchHighways().then(highways => {
-          if (!highways || !map.isStyleLoaded()) return
+        // Add static highways immediately — always visible
+        const addHighwayLayers = (data: GeoJSON.FeatureCollection) => {
           try {
-            map.addSource("highways", { type: "geojson", data: highways })
-            // Glow
+            if (map.getSource("highways")) {
+              // Upgrade existing source with richer Overpass data
+              ;(map.getSource("highways") as GeoJSONSource).setData(data)
+              return
+            }
+            map.addSource("highways", { type: "geojson", data })
+            // Glow beneath markers
             map.addLayer({
               id: "highway-glow",
               type: "line",
@@ -191,13 +275,12 @@ export function DubaiMap({ onBack }: DubaiMapProps) {
               layout: { "line-join": "round", "line-cap": "round" },
               paint: {
                 "line-color": ACCENT,
-                "line-width": 6,
-                "line-opacity": 0.12,
-                "line-blur": 4,
+                "line-width": 10,
+                "line-opacity": 0.15,
+                "line-blur": 6,
               },
-            }, "community-glow") // insert below markers
-
-            // Line
+            }, "community-glow")
+            // Solid line
             map.addLayer({
               id: "highway-line",
               type: "line",
@@ -205,13 +288,21 @@ export function DubaiMap({ onBack }: DubaiMapProps) {
               layout: { "line-join": "round", "line-cap": "round" },
               paint: {
                 "line-color": ACCENT,
-                "line-width": 1.5,
-                "line-opacity": 0.55,
+                "line-width": 2,
+                "line-opacity": 0.7,
               },
             }, "community-glow")
           } catch {
-            // fail silently if map was unmounted
+            // ignore if map unmounted
           }
+        }
+
+        // Show static highways right away
+        addHighwayLayers(STATIC_HIGHWAYS)
+
+        // Upgrade with Overpass data if available
+        fetchHighwaysFromOverpass().then(highways => {
+          if (highways && mapRef.current) addHighwayLayers(highways)
         })
       })
     })
