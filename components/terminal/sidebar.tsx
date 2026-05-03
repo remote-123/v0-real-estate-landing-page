@@ -8,6 +8,7 @@ import {
   BarChart3,
   Building2,
   Calculator,
+  Globe,
   LayoutDashboard,
   Map,
   Percent,
@@ -23,6 +24,7 @@ export const sidebarLinks = [
   {
     title: "Overview",
     links: [
+      { label: "Explore Markets", href: "/terminal/home", icon: Globe },
       { label: "Dashboard", href: "/terminal", icon: LayoutDashboard },
       { label: "Transaction Pulse", href: "/terminal/transaction-pulse", icon: Activity },
     ]
