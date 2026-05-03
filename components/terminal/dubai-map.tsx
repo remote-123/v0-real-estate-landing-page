@@ -151,7 +151,7 @@ export function DubaiMap({ onBack }: DubaiMapProps) {
     let map: MapLibreMap
 
     // Dynamically import maplibre-gl to avoid SSR issues
-    import("maplibre-gl").then(({ Map, NavigationControl, Popup }) => {
+    import("maplibre-gl").then(({ Map, NavigationControl }) => {
       map = new Map({
         container: containerRef.current!,
         style: {
@@ -311,7 +311,7 @@ export function DubaiMap({ onBack }: DubaiMapProps) {
       mapRef.current?.remove()
       mapRef.current = null
     }
-  }, [router])
+  }, [])
 
   return (
     <div className="relative w-full h-full rounded-xl overflow-hidden bg-[#050a0f]">
