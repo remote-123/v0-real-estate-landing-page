@@ -224,17 +224,77 @@ interface DubaiMapProps {
   onBack: () => void
 }
 
+// Radius (degrees) for showing nearby community dots when a district is zoomed in
+const COMMUNITY_RADIUS = 0.08 // ~8km
+
 export function DubaiMap({ onBack }: DubaiMapProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
   const [activeSlug, setActiveSlug] = useState<string | null>(null)
+  // "city" = overview (districts only), "district" = zoomed into a district (communities visible)
+  const [mapLevel, setMapLevel] = useState<"city" | "district">("city")
+  const [activeDistrict, setActiveDistrict] = useState<{ slug: string; name: string } | null>(null)
+
+  const showCommunityLayers = (visible: boolean, map: MapLibreMap) => {
+    const vis = visible ? "visible" : "none"
+    try {
+      map.setLayoutProperty("community-glow", "visibility", vis)
+      map.setLayoutProperty("community-dot", "visibility", vis)
+      map.setLayoutProperty("community-label", "visibility", vis)
+    } catch { /* layers may not exist yet */ }
+  }
+
+  const handleDistrictClick = (slug: string, name: string) => {
+    const map = mapRef.current
+    if (!map) return
+    const area = DUBAI_AREAS.find(a => a.slug === slug)
+    const center: [number, number] = area ? [area.lng, area.lat] : [55.25, 25.13]
+
+    // Filter community dots to those within radius of this district center
+    const nearbySlug = DUBAI_AREAS
+      .filter(a => {
+        const dlat = a.lat - center[1]
+        const dlng = a.lng - center[0]
+        return Math.sqrt(dlat * dlat + dlng * dlng) <= COMMUNITY_RADIUS
+      })
+      .map(a => a.slug)
+
+    try {
+      // If no nearby communities in radius, show the district itself as a dot
+      const slugsToShow = nearbySlug.length > 0 ? nearbySlug : [slug]
+      const filter: any = ["in", ["get", "slug"], ["literal", slugsToShow]]
+      map.setFilter("community-glow", filter)
+      map.setFilter("community-dot", filter)
+      map.setFilter("community-label", filter)
+    } catch { /* ignore */ }
+
+    showCommunityLayers(true, map)
+    map.flyTo({ center, zoom: 14, duration: 1200 })
+    setMapLevel("district")
+    setActiveDistrict({ slug, name })
+    setActiveSlug(null)
+  }
+
+  const handleBackToCity = () => {
+    const map = mapRef.current
+    if (!map) return
+    try {
+      map.setFilter("community-glow", null)
+      map.setFilter("community-dot", null)
+      map.setFilter("community-label", null)
+    } catch { /* ignore */ }
+    showCommunityLayers(false, map)
+    map.flyTo({ center: [55.25, 25.13], zoom: 10.5, duration: 1000 })
+    setMapLevel("city")
+    setActiveDistrict(null)
+    setActiveSlug(null)
+  }
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return
 
     let map: MapLibreMap
 
-    // Dynamically import maplibre-gl to avoid SSR issues
     import("maplibre-gl").then(({ Map, NavigationControl }) => {
       map = new Map({
         container: containerRef.current!,
@@ -254,16 +314,15 @@ export function DubaiMap({ onBack }: DubaiMapProps) {
         center: [55.25, 25.13],
         zoom: 10.5,
         minZoom: 8,
-        maxZoom: 16,
+        maxZoom: 18,
         attributionControl: false,
       })
 
       mapRef.current = map
-
       map.addControl(new NavigationControl({ showCompass: false }), "bottom-right")
 
       map.on("load", async () => {
-        // Add community markers as GeoJSON circles
+        // Community GeoJSON — hidden at city level, revealed on district click
         const communityGeoJSON: GeoJSON.FeatureCollection = {
           type: "FeatureCollection",
           features: DUBAI_AREAS.map(a => ({
@@ -275,11 +334,12 @@ export function DubaiMap({ onBack }: DubaiMapProps) {
 
         map.addSource("communities", { type: "geojson", data: communityGeoJSON })
 
-        // Outer glow ring
+        // Outer glow — hidden by default
         map.addLayer({
           id: "community-glow",
           type: "circle",
           source: "communities",
+          layout: { visibility: "none" },
           paint: {
             "circle-radius": 18,
             "circle-color": ACCENT,
@@ -288,29 +348,31 @@ export function DubaiMap({ onBack }: DubaiMapProps) {
           },
         })
 
-        // Inner dot
+        // Inner dot — hidden by default
         map.addLayer({
           id: "community-dot",
           type: "circle",
           source: "communities",
+          layout: { visibility: "none" },
           paint: {
-            "circle-radius": 5,
+            "circle-radius": 6,
             "circle-color": ACCENT,
-            "circle-opacity": 0.9,
+            "circle-opacity": 0.95,
             "circle-stroke-width": 1.5,
             "circle-stroke-color": BG,
           },
         })
 
-        // Labels
+        // Labels — hidden by default
         map.addLayer({
           id: "community-label",
           type: "symbol",
           source: "communities",
           layout: {
+            visibility: "none",
             "text-field": ["get", "name"],
             "text-font": ["literal", ["Open Sans Regular"]],
-            "text-size": 10,
+            "text-size": 11,
             "text-offset": [0, 1.8],
             "text-anchor": "top",
             "text-allow-overlap": false,
@@ -322,7 +384,6 @@ export function DubaiMap({ onBack }: DubaiMapProps) {
           },
         })
 
-        // Hover cursor
         map.on("mouseenter", "community-dot", () => {
           map.getCanvas().style.cursor = "pointer"
           map.setPaintProperty("community-dot", "circle-color", "#ffffff")
@@ -334,92 +395,60 @@ export function DubaiMap({ onBack }: DubaiMapProps) {
           map.setPaintProperty("community-glow", "circle-opacity", 0.08)
         })
 
-        // Click → navigate
         map.on("click", "community-dot", (e) => {
           const props = e.features?.[0]?.properties
-          if (props?.slug) {
-            setActiveSlug(props.slug ?? null)
-          }
+          if (props?.slug) setActiveSlug(props.slug)
         })
 
-        // Add static highways immediately — always visible
+        // Highways
         const addHighwayLayers = (data: GeoJSON.FeatureCollection) => {
           try {
             if (map.getSource("highways")) {
-              // Upgrade existing source with richer Overpass data
               ;(map.getSource("highways") as GeoJSONSource).setData(data)
               return
             }
             map.addSource("highways", { type: "geojson", data })
-            // Glow beneath markers
             map.addLayer({
               id: "highway-glow",
               type: "line",
               source: "highways",
               layout: { "line-join": "round", "line-cap": "round" },
-              paint: {
-                "line-color": ACCENT,
-                "line-width": 10,
-                "line-opacity": 0.15,
-                "line-blur": 6,
-              },
+              paint: { "line-color": ACCENT, "line-width": 10, "line-opacity": 0.15, "line-blur": 6 },
             }, "community-glow")
-            // Solid line
             map.addLayer({
               id: "highway-line",
               type: "line",
               source: "highways",
               layout: { "line-join": "round", "line-cap": "round" },
-              paint: {
-                "line-color": ACCENT,
-                "line-width": 2,
-                "line-opacity": 0.7,
-              },
+              paint: { "line-color": ACCENT, "line-width": 2, "line-opacity": 0.7 },
             }, "community-glow")
-          } catch {
-            // ignore if map unmounted
-          }
+          } catch { /* ignore */ }
         }
 
-        // Show static highways right away
         addHighwayLayers(STATIC_HIGHWAYS)
+        fetchHighwaysFromOverpass().then(hw => { if (hw && mapRef.current) addHighwayLayers(hw) })
 
-        // Upgrade with Overpass data if available
-        fetchHighwaysFromOverpass().then(highways => {
-          if (highways && mapRef.current) addHighwayLayers(highways)
-        })
-
-        // Fetch district polygons async — amber perimeter highlight
+        // District polygons — amber, clickable to zoom in
         fetchDistrictPolygons().then(districts => {
           if (!districts || !mapRef.current) return
           try {
             map.addSource("districts", { type: "geojson", data: districts })
 
-            // Subtle fill
             map.addLayer({
               id: "district-fill",
               type: "fill",
               source: "districts",
-              paint: {
-                "fill-color": DISTRICT_COLOR,
-                "fill-opacity": 0.06,
-              },
+              paint: { "fill-color": DISTRICT_COLOR, "fill-opacity": 0.06 },
             }, "highway-glow")
 
-            // Perimeter stroke
             map.addLayer({
               id: "district-border",
               type: "line",
               source: "districts",
               layout: { "line-join": "round" },
-              paint: {
-                "line-color": DISTRICT_COLOR,
-                "line-width": 1.5,
-                "line-opacity": 0.6,
-              },
+              paint: { "line-color": DISTRICT_COLOR, "line-width": 1.5, "line-opacity": 0.6 },
             }, "highway-glow")
 
-            // Hover: brighten fill
             map.on("mouseenter", "district-fill", () => {
               map.getCanvas().style.cursor = "pointer"
               map.setPaintProperty("district-fill", "fill-opacity", 0.15)
@@ -429,16 +458,14 @@ export function DubaiMap({ onBack }: DubaiMapProps) {
               map.setPaintProperty("district-fill", "fill-opacity", 0.06)
             })
 
-            // Click district → navigate to area page
+            // District click → zoom in + reveal communities
             map.on("click", "district-fill", (e) => {
-              const slug = e.features?.[0]?.properties?.slug
-              if (slug) {
-                window.location.href = `/terminal/areas/${slug}`
+              const props = e.features?.[0]?.properties
+              if (props?.slug) {
+                handleDistrictClick(props.slug, props.name ?? props.slug)
               }
             })
-          } catch {
-            // ignore if map unmounted
-          }
+          } catch { /* ignore */ }
         })
       })
     })
@@ -447,11 +474,10 @@ export function DubaiMap({ onBack }: DubaiMapProps) {
       mapRef.current?.remove()
       mapRef.current = null
     }
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="relative w-full h-full rounded-xl overflow-hidden bg-[#050a0f]">
-      {/* MapLibre CSS */}
       <style>{`
         .maplibregl-ctrl-group { background: #0d1f2d !important; border: 1px solid #00BFA533 !important; }
         .maplibregl-ctrl-group button { color: #00BFA5 !important; }
@@ -461,29 +487,58 @@ export function DubaiMap({ onBack }: DubaiMapProps) {
 
       <div ref={containerRef} className="w-full h-full" />
 
-      {/* Back button */}
-      <button
-        onClick={onBack}
-        className="absolute top-4 left-4 z-10 flex items-center gap-2 rounded-md border border-[#00BFA533] bg-[#050a0f]/90 px-3 py-1.5 text-[10px] font-mono uppercase tracking-widest text-[#00BFA5] hover:bg-[#00BFA5]/10 transition-colors backdrop-blur-sm"
-      >
-        ← Globe
-      </button>
+      {/* Breadcrumb nav — Globe / Dubai / [District] */}
+      <div className="absolute top-4 left-4 z-10 flex items-center gap-1.5 rounded-md border border-[#00BFA533] bg-[#050a0f]/90 backdrop-blur-sm px-3 py-1.5">
+        <button
+          onClick={onBack}
+          className="text-[10px] font-mono uppercase tracking-widest text-[#00BFA5] hover:text-white transition-colors"
+        >
+          Globe
+        </button>
+        <span className="text-[#ffffff20] text-[10px]">/</span>
+        <button
+          onClick={mapLevel === "district" ? handleBackToCity : undefined}
+          className={`text-[10px] font-mono uppercase tracking-widest transition-colors ${
+            mapLevel === "district"
+              ? "text-[#00BFA5] hover:text-white cursor-pointer"
+              : "text-white cursor-default"
+          }`}
+        >
+          Dubai
+        </button>
+        {activeDistrict && (
+          <>
+            <span className="text-[#ffffff20] text-[10px]">/</span>
+            <span className="text-[10px] font-mono uppercase tracking-widest text-white truncate max-w-[120px]">
+              {activeDistrict.name}
+            </span>
+          </>
+        )}
+      </div>
 
-      {/* Legend — hide when drawer is open */}
+      {/* Level hint label */}
       {!activeSlug && (
         <div className="absolute bottom-4 left-4 z-10 rounded-lg border border-[#00BFA533] bg-[#050a0f]/90 backdrop-blur-sm px-3 py-2 flex flex-col gap-1.5">
-          <div className="flex items-center gap-2">
-            <div className="h-[2px] w-5 rounded" style={{ background: ACCENT, opacity: 0.6 }} />
-            <span className="text-[9px] font-mono uppercase tracking-widest text-slate-400">Major Arteries</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full" style={{ background: ACCENT }} />
-            <span className="text-[9px] font-mono uppercase tracking-widest text-slate-400">Communities · Click to explore</span>
-          </div>
+          {mapLevel === "city" ? (
+            <>
+              <div className="flex items-center gap-2">
+                <div className="h-[2px] w-5 rounded" style={{ background: ACCENT, opacity: 0.6 }} />
+                <span className="text-[9px] font-mono uppercase tracking-widest text-slate-400">Major Arteries</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="h-3 w-4 rounded-sm border" style={{ borderColor: DISTRICT_COLOR, background: DISTRICT_COLOR + "22" }} />
+                <span className="text-[9px] font-mono uppercase tracking-widest text-slate-400">Districts · Click to enter</span>
+              </div>
+            </>
+          ) : (
+            <div className="flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full" style={{ background: ACCENT }} />
+              <span className="text-[9px] font-mono uppercase tracking-widest text-slate-400">Communities · Click to explore</span>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Area drawer — slides up from bottom on community click */}
       <AreaDrawer slug={activeSlug} onClose={() => setActiveSlug(null)} />
     </div>
   )
