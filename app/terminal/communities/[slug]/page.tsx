@@ -11,6 +11,7 @@ import { EmailCaptureWidget } from '@/components/terminal/email-capture-widget'
 import { cn } from '@/lib/utils'
 import { Suspense } from 'react'
 import { formatAreaName } from '@/lib/area-names'
+import { getCommunityBySlug } from '@/lib/area-data/dubai-communities'
 
 export const revalidate = 3600
 
@@ -333,6 +334,7 @@ export default async function CommunityPage({
 
   const { siteName, base } = await getTerminalSiteInfo()
   const displayName = formatAreaName(area.area_name_en)
+  const wikiData = getCommunityBySlug(slug)
 
   const schema = {
     "@context": "https://schema.org",
@@ -371,6 +373,27 @@ export default async function CommunityPage({
           <ArrowLeft className="h-3 w-3" /> Back to Community Screener
         </Link>
       </div>
+
+      {wikiData && (
+        <section className="border-y sm:border border-border/40 rounded-none sm:rounded-xl px-4 sm:px-6 py-4 bg-card/40">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-3">
+            Community Profile — Dubai Municipal Code {wikiData.code}
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              { label: 'Population', value: wikiData.population > 0 ? new Intl.NumberFormat('en-US').format(wikiData.population) : '—' },
+              { label: 'Area', value: `${wikiData.area_km2} km²` },
+              { label: 'Sector', value: wikiData.sectorName },
+              { label: 'Municipal Code', value: wikiData.code },
+            ].map(stat => (
+              <div key={stat.label} className="rounded-lg bg-background border border-border/50 p-3">
+                <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-wide mb-1">{stat.label}</p>
+                <p className="font-mono text-sm font-semibold text-foreground leading-tight">{stat.value}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="border-y sm:border border-border/50 rounded-none sm:rounded-2xl p-6 bg-card space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
