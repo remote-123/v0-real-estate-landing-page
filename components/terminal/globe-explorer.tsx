@@ -52,7 +52,11 @@ const GlobeGL = dynamic(() => import("react-globe.gl"), {
   ),
 })
 
-export const GlobeExplorer = forwardRef<GlobeExplorerHandle>(function GlobeExplorer(_, ref) {
+interface GlobeExplorerProps {
+  onCommunitySelect?: (area: { name: string; slug: string }) => void
+}
+
+export const GlobeExplorer = forwardRef<GlobeExplorerHandle, GlobeExplorerProps>(function GlobeExplorer({ onCommunitySelect }, ref) {
   const router = useRouter()
   const globeRef = useRef<any>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -213,7 +217,7 @@ export const GlobeExplorer = forwardRef<GlobeExplorerHandle>(function GlobeExplo
       {/* City stage — MapLibre Dubai map overlaid on globe with fade-in */}
       {stage === "city" && (
         <div className="absolute inset-0 animate-in fade-in duration-500">
-          <DubaiMap onBack={handleBack} />
+          <DubaiMap onBack={handleBack} onCommunitySelect={onCommunitySelect} />
         </div>
       )}
 

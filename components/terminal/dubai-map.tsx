@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useCallback, useState } from "react"
 import type { Map as MapLibreMap, GeoJSONSource } from "maplibre-gl"
-import { AreaDrawer } from "./area-drawer"
 import DISTRICT_GEOJSON from "@/lib/area-data/dubai-districts"
 
 // Dubai communities — same as globe
@@ -141,15 +140,15 @@ const DISTRICT_COLOR = "#f59e0b"  // amber — distinct from highway green
 
 interface DubaiMapProps {
   onBack: () => void
+  onCommunitySelect?: (area: { name: string; slug: string }) => void
 }
 
 // Radius (degrees) for showing nearby community dots when a district is zoomed in
 const COMMUNITY_RADIUS = 0.08 // ~8km
 
-export function DubaiMap({ onBack }: DubaiMapProps) {
+export function DubaiMap({ onBack, onCommunitySelect }: DubaiMapProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
-  const [activeSlug, setActiveSlug] = useState<string | null>(null)
   // "city" = overview (districts only), "district" = zoomed into a district (communities visible)
   const [mapLevel, setMapLevel] = useState<"city" | "district">("city")
   const [activeDistrict, setActiveDistrict] = useState<{ slug: string; name: string } | null>(null)
@@ -191,7 +190,6 @@ export function DubaiMap({ onBack }: DubaiMapProps) {
     map.flyTo({ center, zoom: 14, duration: 1200 })
     setMapLevel("district")
     setActiveDistrict({ slug, name })
-    setActiveSlug(null)
   }
 
   const handleBackToCity = () => {
@@ -206,7 +204,6 @@ export function DubaiMap({ onBack }: DubaiMapProps) {
     map.flyTo({ center: [55.25, 25.13], zoom: 10.5, duration: 1000 })
     setMapLevel("city")
     setActiveDistrict(null)
-    setActiveSlug(null)
   }
 
   useEffect(() => {
@@ -316,7 +313,7 @@ export function DubaiMap({ onBack }: DubaiMapProps) {
 
         map.on("click", "community-dot", (e) => {
           const props = e.features?.[0]?.properties
-          if (props?.slug) setActiveSlug(props.slug)
+          if (props?.slug) onCommunitySelect?.({ name: props.name ?? props.slug, slug: props.slug })
         })
 
         // Highways
@@ -443,8 +440,7 @@ export function DubaiMap({ onBack }: DubaiMapProps) {
       </div>
 
       {/* Level hint label */}
-      {!activeSlug && (
-        <div className="absolute bottom-4 left-4 z-10 rounded-lg border border-[#00BFA533] bg-[#050a0f]/90 backdrop-blur-sm px-3 py-2 flex flex-col gap-1.5">
+      <div className="absolute bottom-4 left-4 z-10 rounded-lg border border-[#00BFA533] bg-[#050a0f]/90 backdrop-blur-sm px-3 py-2 flex flex-col gap-1.5">
           {mapLevel === "city" ? (
             <>
               <div className="flex items-center gap-2">
@@ -463,9 +459,6 @@ export function DubaiMap({ onBack }: DubaiMapProps) {
             </div>
           )}
         </div>
-      )}
-
-      <AreaDrawer slug={activeSlug} onClose={() => setActiveSlug(null)} />
     </div>
   )
 }

@@ -1,8 +1,10 @@
 "use client"
 
-import { useRef } from "react"
-import { MapPin, Clock } from "lucide-react"
+import { useRef, useState } from "react"
+import { MapPin, Clock, X, ChevronRight } from "lucide-react"
+import Link from "next/link"
 import { GlobeExplorer, type GlobeExplorerHandle } from "./globe-explorer"
+import { getAreaDescription } from "@/lib/area-descriptions"
 
 const MARKETS = [
   { city: "Dubai", flag: "🇦🇪", country: "United Arab Emirates", active: true, lat: 25.15, lng: 55.25, label: "16 areas · DLD data" },
@@ -14,16 +16,59 @@ const MARKETS = [
 
 export function GlobeSection() {
   const globeRef = useRef<GlobeExplorerHandle>(null)
+  const [selectedCommunity, setSelectedCommunity] = useState<{ name: string; slug: string } | null>(null)
 
   return (
     <>
       {/* Globe */}
       <div className="w-full h-[560px] lg:h-[640px]">
-        <GlobeExplorer ref={globeRef} />
+        <GlobeExplorer ref={globeRef} onCommunitySelect={setSelectedCommunity} />
       </div>
 
-      {/* City cards */}
-      <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
+      {/* Community panel — shown when a teal dot is clicked */}
+      {selectedCommunity && (() => {
+        const desc = getAreaDescription(selectedCommunity.name)
+        const imgQuery = encodeURIComponent(selectedCommunity.name + " Dubai aerial")
+        return (
+          <div className="rounded-xl border border-border/40 bg-card/40 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-400">
+            {/* Hero image */}
+            <div className="relative h-48 sm:h-60 w-full overflow-hidden bg-[#050a0f]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`https://source.unsplash.com/featured/1200x500/?${imgQuery}`}
+                alt={selectedCommunity.name}
+                className="w-full h-full object-cover opacity-80"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#050a0f] via-[#050a0f]/40 to-transparent" />
+              <div className="absolute bottom-4 left-4">
+                <p className="text-[9px] font-mono uppercase tracking-widest text-[#00BFA5] mb-1">Community</p>
+                <h2 className="text-xl sm:text-2xl font-bold text-white leading-tight">{selectedCommunity.name}</h2>
+              </div>
+              <button
+                onClick={() => setSelectedCommunity(null)}
+                className="absolute top-3 right-3 flex h-7 w-7 items-center justify-center rounded-md border border-white/20 bg-[#050a0f]/70 text-white/70 hover:text-white transition-colors backdrop-blur-sm"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+            {/* Description + CTA */}
+            <div className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-end gap-4">
+              <p className="flex-1 text-sm text-muted-foreground leading-relaxed">
+                {desc ?? `${selectedCommunity.name} is a residential and commercial community in Dubai.`}
+              </p>
+              <Link
+                href={`/terminal/communities/${selectedCommunity.slug}`}
+                className="shrink-0 flex items-center gap-1.5 rounded-lg border border-[#00BFA5]/40 bg-[#00BFA5]/10 px-4 py-2 text-[11px] font-mono uppercase tracking-wider text-[#00BFA5] hover:bg-[#00BFA5]/20 transition-colors"
+              >
+                Full Analysis <ChevronRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* City cards — hidden when a community is selected */}
+      {!selectedCommunity && <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
         {MARKETS.map(m => (
           <button
             key={m.city}
@@ -60,7 +105,7 @@ export function GlobeSection() {
             )}
           </button>
         ))}
-      </div>
+      </div>}
     </>
   )
 }
