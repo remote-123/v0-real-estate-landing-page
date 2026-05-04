@@ -149,9 +149,11 @@ const COMMUNITY_RADIUS = 0.08 // ~8km
 export function DubaiMap({ onBack, onCommunitySelect }: DubaiMapProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
+  const hoveredDistrictId = useRef<number | string | null>(null)
   // "city" = overview (districts only), "district" = zoomed into a district (communities visible)
   const [mapLevel, setMapLevel] = useState<"city" | "district">("city")
   const [activeDistrict, setActiveDistrict] = useState<{ slug: string; name: string } | null>(null)
+  const [tooltip, setTooltip] = useState<{ name: string; x: number; y: number } | null>(null)
 
   const showCommunityLayers = (visible: boolean, map: MapLibreMap) => {
     const vis = visible ? "visible" : "none"
@@ -344,21 +346,34 @@ export function DubaiMap({ onBack, onCommunitySelect }: DubaiMapProps) {
         addHighwayLayers(STATIC_HIGHWAYS)
         fetchHighwaysFromOverpass().then(hw => { if (hw && mapRef.current) addHighwayLayers(hw) })
 
-        // District polygons — show static immediately, upgrade with Overpass if available
+        // District polygons — show static immediately
         const addDistrictLayers = (data: GeoJSON.FeatureCollection) => {
           try {
+            // Add numeric IDs required for feature-state hover
+            const dataWithIds: GeoJSON.FeatureCollection = {
+              ...data,
+              features: data.features.map((f, i) => ({ ...f, id: i + 1 })),
+            }
             if (map.getSource("districts")) {
-              ;(map.getSource("districts") as GeoJSONSource).setData(data)
+              ;(map.getSource("districts") as GeoJSONSource).setData(dataWithIds)
               return
             }
 
-            map.addSource("districts", { type: "geojson", data })
+            map.addSource("districts", { type: "geojson", data: dataWithIds })
 
             map.addLayer({
               id: "district-fill",
               type: "fill",
               source: "districts",
-              paint: { "fill-color": DISTRICT_COLOR, "fill-opacity": 0.06 },
+              paint: {
+                "fill-color": DISTRICT_COLOR,
+                "fill-opacity": [
+                  "case",
+                  ["boolean", ["feature-state", "hover"], false],
+                  0.22,
+                  0.06,
+                ],
+              },
             }, "highway-glow")
 
             map.addLayer({
@@ -366,16 +381,36 @@ export function DubaiMap({ onBack, onCommunitySelect }: DubaiMapProps) {
               type: "line",
               source: "districts",
               layout: { "line-join": "round" },
-              paint: { "line-color": DISTRICT_COLOR, "line-width": 1.5, "line-opacity": 0.6 },
+              paint: {
+                "line-color": DISTRICT_COLOR,
+                "line-width": ["case", ["boolean", ["feature-state", "hover"], false], 2.5, 1.5],
+                "line-opacity": ["case", ["boolean", ["feature-state", "hover"], false], 1, 0.6],
+              },
             }, "highway-glow")
 
-            map.on("mouseenter", "district-fill", () => {
+            map.on("mousemove", "district-fill", (e) => {
               map.getCanvas().style.cursor = "pointer"
-              map.setPaintProperty("district-fill", "fill-opacity", 0.15)
+              const feature = e.features?.[0]
+              if (!feature) return
+              const fid = feature.id
+              if (hoveredDistrictId.current !== null && hoveredDistrictId.current !== fid) {
+                map.setFeatureState({ source: "districts", id: hoveredDistrictId.current }, { hover: false })
+              }
+              hoveredDistrictId.current = fid ?? null
+              if (fid != null) map.setFeatureState({ source: "districts", id: fid }, { hover: true })
+              setTooltip({
+                name: feature.properties?.name ?? "",
+                x: e.point.x,
+                y: e.point.y,
+              })
             })
             map.on("mouseleave", "district-fill", () => {
               map.getCanvas().style.cursor = ""
-              map.setPaintProperty("district-fill", "fill-opacity", 0.06)
+              if (hoveredDistrictId.current !== null) {
+                map.setFeatureState({ source: "districts", id: hoveredDistrictId.current }, { hover: false })
+                hoveredDistrictId.current = null
+              }
+              setTooltip(null)
             })
 
             // District click → zoom in + reveal communities
@@ -409,6 +444,16 @@ export function DubaiMap({ onBack, onCommunitySelect }: DubaiMapProps) {
       `}</style>
 
       <div ref={containerRef} className="w-full h-full" />
+
+      {/* District hover tooltip */}
+      {tooltip && mapLevel === "city" && (
+        <div
+          className="pointer-events-none absolute z-30 rounded-md border border-[#00BFA533] bg-[#0d1f2d]/95 backdrop-blur-sm px-3 py-1.5 text-[11px] font-mono text-[#00BFA5] font-semibold shadow-lg"
+          style={{ left: tooltip.x + 12, top: tooltip.y - 10, transform: "translateY(-100%)" }}
+        >
+          {tooltip.name}
+        </div>
+      )}
 
       {/* Breadcrumb nav — Globe / Dubai / [District] */}
       <div className="absolute top-4 left-4 z-10 flex items-center gap-1.5 rounded-md border border-[#00BFA533] bg-[#050a0f]/90 backdrop-blur-sm px-3 py-1.5">
