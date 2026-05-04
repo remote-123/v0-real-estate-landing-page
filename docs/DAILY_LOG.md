@@ -7,6 +7,13 @@
 > 3. **Mandatory Signature:** Every entry must explicitly state the tool name at the start (e.g., *"Built by Antigravity"*, *"Built by Claude Code"*, or *"Built by Cursor"*).
 
 
+## 04 May 2026 — Globe Terminal: District Polygons + Area Deep-Dive Bedroom Breakdown
+
+*Built by Claude Code*
+
+- **District polygon perimeters** on Dubai city map (`components/terminal/dubai-map.tsx`): amber (#f59e0b) fill + border fetched async from Overpass OSM for 16 communities. Hover brightens fill; click navigates to `/terminal/areas/[slug]`. Static highways remain as instant fallback.
+- **Area deep-dive pages** (`app/terminal/areas/[slug]/page.tsx`): added bedroom price breakdown section (Studio→5 B/R horizontal bars, avg PSF, avg deal value, deal count from `mv_txn_monthly_unified` 12m window) + `getAreaDescription` paragraph in page header.
+
 ## 03 May 2026 — Auth.js v5 Migration
 
 *Built by Claude Code*
