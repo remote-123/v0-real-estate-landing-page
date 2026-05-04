@@ -2,9 +2,10 @@ import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 import { getTerminalSiteInfo } from "@/lib/terminal-metadata"
 import Link from "next/link"
-import { ArrowLeft, BarChart3, Building2, Layers, TrendingUp } from "lucide-react"
+import { ArrowLeft, BarChart3, Building2, Layers, TrendingUp, BedDouble } from "lucide-react"
 import { sql } from "@/lib/db"
 import { formatAreaName } from "@/lib/area-names"
+import { getAreaDescription } from "@/lib/area-descriptions"
 import { EmailCaptureWidget } from "@/components/terminal/email-capture-widget"
 
 export const revalidate = 3600
@@ -36,6 +37,7 @@ interface AreaDeepDiveData {
   price_history: SparkPoint[]
   service_charge_avg: number | null
   top_projects: { project_name_en: string; no_of_units: number; project_status: string }[]
+  bedroom_prices: { rooms_en: string; avg_psf: number; avg_value: number; txn_count: number }[]
 }
 
 async function fetchAreaData(slug: string): Promise<AreaDeepDiveData | null> {
@@ -53,7 +55,7 @@ async function fetchAreaData(slug: string): Promise<AreaDeepDiveData | null> {
 
     const areaName = match.area_name_en
 
-    const [psfRows, historyRows, pipelineRows, scRows, distressRows, metricsRows] = await Promise.all([
+    const [psfRows, historyRows, pipelineRows, scRows, distressRows, metricsRows, bedroomRows] = await Promise.all([
       // Current + prev month avg PSF
       sql<{ avg_psf: string; prev_psf: string | null }[]>`
         WITH latest AS (SELECT MAX(txn_month) AS m FROM mv_txn_monthly_unified),
@@ -140,6 +142,33 @@ async function fetchAreaData(slug: string): Promise<AreaDeepDiveData | null> {
           ROUND((prev_window.psm / 10.764)::numeric, 0) AS yoy_psf
         FROM curr_window, prev_window
       `.catch(() => [{ txn_count_12m: "0", yoy_psf: null }]),
+
+      // Price by bedroom type (12m)
+      sql<{ rooms_en: string; avg_psf: string; avg_value: string; txn_count: string }[]>`
+        SELECT
+          rooms_en,
+          ROUND((SUM(txn_count * avg_price_sqm) / NULLIF(SUM(txn_count), 0) / 10.764)::numeric, 0) AS avg_psf,
+          ROUND((SUM(txn_count * avg_price) / NULLIF(SUM(txn_count), 0))::numeric, 0) AS avg_value,
+          SUM(txn_count) AS txn_count
+        FROM mv_txn_monthly_unified
+        CROSS JOIN (SELECT MAX(txn_month) AS max_m FROM mv_txn_monthly_unified WHERE trans_group_en = 'Sales') l
+        WHERE area_name_en = ${areaName}
+          AND trans_group_en = 'Sales'
+          AND property_type_en = 'Unit'
+          AND rooms_en IS NOT NULL
+          AND txn_month >= l.max_m - INTERVAL '11 months'
+        GROUP BY rooms_en
+        ORDER BY
+          CASE rooms_en
+            WHEN 'Studio' THEN 0
+            WHEN '1 B/R' THEN 1
+            WHEN '2 B/R' THEN 2
+            WHEN '3 B/R' THEN 3
+            WHEN '4 B/R' THEN 4
+            WHEN '5 B/R' THEN 5
+            ELSE 6
+          END
+      `.catch(() => []),
     ])
 
     const avgPsf = Number(psfRows[0]?.avg_psf ?? 0)
@@ -162,6 +191,13 @@ async function fetchAreaData(slug: string): Promise<AreaDeepDiveData | null> {
     const txnCount12m = Number(metricsRows[0]?.txn_count_12m ?? 0)
     const yoyAvgPsf = metricsRows[0]?.yoy_psf ? Number(metricsRows[0].yoy_psf) : null
 
+    const bedroomPrices = bedroomRows.map((r) => ({
+      rooms_en: r.rooms_en,
+      avg_psf: Number(r.avg_psf),
+      avg_value: Number(r.avg_value),
+      txn_count: Number(r.txn_count),
+    }))
+
     return {
       area_name_en: areaName,
       avg_psf: avgPsf,
@@ -173,6 +209,7 @@ async function fetchAreaData(slug: string): Promise<AreaDeepDiveData | null> {
       price_history: history,
       service_charge_avg: scAvg,
       top_projects: topProjects,
+      bedroom_prices: bedroomPrices,
     }
   } catch (err) {
     console.error("[areas/slug] fetchAreaData error:", err)
@@ -332,6 +369,12 @@ export default async function AreaDeepDivePage({
           <h1 className="font-serif text-3xl sm:text-4xl font-bold text-foreground">
             {displayName}
           </h1>
+          {(() => {
+            const desc = getAreaDescription(data.area_name_en)
+            return desc ? (
+              <p className="mt-3 text-sm text-muted-foreground leading-relaxed max-w-2xl">{desc}</p>
+            ) : null
+          })()}
         </div>
 
         {/* Stat cards */}
@@ -414,6 +457,40 @@ export default async function AreaDeepDivePage({
             {data.price_history.filter((_, i) => i % 3 === 0).map((p) => (
               <span key={p.month}>{p.month}</span>
             ))}
+          </div>
+        </section>
+      )}
+
+      {/* Price by bedroom type */}
+      {data.bedroom_prices.length > 0 && (
+        <section className="border border-border/50 rounded-xl p-5 bg-card space-y-4">
+          <div className="flex items-center gap-2">
+            <BedDouble className="h-4 w-4 text-muted-foreground" />
+            <h2 className="font-mono text-xs uppercase tracking-widest text-muted-foreground font-semibold">
+              Price by Bedroom Type (12 Months)
+            </h2>
+          </div>
+          <div className="space-y-2">
+            {(() => {
+              const maxPsf = Math.max(...data.bedroom_prices.map((b) => b.avg_psf))
+              return data.bedroom_prices.map((b) => (
+                <div key={b.rooms_en} className="grid grid-cols-[90px_1fr_auto_auto] items-center gap-3">
+                  <span className="font-mono text-[11px] text-muted-foreground">{b.rooms_en}</span>
+                  <div className="relative h-2 rounded-full bg-border/40 overflow-hidden">
+                    <div
+                      className="absolute left-0 top-0 h-full rounded-full bg-accent/60"
+                      style={{ width: `${Math.round((b.avg_psf / maxPsf) * 100)}%` }}
+                    />
+                  </div>
+                  <span className="font-mono text-xs font-semibold text-foreground whitespace-nowrap">
+                    AED {formatNum(b.avg_psf)} /sqft
+                  </span>
+                  <span className="font-mono text-[10px] text-muted-foreground/60 whitespace-nowrap hidden sm:block">
+                    {formatPrice(b.avg_value)} avg · {formatNum(b.txn_count)} deals
+                  </span>
+                </div>
+              ))
+            })()}
           </div>
         </section>
       )}
