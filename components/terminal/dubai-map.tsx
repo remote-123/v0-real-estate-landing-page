@@ -3,7 +3,7 @@
 import { useEffect, useRef, useCallback, useState } from "react"
 import type { Map as MapLibreMap, GeoJSONSource } from "maplibre-gl"
 import { AreaDrawer } from "./area-drawer"
-import DISTRICT_GEOJSON from "@/lib/area-data/dubai-districts.geojson"
+import DISTRICT_GEOJSON from "@/lib/area-data/dubai-districts"
 
 // Dubai communities — same as globe
 const DUBAI_AREAS = [
@@ -138,88 +138,6 @@ async function fetchHighwaysFromOverpass(): Promise<GeoJSON.FeatureCollection | 
 }
 
 const DISTRICT_COLOR = "#f59e0b"  // amber — distinct from highway green
-
-// slug → OSM search name override (for areas where OSM name differs)
-const OSM_NAME_MAP: Record<string, string> = {
-  "downtown-dubai": "Downtown Dubai",
-  "dubai-marina": "Dubai Marina",
-  "business-bay": "Business Bay",
-  "palm-jumeirah": "Palm Jumeirah",
-  "jumeirah-village-circle": "Jumeirah Village Circle",
-  "dubai-hills-estate": "Dubai Hills Estate",
-  "arabian-ranches": "Arabian Ranches",
-  "damac-hills": "DAMAC Hills",
-  "al-barsha": "Al Barsha",
-  "deira": "Deira",
-  "bur-dubai": "Bur Dubai",
-  "dubai-creek-harbour": "Dubai Creek Harbour",
-  "difc": "Dubai International Financial Centre",
-  "jumeirah-lake-towers": "Jumeirah Lake Towers",
-  "meydan": "Meydan",
-  "sobha-hartland": "Sobha Hartland",
-}
-
-/** Assemble OSM way sequences into a closed ring of [lng, lat] */
-function waysToRing(ways: any[]): [number, number][] | null {
-  if (!ways.length) return null
-  const coords = ways.flatMap((w: any) =>
-    (w.geometry ?? []).map((p: any) => [p.lon, p.lat] as [number, number])
-  )
-  if (coords.length < 3) return null
-  // Close the ring
-  const first = coords[0], last = coords[coords.length - 1]
-  if (first[0] !== last[0] || first[1] !== last[1]) coords.push(first)
-  return coords
-}
-
-async function fetchDistrictPolygons(): Promise<GeoJSON.FeatureCollection | null> {
-  const names = Object.values(OSM_NAME_MAP).join("|")
-  const query = `[out:json][timeout:30];(relation["boundary"="suburb"]["name"~"${names}"](24.5,54.7,25.6,56.0);relation["place"~"suburb|neighbourhood|quarter"]["name"~"${names}"](24.5,54.7,25.6,56.0);way["boundary"="suburb"]["name"~"${names}"](24.5,54.7,25.6,56.0););out geom;`
-  try {
-    const controller = new AbortController()
-    const timer = setTimeout(() => controller.abort(), 20000)
-    const res = await fetch(
-      `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`,
-      { signal: controller.signal }
-    )
-    clearTimeout(timer)
-    if (!res.ok) return null
-    const data = await res.json()
-
-    const features: GeoJSON.Feature[] = []
-
-    for (const el of data.elements ?? []) {
-      const name: string = el.tags?.name ?? ""
-      if (!name) continue
-
-      // Find matching slug
-      const slug = Object.entries(OSM_NAME_MAP).find(([, n]) => n === name)?.[0]
-        ?? Object.keys(OSM_NAME_MAP).find(k => name.toLowerCase().includes(k.replace(/-/g, " ")))
-      if (!slug) continue
-
-      let ring: [number, number][] | null = null
-
-      if (el.type === "way" && el.geometry?.length > 2) {
-        ring = waysToRing([el])
-      } else if (el.type === "relation" && el.members) {
-        const outerWays = el.members.filter((m: any) => m.role === "outer" && m.geometry)
-        ring = waysToRing(outerWays)
-      }
-
-      if (ring && ring.length >= 4) {
-        features.push({
-          type: "Feature",
-          properties: { name, slug },
-          geometry: { type: "Polygon", coordinates: [ring] },
-        })
-      }
-    }
-
-    return features.length > 0 ? { type: "FeatureCollection", features } : null
-  } catch {
-    return null
-  }
-}
 
 interface DubaiMapProps {
   onBack: () => void
@@ -473,12 +391,8 @@ export function DubaiMap({ onBack }: DubaiMapProps) {
           } catch { /* ignore */ }
         }
 
-        // Show real district polygons immediately from static GeoJSON
-        addDistrictLayers(DISTRICT_GEOJSON as GeoJSON.FeatureCollection)
-        // Optionally upgrade with Overpass if it returns data
-        fetchDistrictPolygons().then(districts => {
-          if (districts && mapRef.current) addDistrictLayers(districts)
-        })
+        // Load district polygons from static Nominatim GeoJSON
+        addDistrictLayers(DISTRICT_GEOJSON)
       })
     })
 
