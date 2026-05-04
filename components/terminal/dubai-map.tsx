@@ -138,6 +138,37 @@ async function fetchHighwaysFromOverpass(): Promise<GeoJSON.FeatureCollection | 
 
 const DISTRICT_COLOR = "#f59e0b"  // amber — distinct from highway green
 
+/** Approximate bounding box → closed polygon ring [lng, lat][] */
+function bbox(s: number, n: number, w: number, e: number): [number, number][] {
+  return [[w, s], [e, s], [e, n], [w, n], [w, s]]
+}
+
+/**
+ * Static district polygons — approximate bounding boxes for 16 key communities.
+ * Used immediately; Overpass data upgrades them if available.
+ */
+const STATIC_DISTRICTS: GeoJSON.FeatureCollection = {
+  type: "FeatureCollection",
+  features: [
+    { type: "Feature", properties: { slug: "downtown-dubai",         name: "Downtown Dubai" },         geometry: { type: "Polygon", coordinates: [bbox(25.183, 25.212, 55.262, 55.290)] } },
+    { type: "Feature", properties: { slug: "business-bay",           name: "Business Bay" },           geometry: { type: "Polygon", coordinates: [bbox(25.173, 25.198, 55.250, 55.278)] } },
+    { type: "Feature", properties: { slug: "difc",                   name: "DIFC" },                   geometry: { type: "Polygon", coordinates: [bbox(25.204, 25.222, 55.272, 55.291)] } },
+    { type: "Feature", properties: { slug: "dubai-marina",           name: "Dubai Marina" },           geometry: { type: "Polygon", coordinates: [bbox(25.072, 25.095, 55.126, 55.152)] } },
+    { type: "Feature", properties: { slug: "jumeirah-lake-towers",   name: "Jumeirah Lake Towers" },   geometry: { type: "Polygon", coordinates: [bbox(25.062, 25.082, 55.136, 55.158)] } },
+    { type: "Feature", properties: { slug: "palm-jumeirah",          name: "Palm Jumeirah" },          geometry: { type: "Polygon", coordinates: [bbox(25.094, 25.135, 55.112, 55.192)] } },
+    { type: "Feature", properties: { slug: "jumeirah-village-circle",name: "Jumeirah Village Circle"}, geometry: { type: "Polygon", coordinates: [bbox(25.048, 25.075, 55.187, 55.216)] } },
+    { type: "Feature", properties: { slug: "dubai-hills-estate",     name: "Dubai Hills Estate" },     geometry: { type: "Polygon", coordinates: [bbox(25.096, 25.132, 55.218, 55.252)] } },
+    { type: "Feature", properties: { slug: "al-barsha",              name: "Al Barsha" },              geometry: { type: "Polygon", coordinates: [bbox(25.098, 25.132, 55.182, 55.218)] } },
+    { type: "Feature", properties: { slug: "arabian-ranches",        name: "Arabian Ranches" },        geometry: { type: "Polygon", coordinates: [bbox(25.030, 25.068, 55.252, 55.290)] } },
+    { type: "Feature", properties: { slug: "damac-hills",            name: "Damac Hills" },            geometry: { type: "Polygon", coordinates: [bbox(25.008, 25.045, 55.212, 55.250)] } },
+    { type: "Feature", properties: { slug: "meydan",                 name: "Meydan" },                 geometry: { type: "Polygon", coordinates: [bbox(25.148, 25.178, 55.288, 55.318)] } },
+    { type: "Feature", properties: { slug: "sobha-hartland",         name: "Sobha Hartland" },         geometry: { type: "Polygon", coordinates: [bbox(25.182, 25.202, 55.328, 55.354)] } },
+    { type: "Feature", properties: { slug: "dubai-creek-harbour",    name: "Dubai Creek Harbour" },    geometry: { type: "Polygon", coordinates: [bbox(25.196, 25.224, 55.338, 55.368)] } },
+    { type: "Feature", properties: { slug: "deira",                  name: "Deira" },                  geometry: { type: "Polygon", coordinates: [bbox(25.258, 25.298, 55.308, 55.352)] } },
+    { type: "Feature", properties: { slug: "bur-dubai",              name: "Bur Dubai" },              geometry: { type: "Polygon", coordinates: [bbox(25.240, 25.272, 55.278, 55.318)] } },
+  ],
+}
+
 // slug → OSM search name override (for areas where OSM name differs)
 const OSM_NAME_MAP: Record<string, string> = {
   "downtown-dubai": "Downtown Dubai",
@@ -428,11 +459,15 @@ export function DubaiMap({ onBack }: DubaiMapProps) {
         addHighwayLayers(STATIC_HIGHWAYS)
         fetchHighwaysFromOverpass().then(hw => { if (hw && mapRef.current) addHighwayLayers(hw) })
 
-        // District polygons — amber, clickable to zoom in
-        fetchDistrictPolygons().then(districts => {
-          if (!districts || !mapRef.current) return
+        // District polygons — show static immediately, upgrade with Overpass if available
+        const addDistrictLayers = (data: GeoJSON.FeatureCollection) => {
           try {
-            map.addSource("districts", { type: "geojson", data: districts })
+            if (map.getSource("districts")) {
+              ;(map.getSource("districts") as GeoJSONSource).setData(data)
+              return
+            }
+
+            map.addSource("districts", { type: "geojson", data })
 
             map.addLayer({
               id: "district-fill",
@@ -466,6 +501,13 @@ export function DubaiMap({ onBack }: DubaiMapProps) {
               }
             })
           } catch { /* ignore */ }
+        }
+
+        // Show static districts immediately — always visible
+        addDistrictLayers(STATIC_DISTRICTS)
+        // Upgrade with real OSM boundaries if Overpass responds
+        fetchDistrictPolygons().then(districts => {
+          if (districts && mapRef.current) addDistrictLayers(districts)
         })
       })
     })
