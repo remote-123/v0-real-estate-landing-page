@@ -191,12 +191,21 @@ export const GlobeExplorer = forwardRef<GlobeExplorerHandle>(function GlobeExplo
         onGlobeReady={handleGlobeReady}
       />
 
-      {/* Overlay: globe stage instructions */}
+      {/* Overlay: globe stage CTA — tappable on mobile, hint on desktop */}
       {stage === "globe" && ready && (
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 pointer-events-none">
-          <div className="flex items-center gap-2 rounded-full border border-[#00BFA533] bg-[#050a0f]/80 px-4 py-2 backdrop-blur-sm">
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
+          {/* Large tap target on mobile */}
+          <button
+            onClick={() => handleCountryClick({ active: true })}
+            className="flex items-center gap-2.5 rounded-full border border-[#00BFA5]/40 bg-[#00BFA5]/10 px-5 py-2.5 backdrop-blur-sm active:bg-[#00BFA5]/20 transition-colors sm:hidden"
+          >
+            <div className="h-2 w-2 rounded-full bg-[#00BFA5] animate-pulse" />
+            <span className="text-[11px] font-mono uppercase tracking-widest text-[#00BFA5] font-semibold">Explore Dubai</span>
+          </button>
+          {/* Desktop hint (non-interactive, smaller) */}
+          <div className="hidden sm:flex items-center gap-2 rounded-full border border-[#00BFA533] bg-[#050a0f]/80 px-4 py-2 backdrop-blur-sm pointer-events-none">
             <div className="h-1.5 w-1.5 rounded-full bg-[#00BFA5] animate-pulse" />
-            <span className="text-[10px] font-mono uppercase tracking-widest text-[#00BFA5]">Click UAE to explore Dubai</span>
+            <span className="text-[10px] font-mono uppercase tracking-widest text-[#00BFA5]">Click UAE · Tap to explore Dubai</span>
           </div>
         </div>
       )}

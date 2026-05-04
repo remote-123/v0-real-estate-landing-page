@@ -30,9 +30,9 @@ export function GlobeSection() {
             onClick={() => globeRef.current?.zoomToCity(m.lat, m.lng, m.active)}
             className={`rounded-xl border p-4 flex flex-col gap-2 text-left transition-all ${
               m.active
-                ? "border-[#00BFA533] bg-[#00BFA5]/5 hover:bg-[#00BFA5]/10 hover:border-[#00BFA5]/40 cursor-pointer"
+                ? "border-[#00BFA5]/40 bg-[#00BFA5]/8 hover:bg-[#00BFA5]/12 hover:border-[#00BFA5]/60 cursor-pointer active:scale-[0.97]"
                 : "border-border/30 bg-card/20 opacity-50 cursor-default"
-            }`}
+            } ${m.active ? "col-span-2 sm:col-span-1" : ""}`}
           >
             <div className="flex items-center justify-between">
               <span className="text-lg">{m.flag}</span>
@@ -49,7 +49,7 @@ export function GlobeSection() {
               )}
             </div>
             <div>
-              <p className={`text-sm font-semibold ${m.active ? "text-foreground" : "text-foreground/60"}`}>{m.city}</p>
+              <p className={`font-semibold ${m.active ? "text-foreground text-base sm:text-sm" : "text-foreground/60 text-sm"}`}>{m.city}</p>
               <p className={`text-[10px] ${m.active ? "text-muted-foreground" : "text-muted-foreground/50"}`}>{m.country}</p>
             </div>
             {m.active && m.label && (
