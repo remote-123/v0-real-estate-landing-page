@@ -4,23 +4,26 @@ import { sql } from "@/lib/db"
 import { getAreaDescription } from "@/lib/area-descriptions"
 import { getCommunityAmenities } from "@/lib/community-amenities"
 
+// slug = amenities key + globe scroll target (brand-friendly)
+// dldName = exact area_name_en in DB (DLD administrative name)
+// dldSlug = toSlug(dldName) — what /terminal/communities/[slug] uses
 const COMMUNITIES = [
-  { name: "Downtown Dubai",         slug: "downtown-dubai" },
-  { name: "Dubai Marina",           slug: "dubai-marina" },
-  { name: "Business Bay",           slug: "business-bay" },
-  { name: "Palm Jumeirah",          slug: "palm-jumeirah" },
-  { name: "Jumeirah Village Circle",slug: "jumeirah-village-circle" },
-  { name: "Dubai Hills Estate",     slug: "dubai-hills-estate" },
-  { name: "Arabian Ranches",        slug: "arabian-ranches" },
-  { name: "Damac Hills",            slug: "damac-hills" },
-  { name: "Al Barsha",              slug: "al-barsha" },
-  { name: "Deira",                  slug: "deira" },
-  { name: "Bur Dubai",              slug: "bur-dubai" },
-  { name: "Dubai Creek Harbour",    slug: "dubai-creek-harbour" },
-  { name: "DIFC",                   slug: "difc" },
-  { name: "Jumeirah Lake Towers",   slug: "jumeirah-lake-towers" },
-  { name: "Meydan",                 slug: "meydan" },
-  { name: "Sobha Hartland",         slug: "sobha-hartland" },
+  { name: "Downtown Dubai",          slug: "downtown-dubai",         dldName: "Burj Khalifa",                           dldSlug: "burj-khalifa" },
+  { name: "Dubai Marina",            slug: "dubai-marina",           dldName: "Marsa Dubai",                            dldSlug: "marsa-dubai" },
+  { name: "Business Bay",            slug: "business-bay",           dldName: "Business Bay",                           dldSlug: "business-bay" },
+  { name: "Palm Jumeirah",           slug: "palm-jumeirah",          dldName: "Palm Jumeirah",                          dldSlug: "palm-jumeirah" },
+  { name: "Jumeirah Village Circle", slug: "jumeirah-village-circle",dldName: "Al Barsha South Fourth",                 dldSlug: "al-barsha-south-fourth" },
+  { name: "Dubai Hills Estate",      slug: "dubai-hills-estate",     dldName: "Hadaeq Sheikh Mohammed Bin Rashid",      dldSlug: "hadaeq-sheikh-mohammed-bin-rashid" },
+  { name: "Arabian Ranches",         slug: "arabian-ranches",        dldName: "Al Hebiah Third",                        dldSlug: "al-hebiah-third" },
+  { name: "Damac Hills",             slug: "damac-hills",            dldName: "Al Hebiah Fifth",                        dldSlug: "al-hebiah-fifth" },
+  { name: "Al Barsha",               slug: "al-barsha",              dldName: "Al Barsha First",                        dldSlug: "al-barsha-first" },
+  { name: "Deira",                   slug: "deira",                  dldName: "Deira",                                  dldSlug: "deira" },
+  { name: "Bur Dubai",               slug: "bur-dubai",              dldName: "Bur Dubai",                              dldSlug: "bur-dubai" },
+  { name: "Dubai Creek Harbour",     slug: "dubai-creek-harbour",    dldName: "Dubai Creek Harbour",                    dldSlug: "dubai-creek-harbour" },
+  { name: "DIFC",                    slug: "difc",                   dldName: "Trade Center First",                     dldSlug: "trade-center-first" },
+  { name: "Jumeirah Lake Towers",    slug: "jumeirah-lake-towers",   dldName: "Al Thanyah Fifth",                       dldSlug: "al-thanyah-fifth" },
+  { name: "Meydan",                  slug: "meydan",                 dldName: "Nad Al Shiba First",                     dldSlug: "nad-al-shiba-first" },
+  { name: "Sobha Hartland",          slug: "sobha-hartland",         dldName: "Sobha Hartland",                         dldSlug: "sobha-hartland" },
 ]
 
 interface CommunityStats {
@@ -32,7 +35,7 @@ interface CommunityStats {
 
 async function fetchStats(): Promise<Map<string, CommunityStats>> {
   try {
-    const names = COMMUNITIES.map(c => c.name)
+    const names = COMMUNITIES.map(c => c.dldName)
     const rows = await sql<{
       area_name_en: string
       avg_psf: string
@@ -77,7 +80,7 @@ async function fetchStats(): Promise<Map<string, CommunityStats>> {
 
     const map = new Map<string, CommunityStats>()
     for (const r of rows) {
-      const community = COMMUNITIES.find(c => c.name.toLowerCase() === r.area_name_en.toLowerCase())
+      const community = COMMUNITIES.find(c => c.dldName.toLowerCase() === r.area_name_en.toLowerCase())
       if (community) {
         map.set(community.slug, {
           slug: community.slug,
@@ -229,7 +232,7 @@ export async function CommunityGrid() {
               {/* CTA */}
               <div className="px-4 pb-4 pt-2">
                 <Link
-                  href={`/terminal/communities/${community.slug}`}
+                  href={`/terminal/communities/${community.dldSlug}`}
                   className="flex items-center justify-center gap-1.5 w-full rounded-lg border border-[#00BFA5]/30 bg-[#00BFA5]/8 py-2 text-[10px] font-mono uppercase tracking-wider text-[#00BFA5] hover:bg-[#00BFA5]/15 hover:border-[#00BFA5]/50 transition-colors"
                 >
                   View Market Data →
