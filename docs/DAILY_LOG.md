@@ -7,6 +7,22 @@
 > 3. **Mandatory Signature:** Every entry must explicitly state the tool name at the start (e.g., *"Built by Antigravity"*, *"Built by Claude Code"*, or *"Built by Cursor"*).
 
 
+## 04 May 2026 — Globe Map + Community Wiki
+
+*Built by Claude Code*
+
+- **Globe/Map fixes**: District polygons now load from static Nominatim GeoJSON (removed Overpass override that was overwriting shapes with bounding boxes). Per-district hover uses MapLibre feature-state (only hovered polygon brightens) + tooltip. Community dot click scrolls to server-rendered community card below map.
+- **Community grid** (`components/terminal/community-grid.tsx`): server-rendered SEO grid at /terminal/home with 16 key communities, live DLD PSF stats, YoY change, descriptions, malls/hospitals/schools/landmarks. Fixed 404s by mapping brand slugs to DLD administrative slugs (Dubai Marina→marsa-dubai, DIFC→trade-center-first, etc.).
+- **224-community Dubai wiki**: `lib/area-data/dubai-communities.ts` (Wikipedia 2022 census), `/terminal/communities` redesigned with sector-organized grid + Live badge, community detail pages enriched with population/area/sector stats.
+
+## 04 May 2026 — Dubai Community Data System (224 Communities)
+
+*Built by Claude Code*
+
+- **`lib/area-data/dubai-communities.ts`**: typed dataset of all 224 Dubai municipalities from Wikipedia — code, name, sector (1–9), sector name, area_km2, population, slug. Exports `DUBAI_COMMUNITIES`, `getCommunityBySlug`, `getCommunitiesBySector`, `FEATURED_COMMUNITIES` (population > 500).
+- **`app/terminal/communities/[slug]/page.tsx`**: added Wikipedia stats row (Population, Area km², Sector, Municipal Code) using same dark card style, shown above the DLD data section when wiki data is available.
+- **`app/terminal/communities/page.tsx`**: redesigned — keeps existing DLD live-data table, adds full sector-organized grid below showing all 224 communities with green "Live" badge when DLD data exists, population and area stats on each card.
+
 ## 04 May 2026 — Globe Terminal: District Polygons + Area Deep-Dive Bedroom Breakdown
 
 *Built by Claude Code*
