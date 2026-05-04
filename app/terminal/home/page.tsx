@@ -1,5 +1,6 @@
 import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { GlobeSection } from "@/components/terminal/globe-section"
+import { CommunityGrid } from "@/components/terminal/community-grid"
 
 export async function generateMetadata() {
   return terminalPageMeta({
@@ -22,6 +23,7 @@ export default function GlobePage() {
       </div>
 
       <GlobeSection />
+      <CommunityGrid />
     </div>
   )
 }
