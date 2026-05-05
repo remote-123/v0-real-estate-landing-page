@@ -1,8 +1,29 @@
 "use client"
 
 import { useRef, useCallback } from "react"
+import { useRouter } from "next/navigation"
 import { MapPin, Clock } from "lucide-react"
 import { GlobeExplorer, type GlobeExplorerHandle } from "./globe-explorer"
+
+// Brand slug → DLD slug (what /terminal/communities/[slug] uses)
+const DLD_SLUG: Record<string, string> = {
+  "downtown-dubai":          "burj-khalifa",
+  "dubai-marina":            "marsa-dubai",
+  "business-bay":            "business-bay",
+  "palm-jumeirah":           "palm-jumeirah",
+  "jumeirah-village-circle": "al-barsha-south-fourth",
+  "dubai-hills-estate":      "hadaeq-sheikh-mohammed-bin-rashid",
+  "arabian-ranches":         "al-hebiah-third",
+  "damac-hills":             "al-hebiah-fifth",
+  "al-barsha":               "al-barsha-first",
+  "deira":                   "deira",
+  "bur-dubai":               "bur-dubai",
+  "dubai-creek-harbour":     "dubai-creek-harbour",
+  "difc":                    "trade-center-first",
+  "jumeirah-lake-towers":    "al-thanyah-fifth",
+  "meydan":                  "nad-al-shiba-first",
+  "sobha-hartland":          "sobha-hartland",
+}
 
 const MARKETS = [
   { city: "Dubai", flag: "🇦🇪", country: "United Arab Emirates", active: true, lat: 25.15, lng: 55.25, label: "16 areas · DLD data" },
@@ -14,15 +35,12 @@ const MARKETS = [
 
 export function GlobeSection() {
   const globeRef = useRef<GlobeExplorerHandle>(null)
+  const router = useRouter()
 
   const handleCommunitySelect = useCallback(({ slug }: { name: string; slug: string }) => {
-    const el = document.getElementById(`community-${slug}`)
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "center" })
-      el.classList.add("ring-2", "ring-[#00BFA5]", "ring-offset-2", "ring-offset-background")
-      setTimeout(() => el.classList.remove("ring-2", "ring-[#00BFA5]", "ring-offset-2", "ring-offset-background"), 2500)
-    }
-  }, [])
+    const dldSlug = DLD_SLUG[slug] ?? slug
+    router.push(`/terminal/communities/${dldSlug}`)
+  }, [router])
 
   return (
     <>
