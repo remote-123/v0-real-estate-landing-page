@@ -15,13 +15,13 @@ const DUBAI_AREAS = [
   { name: "Arabian Ranches", slug: "arabian-ranches", lat: 25.0503, lng: 55.2693 },
   { name: "Damac Hills", slug: "damac-hills", lat: 25.0256, lng: 55.2298 },
   { name: "Al Barsha", slug: "al-barsha", lat: 25.1145, lng: 55.2001 },
-  { name: "Deira", slug: "deira", lat: 25.2769, lng: 55.3273 },
+  { name: "Hor Al Anz", slug: "hor-al-anz", lat: 25.2769, lng: 55.3273 },
   { name: "Bur Dubai", slug: "bur-dubai", lat: 25.2581, lng: 55.2989 },
-  { name: "Dubai Creek Harbour", slug: "dubai-creek-harbour", lat: 25.2083, lng: 55.3524 },
+  { name: "Al Jadaf", slug: "al-jadaf", lat: 25.2220, lng: 55.3480 },
   { name: "DIFC", slug: "difc", lat: 25.2124, lng: 55.2798 },
   { name: "Jumeirah Lake Towers", slug: "jumeirah-lake-towers", lat: 25.0714, lng: 55.1454 },
   { name: "Meydan", slug: "meydan", lat: 25.1612, lng: 55.3024 },
-  { name: "Sobha Hartland", slug: "sobha-hartland", lat: 25.1916, lng: 55.3401 },
+  { name: "Nad Al Shiba", slug: "nad-al-shiba", lat: 25.1916, lng: 55.3401 },
 ]
 
 const ACCENT = "#00BFA5"

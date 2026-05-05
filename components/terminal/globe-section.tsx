@@ -16,13 +16,13 @@ const DLD_SLUG: Record<string, string> = {
   "arabian-ranches":         "al-hebiah-third",
   "damac-hills":             "al-hebiah-fifth",
   "al-barsha":               "al-barsha-first",
-  "deira":                   "deira",
+  "hor-al-anz":              "hor-al-anz",
   "bur-dubai":               "bur-dubai",
-  "dubai-creek-harbour":     "dubai-creek-harbour",
+  "al-jadaf":                "al-jadaf",
   "difc":                    "trade-center-first",
   "jumeirah-lake-towers":    "al-thanyah-fifth",
   "meydan":                  "nad-al-shiba-first",
-  "sobha-hartland":          "sobha-hartland",
+  "nad-al-shiba":            "nad-al-shiba",
 }
 
 const MARKETS = [

@@ -17,13 +17,13 @@ const COMMUNITIES = [
   { name: "Arabian Ranches",         slug: "arabian-ranches",        dldName: "Al Hebiah Third",                        dldSlug: "al-hebiah-third" },
   { name: "Damac Hills",             slug: "damac-hills",            dldName: "Al Hebiah Fifth",                        dldSlug: "al-hebiah-fifth" },
   { name: "Al Barsha",               slug: "al-barsha",              dldName: "Al Barsha First",                        dldSlug: "al-barsha-first" },
-  { name: "Deira",                   slug: "deira",                  dldName: "Deira",                                  dldSlug: "deira" },
+  { name: "Hor Al Anz",              slug: "hor-al-anz",             dldName: "Hor Al Anz",                             dldSlug: "hor-al-anz" },
   { name: "Bur Dubai",               slug: "bur-dubai",              dldName: "Bur Dubai",                              dldSlug: "bur-dubai" },
-  { name: "Dubai Creek Harbour",     slug: "dubai-creek-harbour",    dldName: "Dubai Creek Harbour",                    dldSlug: "dubai-creek-harbour" },
+  { name: "Al Jadaf",                slug: "al-jadaf",               dldName: "Al Jadaf",                               dldSlug: "al-jadaf" },
   { name: "DIFC",                    slug: "difc",                   dldName: "Trade Center First",                     dldSlug: "trade-center-first" },
   { name: "Jumeirah Lake Towers",    slug: "jumeirah-lake-towers",   dldName: "Al Thanyah Fifth",                       dldSlug: "al-thanyah-fifth" },
   { name: "Meydan",                  slug: "meydan",                 dldName: "Nad Al Shiba First",                     dldSlug: "nad-al-shiba-first" },
-  { name: "Sobha Hartland",          slug: "sobha-hartland",         dldName: "Sobha Hartland",                         dldSlug: "sobha-hartland" },
+  { name: "Nad Al Shiba",            slug: "nad-al-shiba",           dldName: "Nad Al Shiba",                           dldSlug: "nad-al-shiba" },
 ]
 
 interface CommunityStats {
