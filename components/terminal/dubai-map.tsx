@@ -27,6 +27,44 @@ const DUBAI_AREAS = [
 const ACCENT = "#00BFA5"
 const BG = "#050a0f"
 
+// Key POIs — malls, hospitals, attractions
+const POI_COLORS: Record<string, string> = {
+  mall: "#8B5CF6",       // violet
+  hospital: "#EF4444",   // red
+  attraction: "#F59E0B", // amber
+}
+
+const DUBAI_POIS: GeoJSON.FeatureCollection = {
+  type: "FeatureCollection",
+  features: [
+    // Malls
+    { type: "Feature", properties: { type: "mall", name: "The Dubai Mall" }, geometry: { type: "Point", coordinates: [55.2797, 25.1972] } },
+    { type: "Feature", properties: { type: "mall", name: "Mall of the Emirates" }, geometry: { type: "Point", coordinates: [55.2006, 25.1184] } },
+    { type: "Feature", properties: { type: "mall", name: "Ibn Battuta Mall" }, geometry: { type: "Point", coordinates: [55.1159, 25.0447] } },
+    { type: "Feature", properties: { type: "mall", name: "Deira City Centre" }, geometry: { type: "Point", coordinates: [55.3316, 25.2519] } },
+    { type: "Feature", properties: { type: "mall", name: "Dubai Festival City" }, geometry: { type: "Point", coordinates: [55.3516, 25.2189] } },
+    { type: "Feature", properties: { type: "mall", name: "City Centre Mirdif" }, geometry: { type: "Point", coordinates: [55.4133, 25.2200] } },
+    { type: "Feature", properties: { type: "mall", name: "BurJuman" }, geometry: { type: "Point", coordinates: [55.3035, 25.2534] } },
+    { type: "Feature", properties: { type: "mall", name: "Mercato Mall" }, geometry: { type: "Point", coordinates: [55.2392, 25.2121] } },
+    // Hospitals
+    { type: "Feature", properties: { type: "hospital", name: "Dubai Hospital" }, geometry: { type: "Point", coordinates: [55.3057, 25.2710] } },
+    { type: "Feature", properties: { type: "hospital", name: "Rashid Hospital" }, geometry: { type: "Point", coordinates: [55.3219, 25.2338] } },
+    { type: "Feature", properties: { type: "hospital", name: "Mediclinic City Hospital" }, geometry: { type: "Point", coordinates: [55.3532, 25.1940] } },
+    { type: "Feature", properties: { type: "hospital", name: "American Hospital Dubai" }, geometry: { type: "Point", coordinates: [55.3050, 25.2145] } },
+    { type: "Feature", properties: { type: "hospital", name: "Saudi German Hospital" }, geometry: { type: "Point", coordinates: [55.1752, 25.1005] } },
+    { type: "Feature", properties: { type: "hospital", name: "Mediclinic Parkview" }, geometry: { type: "Point", coordinates: [55.2310, 25.0620] } },
+    // Attractions
+    { type: "Feature", properties: { type: "attraction", name: "Burj Khalifa" }, geometry: { type: "Point", coordinates: [55.2744, 25.1972] } },
+    { type: "Feature", properties: { type: "attraction", name: "Dubai Frame" }, geometry: { type: "Point", coordinates: [55.3009, 25.2353] } },
+    { type: "Feature", properties: { type: "attraction", name: "Global Village" }, geometry: { type: "Point", coordinates: [55.3044, 25.0691] } },
+    { type: "Feature", properties: { type: "attraction", name: "Expo City Dubai" }, geometry: { type: "Point", coordinates: [55.1554, 24.9681] } },
+    { type: "Feature", properties: { type: "attraction", name: "Dubai Creek" }, geometry: { type: "Point", coordinates: [55.3049, 25.2697] } },
+    { type: "Feature", properties: { type: "attraction", name: "Atlantis The Palm" }, geometry: { type: "Point", coordinates: [55.1172, 25.1304] } },
+    { type: "Feature", properties: { type: "attraction", name: "Dubai Opera" }, geometry: { type: "Point", coordinates: [55.2725, 25.1957] } },
+    { type: "Feature", properties: { type: "attraction", name: "Ain Dubai" }, geometry: { type: "Point", coordinates: [55.1235, 25.0791] } },
+  ],
+}
+
 // Static Dubai highway polylines — instant, no API dependency
 // Approximate coordinates for the 5 major arteries
 const STATIC_HIGHWAYS: GeoJSON.FeatureCollection = {
@@ -425,6 +463,46 @@ export function DubaiMap({ onBack, onCommunitySelect }: DubaiMapProps) {
 
         // Load district polygons from static Nominatim GeoJSON
         addDistrictLayers(DISTRICT_GEOJSON)
+
+        // POI markers — malls, hospitals, attractions
+        map.addSource("pois", { type: "geojson", data: DUBAI_POIS })
+
+        map.addLayer({
+          id: "poi-glow",
+          type: "circle",
+          source: "pois",
+          paint: {
+            "circle-radius": 12,
+            "circle-color": ["match", ["get", "type"], "mall", POI_COLORS.mall, "hospital", POI_COLORS.hospital, "attraction", POI_COLORS.attraction, "#ffffff"],
+            "circle-opacity": 0.12,
+            "circle-blur": 1,
+          },
+        })
+
+        map.addLayer({
+          id: "poi-dot",
+          type: "circle",
+          source: "pois",
+          paint: {
+            "circle-radius": 5,
+            "circle-color": ["match", ["get", "type"], "mall", POI_COLORS.mall, "hospital", POI_COLORS.hospital, "attraction", POI_COLORS.attraction, "#ffffff"],
+            "circle-opacity": 0.9,
+            "circle-stroke-width": 1.5,
+            "circle-stroke-color": BG,
+          },
+        })
+
+        // POI tooltip on hover
+        map.on("mousemove", "poi-dot", (e) => {
+          map.getCanvas().style.cursor = "default"
+          const feature = e.features?.[0]
+          if (!feature) return
+          setTooltip({ name: feature.properties?.name ?? "", x: e.point.x, y: e.point.y })
+        })
+        map.on("mouseleave", "poi-dot", () => {
+          map.getCanvas().style.cursor = ""
+          setTooltip(null)
+        })
       })
     })
 
@@ -445,8 +523,8 @@ export function DubaiMap({ onBack, onCommunitySelect }: DubaiMapProps) {
 
       <div ref={containerRef} className="w-full h-full" />
 
-      {/* District hover tooltip */}
-      {tooltip && mapLevel === "city" && (
+      {/* Hover tooltip */}
+      {tooltip && (
         <div
           className="pointer-events-none absolute z-30 rounded-md border border-[#00BFA533] bg-[#0d1f2d]/95 backdrop-blur-sm px-3 py-1.5 text-[11px] font-mono text-[#00BFA5] font-semibold shadow-lg"
           style={{ left: tooltip.x + 12, top: tooltip.y - 10, transform: "translateY(-100%)" }}
@@ -484,26 +562,40 @@ export function DubaiMap({ onBack, onCommunitySelect }: DubaiMapProps) {
         )}
       </div>
 
-      {/* Level hint label */}
+      {/* Legend */}
       <div className="absolute bottom-4 left-4 z-10 rounded-lg border border-[#00BFA533] bg-[#050a0f]/90 backdrop-blur-sm px-3 py-2 flex flex-col gap-1.5">
-          {mapLevel === "city" ? (
-            <>
-              <div className="flex items-center gap-2">
-                <div className="h-[2px] w-5 rounded" style={{ background: ACCENT, opacity: 0.6 }} />
-                <span className="text-[9px] font-mono uppercase tracking-widest text-slate-400">Major Arteries</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="h-3 w-4 rounded-sm border" style={{ borderColor: DISTRICT_COLOR, background: DISTRICT_COLOR + "22" }} />
-                <span className="text-[9px] font-mono uppercase tracking-widest text-slate-400">Districts · Click to enter</span>
-              </div>
-            </>
-          ) : (
+        {mapLevel === "city" ? (
+          <>
             <div className="flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full" style={{ background: ACCENT }} />
-              <span className="text-[9px] font-mono uppercase tracking-widest text-slate-400">Communities · Click to explore</span>
+              <div className="h-[2px] w-5 rounded" style={{ background: ACCENT, opacity: 0.6 }} />
+              <span className="text-[9px] font-mono uppercase tracking-widest text-slate-400">Major Arteries</span>
             </div>
-          )}
-        </div>
+            <div className="flex items-center gap-2">
+              <div className="h-3 w-4 rounded-sm border" style={{ borderColor: DISTRICT_COLOR, background: DISTRICT_COLOR + "22" }} />
+              <span className="text-[9px] font-mono uppercase tracking-widest text-slate-400">Districts · Click to enter</span>
+            </div>
+            <div className="border-t border-white/10 mt-0.5 pt-1 flex flex-col gap-1.5">
+              <div className="flex items-center gap-2">
+                <div className="h-2.5 w-2.5 rounded-full" style={{ background: POI_COLORS.mall }} />
+                <span className="text-[9px] font-mono uppercase tracking-widest text-slate-400">Malls</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="h-2.5 w-2.5 rounded-full" style={{ background: POI_COLORS.hospital }} />
+                <span className="text-[9px] font-mono uppercase tracking-widest text-slate-400">Hospitals</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="h-2.5 w-2.5 rounded-full" style={{ background: POI_COLORS.attraction }} />
+                <span className="text-[9px] font-mono uppercase tracking-widest text-slate-400">Attractions</span>
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 rounded-full" style={{ background: ACCENT }} />
+            <span className="text-[9px] font-mono uppercase tracking-widest text-slate-400">Communities · Click to explore</span>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
