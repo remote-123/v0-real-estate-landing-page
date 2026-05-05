@@ -12,6 +12,9 @@ import { cn } from '@/lib/utils'
 import { Suspense } from 'react'
 import { formatAreaName } from '@/lib/area-names'
 import { getCommunityBySlug } from '@/lib/area-data/dubai-communities'
+import { getCommunityDescription } from '@/lib/community-description-fallback'
+import { getCommunityLocation } from '@/lib/area-data/community-locations'
+import { CommunityMiniMap } from '@/components/terminal/community-mini-map'
 
 export const revalidate = 3600
 
@@ -335,6 +338,10 @@ export default async function CommunityPage({
   const { siteName, base } = await getTerminalSiteInfo()
   const displayName = formatAreaName(area.area_name_en)
   const wikiData = getCommunityBySlug(slug)
+  const location = getCommunityLocation(slug)
+  const description = wikiData
+    ? getCommunityDescription(wikiData)
+    : getAreaDescription(area.area_name_en)
 
   const schema = {
     "@context": "https://schema.org",
@@ -379,18 +386,25 @@ export default async function CommunityPage({
           <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-3">
             Community Profile — Dubai Municipal Code {wikiData.code}
           </p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {[
-              { label: 'Population', value: wikiData.population > 0 ? new Intl.NumberFormat('en-US').format(wikiData.population) : '—' },
-              { label: 'Area', value: `${wikiData.area_km2} km²` },
-              { label: 'Sector', value: wikiData.sectorName },
-              { label: 'Municipal Code', value: wikiData.code },
-            ].map(stat => (
-              <div key={stat.label} className="rounded-lg bg-background border border-border/50 p-3">
-                <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-wide mb-1">{stat.label}</p>
-                <p className="font-mono text-sm font-semibold text-foreground leading-tight">{stat.value}</p>
+          <div className="flex flex-col lg:flex-row gap-4">
+            <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4 gap-3">
+              {[
+                { label: 'Population', value: wikiData.population > 0 ? new Intl.NumberFormat('en-US').format(wikiData.population) : '—' },
+                { label: 'Area', value: `${wikiData.area_km2} km²` },
+                { label: 'Sector', value: wikiData.sectorName },
+                { label: 'Municipal Code', value: wikiData.code },
+              ].map(stat => (
+                <div key={stat.label} className="rounded-lg bg-background border border-border/50 p-3">
+                  <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-wide mb-1">{stat.label}</p>
+                  <p className="font-mono text-sm font-semibold text-foreground leading-tight">{stat.value}</p>
+                </div>
+              ))}
+            </div>
+            {location && (
+              <div className="w-full lg:w-72 h-44 lg:h-auto shrink-0 rounded-xl overflow-hidden">
+                <CommunityMiniMap lat={location[0]} lng={location[1]} name={displayName} />
               </div>
-            ))}
+            )}
           </div>
         </section>
       )}
@@ -402,12 +416,9 @@ export default async function CommunityPage({
               <span className="font-mono text-xs text-muted-foreground uppercase tracking-widest">Dubai</span>
             </div>
             <h1 className="font-serif text-3xl sm:text-4xl font-bold text-foreground">{displayName}</h1>
-            {(() => {
-              const desc = getAreaDescription(area.area_name_en)
-              return desc ? (
-                <p className="mt-3 text-sm text-muted-foreground leading-relaxed max-w-2xl">{desc}</p>
-              ) : null
-            })()}
+            {description && (
+              <p className="mt-3 text-sm text-muted-foreground leading-relaxed max-w-2xl">{description}</p>
+            )}
           </div>
           {!noData && (
             <div className="flex items-center gap-2">
