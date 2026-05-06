@@ -125,6 +125,8 @@ const faqSchema = {
 }
 
 export default async function MortgageCalculatorPage() {
+  const _h2 = await headers()
+  const isCR = (_h2.get('x-site') ?? '') === 'cityregistry'
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />

@@ -177,6 +177,8 @@ const faqSchema = {
 }
 
 export default async function ServiceChargeEstimatorPage() {
+  const _h2 = await headers()
+  const isCR = (_h2.get('x-site') ?? '') === 'cityregistry'
   const projectData = await fetchProjectData()
 
   const uniqueProjects = new Set(projectData.map(r => r.project_name)).size

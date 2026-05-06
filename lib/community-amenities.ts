@@ -70,12 +70,12 @@ const AMENITIES: Record<string, CommunityAmenities> = {
     landmarks: ["Ski Dubai", "Magic Planet", "Al Barsha Pond Park"],
     highlights: ["Mall of the Emirates hub", "Ski Dubai access", "Central location on SZR"],
   },
-  "deira": {
+  "hor-al-anz": {
     malls: ["City Centre Deira", "Al Ghurair Centre", "Deira City Centre"],
     hospitals: ["Rashid Hospital", "Al Qusais Medical Centre", "NMC Specialty Hospital"],
     schools: ["Deira International School", "Dubai Modern Education School"],
     landmarks: ["Gold Souk", "Spice Souk", "Dubai Creek", "Al Fahidi Fort"],
-    highlights: ["Original Dubai commercial heart", "Heritage souks", "Creek dhow tours"],
+    highlights: ["Dense residential Deira neighbourhood", "Metro-connected", "Strong rental demand"],
   },
   "bur-dubai": {
     malls: ["BurJuman Mall", "Lamcy Plaza"],
@@ -84,12 +84,12 @@ const AMENITIES: Record<string, CommunityAmenities> = {
     landmarks: ["Al Fahidi Historical Neighbourhood", "Dubai Museum", "Grand Mosque", "Textile Souk"],
     highlights: ["Historic old town", "Dubai Museum heritage hub", "Multicultural dining scene"],
   },
-  "dubai-creek-harbour": {
-    malls: ["The Cove Souk", "Ras Al Khor Wildlife Sanctuary (adjacent)"],
-    hospitals: ["Dubai Hospital (nearby)", "Aster DM Healthcare"],
-    schools: ["GEMS Wellington School (nearby)"],
-    landmarks: ["Dubai Creek Tower (under construction)", "Creek Marina", "Ras Al Khor Bird Sanctuary"],
-    highlights: ["Next iconic Dubai skyline", "Flamingo sanctuary views", "Master-planned waterfront city"],
+  "al-jadaf": {
+    malls: ["Dubai Festival City Mall", "Wafi Mall (nearby)"],
+    hospitals: ["Latifa Hospital", "Dubai Healthcare City (adjacent)"],
+    schools: ["University of Wollongong Dubai", "Kings' School Nad Al Sheba (nearby)"],
+    landmarks: ["Dubai Culture Village", "Al Jadaf Waterfront", "Dubai Creek (south bank)"],
+    highlights: ["Emerging waterfront district", "Healthcare City proximity", "Canal views"],
   },
   "difc": {
     malls: ["Gate Village", "DIFC Retail Precinct"],
@@ -112,12 +112,12 @@ const AMENITIES: Record<string, CommunityAmenities> = {
     landmarks: ["Meydan Racecourse", "Meydan Hotel", "The Track Golf Course", "Godolphin Gallery"],
     highlights: ["Horse racing capital of Dubai", "Luxury branded residences", "Al Meydan Road connectivity"],
   },
-  "sobha-hartland": {
-    malls: ["Dubai Festival City Mall (nearby)", "Dragon Mart (nearby)"],
-    hospitals: ["Mediclinic City Hospital (nearby)", "Latifa Hospital"],
-    schools: ["GEMS Wellington School", "North London Collegiate School Dubai", "Hartland International School"],
-    landmarks: ["Mohammed Bin Rashid City", "Crystal Lagoon", "Ras Al Khor Wildlife Sanctuary"],
-    highlights: ["Premium integrated community", "Crystal lagoon & beach clubs", "Top international schools"],
+  "nad-al-shiba": {
+    malls: ["Meydan One Mall (upcoming)", "Dragon Mart (nearby)"],
+    hospitals: ["Meydan Medical Centre", "Mediclinic City Hospital (nearby)"],
+    schools: ["GEMS Wellington School", "Kings' School Nad Al Sheba", "Hartland International School"],
+    landmarks: ["Meydan Racecourse", "Mohammed Bin Rashid City", "Ras Al Khor Wildlife Sanctuary"],
+    highlights: ["MBR City mega-development zone", "Racecourse proximity", "Fast-appreciating land bank"],
   },
 }
 

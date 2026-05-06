@@ -192,6 +192,8 @@ const faqSchema = {
 }
 
 export default async function RentalYieldCalculatorPage() {
+  const _h2 = await headers()
+  const isCR = (_h2.get('x-site') ?? '') === 'cityregistry'
   const benchmarks = await fetchBenchmarks()
 
   const topYield = benchmarks[0]?.gross_yield_pct ?? null

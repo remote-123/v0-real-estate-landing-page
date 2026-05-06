@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { getTerminalSiteInfo } from "@/lib/terminal-metadata"
-import { ArrowLeft, BarChart3, Layers } from 'lucide-react'
+import { ArrowLeft, BarChart3, Layers, Train, Bus, TramFront, MapPin, TrendingUp } from 'lucide-react'
 import Link from 'next/link'
 import { getAreaDescription } from '@/lib/area-descriptions'
 import { sql } from '@/lib/db'
@@ -15,6 +15,7 @@ import { getCommunityBySlug } from '@/lib/area-data/dubai-communities'
 import { getCommunityDescription } from '@/lib/community-description-fallback'
 import { getCommunityLocation } from '@/lib/area-data/community-locations'
 import { CommunityMiniMap } from '@/components/terminal/community-mini-map'
+import { getCommunityTransportMeta } from '@/lib/area-data/community-transport-meta'
 
 export const revalidate = 3600
 
@@ -339,6 +340,7 @@ export default async function CommunityPage({
   const displayName = formatAreaName(area.area_name_en)
   const wikiData = getCommunityBySlug(slug)
   const location = getCommunityLocation(slug)
+  const transportMeta = getCommunityTransportMeta(slug)
   const description = wikiData
     ? getCommunityDescription(wikiData)
     : getAreaDescription(area.area_name_en)
@@ -463,6 +465,66 @@ export default async function CommunityPage({
           </div>
         )}
       </section>
+
+      {/* Transport & Investment Profile */}
+      {transportMeta && (
+        <section className="border border-border/40 rounded-xl bg-card/40 p-4 space-y-3">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Transport & Investment Profile</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {/* Community type */}
+            <div className="rounded-lg bg-background border border-border/50 p-3 col-span-1 sm:col-span-2 lg:col-span-1">
+              <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Community Type</p>
+              <p className="text-xs text-foreground leading-snug">{transportMeta.community_type}</p>
+            </div>
+            {/* Yield range */}
+            <div className="rounded-lg bg-background border border-border/50 p-3">
+              <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Gross Yield Range</p>
+              <div className="flex items-center gap-1.5">
+                <TrendingUp className="h-3.5 w-3.5 text-accent shrink-0" />
+                <p className="font-mono text-sm font-bold text-accent">{transportMeta.yield_range}</p>
+              </div>
+            </div>
+            {/* PSF range */}
+            <div className="rounded-lg bg-background border border-border/50 p-3">
+              <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Typical Price Range</p>
+              <p className="font-mono text-sm font-semibold text-foreground">{transportMeta.psf_range}</p>
+              <p className="text-[9px] text-muted-foreground">per sqft</p>
+            </div>
+            {/* Metro */}
+            <div className="rounded-lg bg-background border border-border/50 p-3">
+              <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Public Transport</p>
+              <div className="space-y-1">
+                {transportMeta.metro.slice(0, 2).map(m => (
+                  <div key={m} className="flex items-start gap-1.5">
+                    <Train className="h-3 w-3 text-[#00BFA5] mt-0.5 shrink-0" />
+                    <p className="text-[10px] text-muted-foreground leading-tight">{m}</p>
+                  </div>
+                ))}
+                {transportMeta.tram && (
+                  <div className="flex items-center gap-1.5">
+                    <TramFront className="h-3 w-3 text-blue-400 shrink-0" />
+                    <p className="text-[10px] text-blue-400">Dubai Tram access</p>
+                  </div>
+                )}
+                {transportMeta.bus.length > 0 && (
+                  <div className="flex items-center gap-1.5">
+                    <Bus className="h-3 w-3 text-muted-foreground shrink-0" />
+                    <p className="text-[10px] text-muted-foreground">Bus {transportMeta.bus.slice(0, 3).join(', ')}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          {transportMeta.notable_streets.length > 0 && (
+            <div className="flex items-center gap-1.5 pt-1">
+              <MapPin className="h-3 w-3 text-muted-foreground/50 shrink-0" />
+              <p className="text-[10px] text-muted-foreground">
+                Key streets: {transportMeta.notable_streets.join(' · ')}
+              </p>
+            </div>
+          )}
+        </section>
+      )}
 
       {history.length >= 2 && <CommunityCharts priceHistory={history} type={type} />}
 
