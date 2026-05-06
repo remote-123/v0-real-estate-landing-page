@@ -141,7 +141,9 @@ const faqSchema = {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-export default function GoldenVisaCalculatorPage() {
+export default async function GoldenVisaCalculatorPage() {
+  const _h2 = await headers()
+  const isCR = (_h2.get('x-site') ?? '') === 'cityregistry'
   return (
     <>
       <script
@@ -152,7 +154,7 @@ export default function GoldenVisaCalculatorPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
-      <Navbar />
+      {!isCR && <Navbar />}
 
       <main className="min-h-screen pt-24 pb-20">
         <div className="mx-auto max-w-5xl px-6 space-y-8">
@@ -229,7 +231,7 @@ export default function GoldenVisaCalculatorPage() {
         </div>
       </main>
 
-      <Footer />
+      {!isCR && <Footer />}
     </>
   )
 }

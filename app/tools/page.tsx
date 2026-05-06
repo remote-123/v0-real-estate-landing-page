@@ -139,7 +139,7 @@ export default async function ToolsIndexPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema) }}
       />
-      <Navbar />
+      {!isCR && <Navbar />}
 
       <main className="min-h-screen pt-24 pb-20">
         <div className="mx-auto max-w-5xl px-6 space-y-8">
@@ -206,7 +206,7 @@ export default async function ToolsIndexPage() {
         </div>
       </main>
 
-      <Footer />
+      {!isCR && <Footer />}
     </>
   )
 }
