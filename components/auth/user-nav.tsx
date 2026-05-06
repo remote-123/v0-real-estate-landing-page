@@ -25,10 +25,10 @@ export function UserNav() {
 
   if (!session) {
     return (
-      <Button asChild variant="outline" size="sm" className="gap-2 border-accent/20 hover:bg-accent/10 hover:text-accent">
+      <Button asChild size="sm" className="gap-2 bg-accent text-accent-foreground hover:bg-accent/90 font-semibold">
         <Link href={`/sign-in?callbackUrl=${encodeURIComponent(pathname)}`}>
-          <LogIn className="h-3 w-3" />
-          <span className="hidden sm:inline">Sign In</span>
+          <LogIn className="h-3.5 w-3.5" />
+          Sign In
         </Link>
       </Button>
     )

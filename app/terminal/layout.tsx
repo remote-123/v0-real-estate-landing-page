@@ -157,17 +157,18 @@ export default async function InvestorTerminalLayout({
                     <div className="flex flex-1 items-center justify-between">
                         <div className="flex items-center gap-4">
                             <MobileNav />
-                            <h1 className="text-[10px] sm:text-sm font-medium text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+                            {/* Title — desktop only */}
+                            <h1 className="hidden sm:flex text-[10px] sm:text-sm font-medium text-muted-foreground uppercase tracking-widest items-center gap-2">
                                 {isCityRegistry ? (
                                     <>
-                                        <span className="hidden sm:inline text-foreground font-semibold tracking-wider">The City Registry</span>
-                                        <span className="sm:mx-2 opacity-20">/</span>
+                                        <span className="text-foreground font-semibold tracking-wider">The City Registry</span>
+                                        <span className="mx-2 opacity-20">/</span>
                                         <span className="font-mono text-[10px]" style={{ color: '#00BFA5' }}>UAE Real Estate Intelligence</span>
                                     </>
                                 ) : (
                                     <>
-                                        <span className="hidden sm:inline">Investor Terminal</span>
-                                        <span className="sm:mx-2 opacity-30">/</span>
+                                        <span>Investor Terminal</span>
+                                        <span className="mx-2 opacity-30">/</span>
                                         <span className="text-foreground">v1.0.4</span>
                                     </>
                                 )}
@@ -193,7 +194,8 @@ export default async function InvestorTerminalLayout({
                             <FeedbackModal />
                             <UserNav />
                             {!isCityRegistry && <ThemeToggle />}
-                            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/50 shrink-0">
+                            {/* Live badge — desktop only */}
+                            <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/50 shrink-0">
                                 {isCityRegistry
                                     ? <div className="h-2 w-2 rounded-full animate-pulse" style={{ background: '#00BFA5' }} />
                                     : <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
