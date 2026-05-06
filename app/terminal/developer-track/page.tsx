@@ -6,6 +6,7 @@ import { formatAreaName } from "@/lib/area-names"
 import { auth } from "@/auth"
 import { GatedTableOverlay } from "@/components/auth/gated-table-overlay"
 import { isTerminalUnlocked } from "@/lib/terminal-gate"
+import { getDeveloperProfile, TYPE_COLORS } from "@/lib/area-data/developer-profiles"
 
 export const dynamic = "force-dynamic"
 
@@ -146,7 +147,7 @@ export default async function DeveloperTrackPage() {
         />
         <StatCard
           label="Top Developer"
-          value={topDeveloper.split(" ").slice(0, 2).join(" ")}
+          value={getDeveloperProfile(topDeveloper)?.brand_name?.split(" ")[0] ?? topDeveloper.split(" ").slice(0, 2).join(" ")}
           icon={TrendingUp}
           description={`${Number(topDevUnits).toLocaleString()} units`}
         />
@@ -202,6 +203,7 @@ export default async function DeveloperTrackPage() {
                           (Number(dev.finished_projects) / Number(dev.total_projects)) * 100
                         )
                       : 0
+                  const profile = getDeveloperProfile(dev.developer_name)
 
                   return (
                     <tr
@@ -210,9 +212,28 @@ export default async function DeveloperTrackPage() {
                     >
                       <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{i + 1}</td>
                       <td className="px-4 py-3">
-                        <span className="font-medium text-foreground text-sm">
-                          {dev.developer_name}
-                        </span>
+                        <div className="flex flex-col gap-0.5">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-medium text-foreground text-sm">
+                              {profile?.brand_name ?? dev.developer_name}
+                            </span>
+                            {profile && (
+                              <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-[9px] font-mono font-semibold uppercase tracking-wider ${TYPE_COLORS[profile.type]}`}>
+                                {profile.type}
+                              </span>
+                            )}
+                            {profile?.listed && (
+                              <span className="inline-flex items-center rounded border border-emerald-500/20 bg-emerald-500/10 px-1.5 py-0.5 text-[9px] font-mono font-semibold uppercase tracking-wider text-emerald-400">
+                                Listed
+                              </span>
+                            )}
+                          </div>
+                          {profile && (
+                            <span className="text-[10px] text-muted-foreground/60 hidden sm:block">
+                              Est. {profile.founded} · {profile.flagship_project}
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-right">
                         <span className="font-mono font-bold text-foreground">
