@@ -347,26 +347,65 @@ export default async function CommunityPage({
 
   const schema = {
     "@context": "https://schema.org",
-    "@type": "Dataset",
-    "name": `${displayName} — Dubai Community Intelligence`,
-    "description": `Price per sqft, transaction volume, and investment data for ${displayName}, Dubai. Powered by DLD and Bayut registered records.`,
-    "url": `${base}/terminal/communities/${slug}`,
-    "creator": { "@type": "Organization", "name": siteName, "url": base },
-    "spatialCoverage": {
-      "@type": "Place",
-      "name": `${displayName}, Dubai, UAE`,
-      "address": { "@type": "PostalAddress", "addressLocality": displayName, "addressRegion": "Dubai", "addressCountry": "AE" },
-    },
-    "variableMeasured": [
-      { "@type": "PropertyValue", "name": "Average Price per Sq Ft (AED)", "value": Math.round(Number(area.avg_psf)) },
-      { "@type": "PropertyValue", "name": "Transactions (Last 12 Months)", "value": txnCount12m },
-      { "@type": "PropertyValue", "name": "Off-Plan Pipeline Units", "value": area.pipeline_units },
-      ...(yoyChange !== null ? [{ "@type": "PropertyValue", "name": "Year-over-Year Price Change (%)", "value": Math.round(yoyChange * 10) / 10 }] : []),
-      ...(serviceChargeAvg ? [{ "@type": "PropertyValue", "name": "Average Annual Service Charge (AED/sqft)", "value": Math.round(Number(serviceChargeAvg)) }] : []),
+    "@graph": [
+      {
+        "@type": "Dataset",
+        "@id": `${base}/terminal/communities/${slug}#dataset`,
+        "name": `${displayName} — Property Market Intelligence`,
+        "description": `Price per sq ft, transaction volume, year-over-year price change, supply pipeline, service charge data, and distress count for ${displayName}, Dubai. Powered by Dubai Land Department registered transaction records and Bayut property listings.`,
+        "url": `${base}/terminal/communities/${slug}`,
+        "creator": { "@type": "Organization", "name": siteName, "url": base },
+        "isBasedOn": {
+          "@type": "Dataset",
+          "name": "Dubai Land Department Transaction Registry",
+          "publisher": {
+            "@type": "GovernmentOrganization",
+            "name": "Dubai Land Department",
+            "url": "https://dubailand.gov.ae",
+          },
+        },
+        "spatialCoverage": {
+          "@type": "Place",
+          "name": `${displayName}, Dubai, United Arab Emirates`,
+          ...(location ? { "geo": { "@type": "GeoCoordinates", "latitude": location[0].toString(), "longitude": location[1].toString() } } : {}),
+          "address": { "@type": "PostalAddress", "addressLocality": displayName, "addressRegion": "Dubai", "addressCountry": "AE" },
+        },
+        "temporalCoverage": "2020-01-01/..",
+        "dateModified": new Date().toISOString().slice(0, 10),
+        "inLanguage": "en",
+        "license": `${base}/terms`,
+        "isAccessibleForFree": false,
+        "variableMeasured": [
+          { "@type": "PropertyValue", "name": "Average Price per Square Foot (AED)", "value": Math.round(Number(area.avg_psf)), "unitCode": "AED", "measurementTechnique": "Volume-weighted mean of DLD-registered sales transactions in latest month" },
+          { "@type": "PropertyValue", "name": "Sales Transactions (12 Months)", "value": txnCount12m, "unitCode": "C62" },
+          { "@type": "PropertyValue", "name": "Off-Plan Pipeline Units", "value": area.pipeline_units, "unitCode": "C62" },
+          ...(yoyChange !== null ? [{ "@type": "PropertyValue", "name": "Year-over-Year Price Change (%)", "value": Math.round(yoyChange * 10) / 10, "unitCode": "P1" }] : []),
+          ...(area.mom_change !== null ? [{ "@type": "PropertyValue", "name": "Month-over-Month Price Change (%)", "value": Number(area.mom_change), "unitCode": "P1" }] : []),
+          ...(serviceChargeAvg ? [{ "@type": "PropertyValue", "name": "Average Annual Service Charge (AED/sqft)", "value": Math.round(Number(serviceChargeAvg)), "unitCode": "AED" }] : []),
+        ],
+        "measurementTechnique": "Dubai Land Department registered transaction records, cross-referenced with Bayut listings. Aggregated daily via materialized views.",
+        "keywords": [
+          `${displayName} property prices`, `${displayName} real estate data`,
+          `${displayName} price per sqft 2026`, `${displayName} transaction volume`, `${displayName} Dubai`,
+        ],
+        "includedInDataCatalog": {
+          "@type": "DataCatalog",
+          "name": `${siteName} — Dubai Real Estate Data Platform`,
+          "url": `${base}/terminal`,
+        },
+      },
+      {
+        "@type": "WebPage",
+        "name": `${displayName} — Property Market Intelligence | ${siteName}`,
+        "url": `${base}/terminal/communities/${slug}`,
+        "about": {
+          "@type": "Place",
+          "name": displayName,
+          "address": { "@type": "PostalAddress", "addressLocality": displayName, "addressRegion": "Dubai", "addressCountry": "AE" },
+        },
+        "isPartOf": { "@type": "WebSite", "name": siteName, "url": base },
+      },
     ],
-    "temporalCoverage": "2020/..",
-    "measurementTechnique": "Dubai Land Department and Bayut registered transaction records",
-    "isAccessibleForFree": true,
   }
 
   return (

@@ -1,4 +1,4 @@
-import { terminalPageMeta } from "@/lib/terminal-metadata"
+import { terminalPageMeta, getTerminalSiteInfo } from "@/lib/terminal-metadata"
 import { Activity, TrendingUp, DollarSign, BarChart2 } from "lucide-react"
 import { sql } from "@/lib/db"
 import { StatCard } from "@/components/terminal/stat-card"
@@ -92,14 +92,47 @@ function fmtPct(v: number | null): { label: string; dir: "up" | "down" | "neutra
 }
 
 export default async function TransactionPulsePage() {
-  const [session, { monthly, daily }] = await Promise.all([auth(), fetchData()])
+  const [session, { monthly, daily }, { siteName, base }] = await Promise.all([auth(), fetchData(), getTerminalSiteInfo()])
   const isAuthenticated = await isTerminalUnlocked(session)
   const stats = deriveStats(monthly)
   const mom = fmtPct(stats.mom)
   const yoy = fmtPct(stats.yoy)
   const currentYear = new Date().getFullYear()
 
+  const transactionPulseSchema = {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "@id": `${base}/terminal/transaction-pulse#dataset`,
+    "name": "Dubai Property Transaction Pulse — Monthly Volume & Value",
+    "description": "Monthly sales, mortgage, and gift transaction counts and total AED values across all Dubai communities. Covers residential and commercial transfers registered with the Dubai Land Department. Updated daily.",
+    "url": `${base}/terminal/transaction-pulse`,
+    "creator": { "@type": "Organization", "name": siteName, "url": base },
+    "isBasedOn": [
+      { "@type": "Dataset", "name": "Dubai Land Department Transaction Registry", "publisher": { "@type": "GovernmentOrganization", "name": "Dubai Land Department", "url": "https://dubailand.gov.ae" } },
+      { "@type": "Dataset", "name": "Bayut Property Transaction Feed", "publisher": { "@type": "Organization", "name": "Bayut", "url": "https://www.bayut.com" } },
+    ],
+    "spatialCoverage": { "@type": "Place", "name": "Dubai, United Arab Emirates", "geo": { "@type": "GeoCoordinates", "latitude": "25.2048", "longitude": "55.2708" } },
+    "temporalCoverage": "2000-01-01/..",
+    "dateModified": new Date().toISOString().slice(0, 10),
+    "inLanguage": "en",
+    "license": `${base}/terms`,
+    "isAccessibleForFree": false,
+    "variableMeasured": [
+      { "@type": "PropertyValue", "name": "Monthly Sales Transaction Count", "unitCode": "C62" },
+      { "@type": "PropertyValue", "name": "Monthly Transaction Value (AED Billions)", "unitCode": "AED" },
+      { "@type": "PropertyValue", "name": "Monthly Mortgage Transaction Count", "unitCode": "C62" },
+      { "@type": "PropertyValue", "name": "Average Price per Square Metre (AED)", "unitCode": "AED" },
+      { "@type": "PropertyValue", "name": "Month-over-Month Volume Change (%)", "unitCode": "P1" },
+      { "@type": "PropertyValue", "name": "Year-over-Year Volume Change (%)", "unitCode": "P1" },
+    ],
+    "measurementTechnique": "Daily aggregation from Dubai Land Department transaction records, cross-referenced with Bayut listing data. Transactions classified by trans_group_en: Sales, Mortgages, Gifts.",
+    "keywords": ["Dubai property transactions", "DLD transaction data", "Dubai real estate sales volume", "Dubai monthly transactions 2026", "Dubai Land Department data", "Dubai transaction pulse"],
+    "includedInDataCatalog": { "@type": "DataCatalog", "name": `${siteName} — Dubai Real Estate Data Platform`, "url": `${base}/terminal` },
+  }
+
   return (
+    <>
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(transactionPulseSchema) }} />
     <div className="flex w-full flex-col px-0 sm:px-8 xl:px-12 py-0 sm:py-6 space-y-6 max-w-7xl mx-auto pb-24 lg:pb-12">
 
       {/* Header */}
@@ -178,5 +211,6 @@ export default async function TransactionPulsePage() {
       </p>
 
     </div>
+    </>
   )
 }

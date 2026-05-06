@@ -1,4 +1,4 @@
-import { terminalPageMeta } from "@/lib/terminal-metadata"
+import { terminalPageMeta, getTerminalSiteInfo } from "@/lib/terminal-metadata"
 import { sql } from "@/lib/db"
 import { Building2, TrendingUp, BarChart3 } from "lucide-react"
 import { StatCard } from "@/components/terminal/stat-card"
@@ -78,14 +78,49 @@ function pipelineBar(pipeline: number, total: number): string {
 const FREE_ROWS = 5
 
 export default async function DeveloperTrackPage() {
-  const [session, { developers, totalDevelopers, topDeveloper, avgProjectUnits }] =
-    await Promise.all([auth(), fetchDeveloperData()])
+  const [session, { developers, totalDevelopers, topDeveloper, avgProjectUnits }, { siteName, base }] =
+    await Promise.all([auth(), fetchDeveloperData(), getTerminalSiteInfo()])
   const isAuthenticated = await isTerminalUnlocked(session)
   const display = isAuthenticated ? developers : developers.slice(0, FREE_ROWS)
 
   const topDevUnits = developers[0]?.total_units ?? 0
 
+  const developerTrackSchema = {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "@id": `${base}/terminal/developer-track#dataset`,
+    "name": "Dubai Developer Track Record — League Table by DLD-Registered Units",
+    "description": "Developer performance league table ranked by total Dubai Land Department-registered unit count. Covers pipeline exposure, project completion rates, and primary market areas. Tracks 60+ developers with 2+ registered projects in Dubai's freehold property market.",
+    "url": `${base}/terminal/developer-track`,
+    "creator": { "@type": "Organization", "name": siteName, "url": base },
+    "isBasedOn": {
+      "@type": "Dataset",
+      "name": "Dubai Land Department Project Registry",
+      "description": "Official DLD registry of all developer-submitted real estate projects, including unit counts, completion status, and area classification",
+      "publisher": { "@type": "GovernmentOrganization", "name": "Dubai Land Department", "url": "https://dubailand.gov.ae", "sameAs": "https://dubailand.gov.ae" },
+    },
+    "spatialCoverage": { "@type": "Place", "name": "Dubai, United Arab Emirates", "address": { "@type": "PostalAddress", "addressLocality": "Dubai", "addressCountry": "AE" } },
+    "temporalCoverage": "2005-01-01/..",
+    "dateModified": new Date().toISOString().slice(0, 10),
+    "inLanguage": "en",
+    "license": `${base}/terms`,
+    "isAccessibleForFree": false,
+    "variableMeasured": [
+      { "@type": "PropertyValue", "name": "Total Registered Units per Developer", "unitCode": "C62", "measurementTechnique": "SUM(no_of_units) from DLD project registry grouped by developer_name" },
+      { "@type": "PropertyValue", "name": "Pipeline Unit Count", "unitCode": "C62" },
+      { "@type": "PropertyValue", "name": "Pipeline Exposure Ratio (%)", "unitCode": "P1" },
+      { "@type": "PropertyValue", "name": "Project Completion Rate (%)", "unitCode": "P1", "measurementTechnique": "COUNT(FINISHED projects) / COUNT(all projects)" },
+      { "@type": "PropertyValue", "name": "Total DLD-Registered Projects", "unitCode": "C62" },
+      { "@type": "PropertyValue", "name": "Primary Market Area" },
+    ],
+    "measurementTechnique": "Aggregated from Dubai Land Department dld_projects registry. Developers with fewer than 2 registered projects are excluded.",
+    "keywords": ["Dubai developer track record", "Dubai developer ranking", "Dubai real estate developer data", "DLD developer projects", "Dubai property developer pipeline", "top developers Dubai 2026"],
+    "includedInDataCatalog": { "@type": "DataCatalog", "name": `${siteName} — Dubai Real Estate Data Platform`, "url": `${base}/terminal` },
+  }
+
   return (
+    <>
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(developerTrackSchema) }} />
     <div className="flex w-full flex-col px-0 sm:px-8 xl:px-12 py-0 sm:py-6 space-y-8 max-w-7xl mx-auto pb-24 lg:pb-12">
 
       {/* Header */}
@@ -229,5 +264,6 @@ export default async function DeveloperTrackPage() {
         Source: Dubai Land Department Project Registry · All registered developers with 2+ projects
       </p>
     </div>
+    </>
   )
 }

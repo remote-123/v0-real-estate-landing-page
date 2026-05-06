@@ -76,6 +76,42 @@ const schema = {
   ],
 }
 
+const softwareAppSchema = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Dubai DLD Transfer Fee Calculator",
+  "alternateName": "Dubai Property Acquisition Cost Calculator",
+  "description": "Free online calculator for the total cost of buying property in Dubai: mandatory 4% DLD transfer fee, flat registration fee (AED 2,000–4,000), real estate agent commission (default 2%), and optional mortgage registration fee (0.25% of loan).",
+  "applicationCategory": "FinanceApplication",
+  "applicationSubCategory": "RealEstateCalculator",
+  "operatingSystem": "Web",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "AED" },
+  "about": {
+    "@type": "GovernmentService",
+    "name": "Dubai Land Department Property Transfer",
+    "provider": { "@type": "GovernmentOrganization", "name": "Dubai Land Department", "url": "https://dubailand.gov.ae" },
+    "areaServed": { "@type": "Place", "name": "Dubai, United Arab Emirates" },
+  },
+  "keywords": ["Dubai DLD transfer fee calculator", "Dubai property acquisition cost", "4% DLD fee Dubai", "how much does it cost to buy property Dubai", "Dubai property buying costs 2026"],
+}
+
+const howToSchema = {
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "How to Calculate the Total Cost of Buying Property in Dubai",
+  "description": "Step-by-step guide to calculating all fees payable when purchasing a freehold property in Dubai, including the 4% DLD transfer fee, registration fee, agent commission, and mortgage costs.",
+  "totalTime": "PT2M",
+  "tool": [{ "@type": "HowToTool", "name": "Dubai DLD Transfer Fee Calculator", "url": "https://thecityregistry.com/tools/dld-transfer-fee-calculator" }],
+  "step": [
+    { "@type": "HowToStep", "position": 1, "name": "Enter the purchase price", "text": "Input the agreed purchase price in AED. Use the price stated in the Sales and Purchase Agreement (SPA), not the bank valuation." },
+    { "@type": "HowToStep", "position": 2, "name": "Calculate the DLD transfer fee", "text": "Multiply the purchase price by 4% (0.04). This is the mandatory Dubai Land Department transfer fee payable by the buyer. Example: AED 2,000,000 × 4% = AED 80,000." },
+    { "@type": "HowToStep", "position": 3, "name": "Add the DLD registration fee", "text": "Add AED 4,000 if the purchase price is AED 500,000 or above, or AED 2,000 if below. This flat fee covers title deed issuance." },
+    { "@type": "HowToStep", "position": 4, "name": "Add agent commission if applicable", "text": "If purchasing through an agent, add 2% of the purchase price as buyer's agent commission. Market standard in Dubai but negotiable." },
+    { "@type": "HowToStep", "position": 5, "name": "Add mortgage registration fee if financing", "text": "If taking a mortgage, add 0.25% of the loan amount. For a AED 1,600,000 mortgage (80% LTV on AED 2M) this is AED 4,000, payable to DLD." },
+    { "@type": "HowToStep", "position": 6, "name": "Sum all costs", "text": "Add DLD transfer fee + DLD registration fee + agent commission + mortgage registration fee + property valuation fee (AED 2,500–3,500 typical). This is your total out-of-pocket cost above the purchase price." },
+  ],
+}
+
 const faqSchema = {
   "@context": "https://schema.org",
   "@type": "FAQPage",
@@ -146,14 +182,10 @@ export default async function DldTransferFeeCalculatorPage() {
   const isCR = (_h2.get('x-site') ?? '') === 'cityregistry'
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareAppSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(howToSchema) }} />
       {!isCR && <Navbar />}
 
       <main className="min-h-screen pt-24 pb-20">
