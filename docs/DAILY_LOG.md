@@ -7,6 +7,21 @@
 > 3. **Mandatory Signature:** Every entry must explicitly state the tool name at the start (e.g., *"Built by Antigravity"*, *"Built by Claude Code"*, or *"Built by Cursor"*).
 
 
+## 06 May 2026 — Operational Autonomy System (LinkedIn, Blog Buttons, Ops Digest)
+*Built by Claude Code* — 3-part operational system requiring zero manual involvement: (1) **LinkedIn auto-post**: `lib/linkedin.ts` wired into `distress-linkedin` route — posts live to LinkedIn after Gemini generation, degrades gracefully if token absent. (2) **Blog approve/reject buttons**: `generate-blog-posts` cron now sends Telegram inline keyboard (✅ Publish / ❌ Skip) per draft; `telegram-webhook` adds `callback_query` handler that publishes Sanity draft (creates published doc, deletes draft) or skips, then edits the original Telegram message to confirm. (3) **Daily ops digest**: `/api/cron/ops-digest` (GET + Bearer CRON_SECRET) fires daily, sends Telegram summary of: leads (email + WA), data freshness (DLD staleness, Bayut status, PF rentals), distress listings count, blog pipeline queue. Add to cron-job.org: daily at 08:00 GST. Required env: `LINKEDIN_ACCESS_TOKEN`, `LINKEDIN_AUTHOR_URN` (60-day OAuth token).
+
+## 06 May 2026 — Auto Blog Generation Cron
+*Built by Claude Code* — New `/api/cron/generate-blog-posts` route. Reads Reddit signal from `reddit_seen_posts` (populated by existing reddit-monitor cron), picks top 2 unprocessed topic-rich posts, generates full SEO blog posts via Gemini in NorthCapital voice, creates Sanity drafts, notifies Telegram with preview link. Self-bootstraps `blog_generated_at` column on `reddit_seen_posts`. Replaces fragile Gmail/Apps Script trigger entirely. Add to cron-job.org: `GET /api/cron/generate-blog-posts` with `Bearer CRON_SECRET`, 2x/week cadence.
+
+## 06 May 2026 — Toronto Expansion Plan + Mobile Header + Auth UI
+*Built by Claude Code* — 3 research agents (data sources, competitors, feature planner) produced full Toronto terminal expansion plan. MVP: 7 features (HPI Price Index, Tarion Pipeline/Developer Track, Rental Yield Map, Rent Control Zone Tracker, Condo Fee Intel, LTT Calculator). Central finding: TRREB gated — build on Tarion open data first as moat. City switcher via x-city middleware extension. Vault note: vault/06-Strategy/Toronto-Expansion.md. Also: mobile header title + live badge hidden on small screens, Sign In button made always-visible solid accent button.
+
+## 06 May 2026 — Community Transport/Yield + Developer Profiles + Schema SEO
+*Built by Claude Code* — 3 research agents gathered community transport/yield data (16 communities) and developer profiles (17 developers with Arabic DLD name mapping). Seeded 2 new DB tables. Community slug pages show transport strip (metro/bus/tram/yield/PSF). Developer track page now shows English brand names, type badges (Luxury/Affordable/etc), founded year, flagship project. Full Dataset/SoftwareApplication/HowTo schema upgrade across 5 pages (DataCatalog + isBasedOn DLD gov authority nodes). Fixed isCR scope bug in 3 tools pages.
+
+## 05 May 2026 — Tools Pages Multi-Domain Fix
+*Built by Claude Code* — Gated `<Navbar />` and `<Footer />` on `{!isCR && ...}` across all 7 `/tools/*` pages + index; thecityregistry.com now shows clean tool embeds without NorthCapital chrome. Build verified clean before push.
+
 ## 04 May 2026 — Globe Map + Community Wiki
 
 *Built by Claude Code*

@@ -1,10 +1,19 @@
 import { NextResponse } from 'next/server'
 import { waitUntil } from '@vercel/functions'
 import { sql } from '@/lib/db'
+import { createClient } from 'next-sanity'
 
 export const maxDuration = 120
 
 const URL_REGEX = /https?:\/\/[^\s]+/i
+
+const sanityWrite = createClient({
+  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
+  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET,
+  apiVersion: '2024-02-24',
+  useCdn: false,
+  token: process.env.SANITY_API_TOKEN,
+})
 
 async function replyToChat(chatId: string | number, text: string, threadId?: number) {
     const token = process.env.TELEGRAM_BOT_TOKEN
@@ -352,6 +361,52 @@ async function handlePriceCommand(args: string[], chatId: string | number, threa
     }
 }
 
+async function answerCallbackQuery(callbackQueryId: string, text?: string) {
+    const token = process.env.TELEGRAM_BOT_TOKEN
+    if (!token) return
+    await fetch(`https://api.telegram.org/bot${token}/answerCallbackQuery`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ callback_query_id: callbackQueryId, text }),
+    })
+}
+
+async function editMessageText(chatId: string | number, messageId: number, text: string) {
+    const token = process.env.TELEGRAM_BOT_TOKEN
+    if (!token) return
+    await fetch(`https://api.telegram.org/bot${token}/editMessageText`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: chatId, message_id: messageId, text, parse_mode: 'HTML' }),
+    })
+}
+
+async function handleBlogCallback(action: string, draftId: string, chatId: string | number, messageId: number) {
+    if (action === 'skip') {
+        await editMessageText(chatId, messageId, `❌ <b>Skipped</b>\n<code>${draftId}</code>`)
+        return
+    }
+
+    // action === 'publish'
+    try {
+        const draft = await sanityWrite.getDocument(draftId)
+        if (!draft) {
+            await editMessageText(chatId, messageId, `⚠️ Draft not found: <code>${draftId}</code>`)
+            return
+        }
+
+        // Published ID = strip "drafts." prefix
+        const publishedId = draftId.replace(/^drafts\./, '')
+        const { _id: _ignoredId, ...rest } = draft
+        await sanityWrite.createOrReplace({ ...rest, _id: publishedId })
+        await sanityWrite.delete(draftId)
+
+        await editMessageText(chatId, messageId, `✅ <b>Published</b>\n<b>${draft.title ?? publishedId}</b>`)
+    } catch (err: any) {
+        await editMessageText(chatId, messageId, `❌ Publish failed: <code>${err.message?.slice(0, 200)}</code>`)
+    }
+}
+
 export async function POST(req: Request) {
     try {
         // Verify Telegram webhook secret
@@ -362,6 +417,25 @@ export async function POST(req: Request) {
         }
 
         const update = await req.json()
+
+        // Handle inline keyboard button presses
+        if (update?.callback_query) {
+            const cq = update.callback_query
+            const fromId = String(cq.from?.id ?? '')
+            const allowedId = process.env.TELEGRAM_ALLOWED_USER_ID?.trim()
+            if (allowedId && fromId !== allowedId) {
+                await answerCallbackQuery(cq.id, '⛔ Not authorized')
+                return NextResponse.json({ ok: true })
+            }
+
+            const [action, ...rest] = (cq.data ?? '').split(':')
+            const draftId = rest.join(':')
+
+            await answerCallbackQuery(cq.id)
+            waitUntil(handleBlogCallback(action, draftId, cq.message.chat.id, cq.message.message_id))
+            return NextResponse.json({ ok: true })
+        }
+
         const message = update?.message
 
         if (!message?.text) {

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NORTH_CAPITAL_SYSTEM_PROMPT } from '@/lib/ai-guidelines';
 import { sendTelegram } from '@/lib/telegram';
+import { postToLinkedIn } from '@/lib/linkedin';
 
 export const maxDuration = 60;
 
@@ -198,7 +199,13 @@ export async function POST(req: Request) {
 
     await sendTelegram(telegramMsg);
 
-    return NextResponse.json({ success: true, format, chars: parsed.post.length });
+    // Auto-post to LinkedIn
+    const liResult = await postToLinkedIn(parsed.post)
+    if (!liResult.success) {
+      console.warn('[distress-linkedin] LinkedIn post skipped:', liResult.error)
+    }
+
+    return NextResponse.json({ success: true, format, chars: parsed.post.length, linkedin: liResult });
   } catch (error: any) {
     console.error('LinkedIn Post Generator Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });

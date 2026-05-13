@@ -31,3 +31,4 @@
 ## Strategy
 - [[Growth-Strategy]] — 90-day content-led authority plan
 - [[Marketing-Context]] — ICP, personas, positioning, differentiators
+- [[Toronto-Expansion]] — Toronto city expansion plan, data sources, MVP scope, ingestion order
