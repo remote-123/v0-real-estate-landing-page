@@ -12,6 +12,7 @@
  *   npx tsx --env-file=.env.local scripts/property-hunter.ts --area=ajman
  *   npx tsx --env-file=.env.local scripts/property-hunter.ts --area=sharjah
  *   npx tsx --env-file=.env.local scripts/property-hunter.ts --months=6
+ *   npx tsx --env-file=.env.local scripts/property-hunter.ts --area=d2 --history
  */
 
 // postgres is dynamically imported — script works offline without it installed.
@@ -25,9 +26,11 @@ function getArg(prefix: string) {
   return f ? f.slice(prefix.length) : null
 }
 
-const AREA_FILTER = getArg("--area=") ?? "all"
-const MONTHS      = parseInt(getArg("--months=") ?? "12", 10)
-const READY_ONLY  = argv.includes("--ready-only")
+const AREA_FILTER  = getArg("--area=") ?? "all"
+const MONTHS       = parseInt(getArg("--months=") ?? "12", 10)
+const READY_ONLY   = argv.includes("--ready-only")
+const HISTORY      = argv.includes("--history")
+const TARGET_PRICE = parseInt(getArg("--target=") ?? "0", 10)
 
 // ── Area definitions ──────────────────────────────────────────────────────────
 
@@ -162,6 +165,103 @@ async function queryDld(db: SqlClient, area: AreaDef): Promise<DldStats[]> {
   `
 
   return rows
+}
+
+// ── Historical price query ────────────────────────────────────────────────────
+
+interface YearlyStats {
+  year:        number
+  count:       number
+  avgPrice:    number
+  minPrice:    number
+  maxPrice:    number
+  avgPriceSqm: number
+}
+
+async function queryHistory(db: SqlClient, area: AreaDef): Promise<YearlyStats[]> {
+  if (!area.dldName) return []
+
+  const rows = await db<YearlyStats[]>`
+    SELECT
+      EXTRACT(YEAR FROM instance_date)::int   AS "year",
+      COUNT(*)::int                           AS "count",
+      ROUND(AVG(actual_worth))::int           AS "avgPrice",
+      ROUND(MIN(actual_worth))::int           AS "minPrice",
+      ROUND(MAX(actual_worth))::int           AS "maxPrice",
+      ROUND(AVG(meter_sale_price))::int       AS "avgPriceSqm"
+    FROM dld_transactions
+    WHERE area_name_en     ILIKE ${area.dldName}
+      AND trans_group_en   = 'Sales'
+      AND property_type_en IN ${db(area.propertyTypes)}
+      AND actual_worth     > 100000
+      AND instance_date    >= '2015-01-01'
+      ${area.bedsFilter != null
+        ? db`AND rooms_en ILIKE ${'%' + area.bedsFilter + '%'}`
+        : db``}
+    GROUP BY "year"
+    ORDER BY "year" ASC
+  `
+
+  return rows
+}
+
+function printHistory(area: AreaDef, rows: YearlyStats[], targetAED: number) {
+  if (rows.length === 0) {
+    console.log(c("yellow", `  No historical DLD data found for "${area.dldName}".`))
+    return
+  }
+
+  const minRow  = rows.reduce((a, b) => a.avgPrice < b.avgPrice ? a : b)
+  const maxRow  = rows.reduce((a, b) => a.avgPrice > b.avgPrice ? a : b)
+  const latest  = rows[rows.length - 1]
+
+  console.log(c("cyan", `\n  Year-by-Year DLD Prices — "${area.dldName}" (${area.propertyTypes.join("/")})\n`))
+  console.log(c("dim", `  ${pad("Year", 6)}  ${pad("Deals", 6)}  ${pad("Avg Price", 14)}  ${pad("Min", 12)}  ${pad("Max", 12)}  ${pad("Avg/sqft", 10)}  vs Target`))
+  console.log(c("dim", `  ${"─".repeat(80)}`))
+
+  for (const r of rows) {
+    const isMin       = r.year === minRow.year
+    const isMax       = r.year === maxRow.year
+    const isCurr      = r.year === latest.year
+    const aboveTarget = r.avgPrice > targetAED
+    const pctVsTarget = r.avgPrice > 0
+      ? ((r.avgPrice - targetAED) / targetAED * 100).toFixed(0)
+      : null
+
+    const badge    = isMin ? " FLOOR" : isMax ? " PEAK " : isCurr ? " NOW  " : "      "
+    const yearCol  = isMin ? "green" : isMax ? "red" : isCurr ? "cyan" : "dim"
+    const priceCol = aboveTarget ? "yellow" : "green"
+    const vsStr    = pctVsTarget
+      ? (aboveTarget ? `+${pctVsTarget}% above` : `${pctVsTarget}% below`)
+      : "—"
+    const vsCol    = aboveTarget ? "yellow" : "green"
+
+    console.log(
+      `  ${c(yearCol, `${r.year}${badge}`)}  ` +
+      `${c("dim", pad(String(r.count), 6))}  ` +
+      `${c(priceCol, pad(fmtAed(r.avgPrice), 14))}  ` +
+      `${pad(fmtAed(r.minPrice), 12)}  ${pad(fmtAed(r.maxPrice), 12)}  ` +
+      `${c("dim", pad(fmtSqft(r.avgPriceSqm), 10))}  ${c(vsCol, vsStr)}`
+    )
+  }
+
+  const fromFloor  = ((latest.avgPrice - minRow.avgPrice) / minRow.avgPrice * 100).toFixed(0)
+  const fromTarget = ((latest.avgPrice - targetAED)       / targetAED       * 100).toFixed(0)
+  const dropNeeded = ((latest.avgPrice - targetAED)       / latest.avgPrice * 100).toFixed(0)
+
+  console.log()
+  console.log(c("bold",   `  Price History Summary:`))
+  console.log(c("green",  `  Floor (${minRow.year}):  AED ${fmtAed(minRow.avgPrice)}`))
+  console.log(c("red",    `  Peak  (${maxRow.year}):  AED ${fmtAed(maxRow.avgPrice)}`))
+  console.log(c("cyan",   `  Now   (${latest.year}):  AED ${fmtAed(latest.avgPrice)}  (+${fromFloor}% above floor)`))
+  console.log()
+  console.log(c("bold",   `  Your target: AED ${fmtAed(targetAED)}`))
+  if (latest.avgPrice > targetAED) {
+    console.log(c("yellow", `  Market needs to drop ${dropNeeded}% from current to hit your target.`))
+    console.log(c("dim",    `  That would bring prices back to ~${minRow.year} levels.`))
+  } else {
+    console.log(c("green",  `  ✓ Current avg is ALREADY at or below your target.`))
+  }
 }
 
 // ── Browser URL builder ───────────────────────────────────────────────────────
@@ -316,14 +416,18 @@ async function main() {
 
   const db      = await makeDb()
   const dbAvail = db !== null
-  const statsMap = new Map<string, DldStats[]>()
+  const statsMap   = new Map<string, DldStats[]>()
+  const historyMap = new Map<string, YearlyStats[]>()
 
-  // Query DLD data for Dubai areas
   if (dbAvail) {
     for (const area of activeAreas.filter(a => a.dldName)) {
       try {
         const stats = await queryDld(db!, area)
         statsMap.set(area.key, stats)
+        if (HISTORY) {
+          const hist = await queryHistory(db!, area)
+          historyMap.set(area.key, hist)
+        }
       } catch (e: any) {
         console.log(c("red", `  [DB error for ${area.key}] ${e.message}`))
         statsMap.set(area.key, [])
@@ -335,6 +439,13 @@ async function main() {
   for (const area of activeAreas) {
     const stats = statsMap.get(area.key) ?? []
     printDldSection(area, stats, dbAvail)
+
+    if (HISTORY && dbAvail && area.dldName) {
+      const hist   = historyMap.get(area.key) ?? []
+      const target = TARGET_PRICE || area.minAED
+      printHistory(area, hist, target)
+    }
+
     printLinks(area)
   }
 
