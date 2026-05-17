@@ -2,8 +2,10 @@
 /**
  * Property Hunter — personal real estate research tool
  *
- * Pulls ACTUAL sold prices from DLD (Dubai Land Dept) data in Neon DB,
- * then generates pre-configured browser links for PropertyFinder & Bayut.
+ * Priority order per area:
+ *   1. PropertyFinder RapidAPI (live listings)  — needs BAYUT_RAPIDAPI_KEY
+ *   2. DLD Neon DB (actual sold prices)          — needs DATABASE_URL
+ *   3. Browser links only (offline fallback)
  *
  * Run:
  *   npx tsx --env-file=.env.local scripts/property-hunter.ts
@@ -13,6 +15,7 @@
  *   npx tsx --env-file=.env.local scripts/property-hunter.ts --area=sharjah
  *   npx tsx --env-file=.env.local scripts/property-hunter.ts --months=6
  *   npx tsx --env-file=.env.local scripts/property-hunter.ts --area=d2 --history
+ *   npx tsx --env-file=.env.local scripts/property-hunter.ts --area=d2 --live
  */
 
 // postgres is dynamically imported — script works offline without it installed.
@@ -30,6 +33,7 @@ const AREA_FILTER  = getArg("--area=") ?? "all"
 const MONTHS       = parseInt(getArg("--months=") ?? "12", 10)
 const READY_ONLY   = argv.includes("--ready-only")
 const HISTORY      = argv.includes("--history")
+const LIVE         = argv.includes("--live")
 const TARGET_PRICE = parseInt(getArg("--target=") ?? "0", 10)
 
 // ── Area definitions ──────────────────────────────────────────────────────────
@@ -165,6 +169,105 @@ async function queryDld(db: SqlClient, area: AreaDef): Promise<DldStats[]> {
   `
 
   return rows
+}
+
+// ── Live listings via PropertyFinder RapidAPI ─────────────────────────────────
+
+async function fetchLiveListings(area: AreaDef): Promise<void> {
+  const key = process.env.BAYUT_RAPIDAPI_KEY
+  if (!key) {
+    console.log(c("yellow", "  [!] BAYUT_RAPIDAPI_KEY not set — cannot fetch live listings."))
+    return
+  }
+
+  let pfApi: typeof import("../lib/propertyfinder-api")
+  try {
+    pfApi = await import("../lib/propertyfinder-api")
+  } catch {
+    console.log(c("yellow", "  [!] Could not load propertyfinder-api module."))
+    return
+  }
+
+  console.log(c("cyan", `\n  Live Listings — PropertyFinder API (fetching...)`))
+
+  // Step 1: resolve location ID
+  let locationId: string | number | null = null
+  try {
+    const locs = await pfApi.autocompleteLocation(area.label.split("—")[0].trim())
+    if (locs.length > 0) {
+      locationId = locs[0].id
+      console.log(c("dim", `  Location resolved: "${locs[0].name}" (id: ${locationId})`))
+    } else {
+      console.log(c("yellow", `  Could not resolve location ID for "${area.label}". Try PropertyFinder browser link.`))
+      return
+    }
+  } catch (e: any) {
+    console.log(c("red", `  [Autocomplete error] ${e.message}`))
+    return
+  }
+
+  // Step 2: search listings
+  try {
+    const typeMap: Record<string, "apartment" | "villa" | "townhouse"> = {
+      apartments: "apartment",
+      townhouses: "townhouse",
+      villas:     "villa",
+    }
+
+    const result = await pfApi.searchBuy({
+      locationIds:   [locationId],
+      minPrice:      area.minAED,
+      maxPrice:      TARGET_PRICE || area.maxAED,
+      beds:          area.bedsFilter ?? undefined,
+      propertyType:  typeMap[area.pfType],
+      readyOnly:     READY_ONLY,
+      page:          1,
+    })
+
+    const listings = result.listings
+    console.log(c("dim", `  ${result.totalCount} total listings found (showing first ${listings.length})\n`))
+
+    if (listings.length === 0) {
+      console.log(c("yellow", "  No listings returned. The API key may need access to this endpoint, or try browser links below."))
+      return
+    }
+
+    console.log(c("dim",
+      `  ${pad("Price (AED)", 14)}  ${pad("Beds", 5)}  ${pad("Sqft", 7)}  ` +
+      `${pad("Location", 26)}  ${pad("Ready", 6)}  ${pad("Furnished", 10)}  Agent`
+    ))
+    console.log(c("dim", `  ${"─".repeat(100)}`))
+
+    const target = TARGET_PRICE || area.maxAED
+    for (const l of listings.slice(0, 20)) {
+      const priceStr  = fmtAed(l.price)
+      const isGoodDeal = l.price <= target * 0.9
+      const priceCol  = isGoodDeal ? "green" : l.price <= target ? "cyan" : "yellow"
+      const readyBadge = l.ready ? c("green", "✓") : c("dim", "–")
+      const furnBadge  = l.furnished ? c("dim", "Furnished") : c("dim", "Unfurnished")
+
+      console.log(
+        `  ${c(priceCol, pad(priceStr, 14))}  ${pad(String(l.beds ?? "—"), 5)}  ` +
+        `${pad(l.sqft ? String(l.sqft) : "—", 7)}  ` +
+        `${pad(l.location, 26)}  ${readyBadge}       ${furnBadge}  ${c("dim", l.agentName)}`
+      )
+
+      if (l.url) console.log(c("dim", `    ${l.url}`))
+    }
+
+    // Cheapest deal callout
+    if (listings.length > 0) {
+      const cheapest = listings.reduce((a, b) => a.price < b.price ? a : b)
+      console.log()
+      console.log(c("bold", `  Cheapest listing: AED ${fmtAed(cheapest.price)} — ${cheapest.title}`))
+      if (cheapest.url) console.log(c("cyan", `  ${cheapest.url}`))
+    }
+
+  } catch (e: any) {
+    // If the endpoint name is wrong, surface the raw error so we can adjust
+    console.log(c("red", `  [Search error] ${e.message}`))
+    console.log(c("dim", "  The API endpoint may differ — check the RapidAPI docs and update lib/propertyfinder-api.ts"))
+  }
 }
 
 // ── Historical price query ────────────────────────────────────────────────────
@@ -444,6 +547,10 @@ async function main() {
       const hist   = historyMap.get(area.key) ?? []
       const target = TARGET_PRICE || area.minAED
       printHistory(area, hist, target)
+    }
+
+    if (LIVE) {
+      await fetchLiveListings(area)
     }
 
     printLinks(area)
