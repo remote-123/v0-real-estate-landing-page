@@ -42,6 +42,7 @@ export const sidebarLinks = [
   {
     title: "Property Research",
     links: [
+      { label: "Prop Buildings", href: "/terminal/prop-buildings", icon: Building2 },
       { label: "Building Comparator", href: "/terminal/building-comparator", icon: Building2 },
       { label: "Floor Plan Pricer", href: "/terminal/floor-plan-pricer", icon: Layers },
       { label: "Comparable Sales", href: "/terminal/transaction-search", icon: Search },
