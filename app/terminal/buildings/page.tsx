@@ -1,9 +1,11 @@
 import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { sql } from '@/lib/db'
 import { BuildingsTable } from '@/components/terminal/buildings-table'
+import { AreaSelector } from '@/components/terminal/area-selector'
 import { auth } from "@/auth"
 import { GatedTableOverlay } from "@/components/auth/gated-table-overlay"
 import { isTerminalUnlocked } from "@/lib/terminal-gate"
+import { Suspense } from 'react'
 
 export const dynamic = "force-dynamic"
 
@@ -33,31 +35,44 @@ type BuildingRow = {
   amenities: string | null
 }
 
-async function fetchBuildings(): Promise<BuildingRow[]> {
+async function fetchAreas(): Promise<string[]> {
   try {
-    const rows = await sql<BuildingRow[]>`
+    const rows = await sql<{ area_name_en: string }[]>`
+      SELECT DISTINCT area_name_en
+      FROM buildings_enriched
+      WHERE area_name_en IS NOT NULL
+      ORDER BY area_name_en
+    `
+    return rows.map(r => r.area_name_en)
+  } catch {
+    return []
+  }
+}
+
+async function fetchBuildings(area: string | null): Promise<BuildingRow[]> {
+  try {
+    if (area) {
+      return await sql<BuildingRow[]>`
+        SELECT
+          building_key, slug, global_slug, building_name_en, area_name_en,
+          primary_sub_type, developer_name, completion_year, propsearch_status,
+          osm_lat, osm_lng, total_floors, total_units, property_types, amenities
+        FROM buildings_enriched
+        WHERE building_name_en IS NOT NULL
+          AND area_name_en = ${area}
+        ORDER BY building_name_en
+      `
+    }
+    return await sql<BuildingRow[]>`
       SELECT
-        building_key,
-        slug,
-        global_slug,
-        building_name_en,
-        area_name_en,
-        primary_sub_type,
-        developer_name,
-        completion_year,
-        propsearch_status,
-        osm_lat,
-        osm_lng,
-        total_floors,
-        total_units,
-        property_types,
-        amenities
+        building_key, slug, global_slug, building_name_en, area_name_en,
+        primary_sub_type, developer_name, completion_year, propsearch_status,
+        osm_lat, osm_lng, total_floors, total_units, property_types, amenities
       FROM buildings_enriched
       WHERE building_name_en IS NOT NULL
       ORDER BY building_name_en
       LIMIT 200
     `
-    return rows
   } catch {
     return []
   }
@@ -65,8 +80,19 @@ async function fetchBuildings(): Promise<BuildingRow[]> {
 
 const FREE_ROWS = 5
 
-export default async function BuildingsPage() {
-  const [session, allData] = await Promise.all([auth(), fetchBuildings()])
+export default async function BuildingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ area?: string }>
+}) {
+  const { area } = await searchParams
+  const selectedArea = area ?? null
+
+  const [session, allData, areas] = await Promise.all([
+    auth(),
+    fetchBuildings(selectedArea),
+    fetchAreas(),
+  ])
   const isAuthenticated = await isTerminalUnlocked(session)
   const display = isAuthenticated ? allData : allData.slice(0, FREE_ROWS)
 
@@ -74,7 +100,6 @@ export default async function BuildingsPage() {
   const offPlan = allData.filter(r =>
     r.propsearch_status === 'under_construction' || r.propsearch_status === 'planned'
   ).length
-  const withUnits = allData.filter(r => r.total_units != null).length
 
   return (
     <div className="flex w-full flex-col px-0 sm:px-8 xl:px-12 py-0 sm:py-6 space-y-6 max-w-7xl mx-auto pb-24 lg:pb-12">
@@ -85,27 +110,30 @@ export default async function BuildingsPage() {
           <div className="flex items-center gap-3">
             <div className="h-2.5 w-2.5 rounded-full bg-green-500 animate-ping" />
             <h1 className="font-mono text-xs tracking-widest text-muted-foreground uppercase font-bold">
-              Buildings Directory &mdash; {allData.length} Records
+              Buildings Directory &mdash; {allData.length}{!selectedArea && '+'} Records
             </h1>
           </div>
           <h2 className="font-serif text-3xl sm:text-4xl font-bold text-foreground">
-            Dubai Buildings Registry
+            {selectedArea ? selectedArea : 'Dubai Buildings Registry'}
           </h2>
           <p className="text-muted-foreground text-sm max-w-xl leading-relaxed">
-            Search and filter Dubai buildings by area, type, developer, and completion status. Data sourced from DLD and enriched with OpenStreetMap coordinates.
+            {selectedArea
+              ? `${allData.length} buildings in ${selectedArea}. Select a different area or clear to browse all.`
+              : 'Browse Dubai buildings by community. Select an area to see all buildings in it.'
+            }
           </p>
         </div>
 
         {/* Stat cards */}
         <div className="flex flex-wrap lg:flex-nowrap gap-4 w-full lg:w-auto">
           <div className="flex-1 rounded-xl bg-background border border-border/50 p-4">
-            <p className="font-mono text-xs text-muted-foreground mb-1">Total Buildings</p>
+            <p className="font-mono text-xs text-muted-foreground mb-1">Buildings</p>
             <p className="font-mono text-xl md:text-2xl font-bold text-accent">
               {allData.length.toLocaleString()}
             </p>
           </div>
           <div className="flex-1 rounded-xl bg-background border border-border/50 p-4">
-            <p className="font-mono text-xs text-muted-foreground mb-1">With Coordinates</p>
+            <p className="font-mono text-xs text-muted-foreground mb-1">With Coords</p>
             <p className="font-mono text-xl md:text-2xl font-bold text-accent">
               {withCoords.toLocaleString()}
             </p>
@@ -116,12 +144,6 @@ export default async function BuildingsPage() {
               {offPlan.toLocaleString()}
             </p>
           </div>
-          <div className="flex-1 rounded-xl bg-background border border-border/50 p-4">
-            <p className="font-mono text-xs text-muted-foreground mb-1">With Unit Data</p>
-            <p className="font-mono text-xl md:text-2xl font-bold text-blue-400">
-              {withUnits.toLocaleString()}
-            </p>
-          </div>
         </div>
       </section>
 
@@ -130,8 +152,11 @@ export default async function BuildingsPage() {
         Source: Dubai Land Department buildings registry, enriched with OpenStreetMap geocoding
       </p>
 
-      {/* Table */}
-      <section className="relative">
+      {/* Area selector + table */}
+      <section className="relative space-y-4">
+        <Suspense>
+          <AreaSelector areas={areas} selected={selectedArea} />
+        </Suspense>
         <BuildingsTable data={display} />
         {!isAuthenticated && allData.length > FREE_ROWS && (
           <GatedTableOverlay
