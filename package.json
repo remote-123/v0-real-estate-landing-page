@@ -29,7 +29,8 @@
     "scrape:propsearch": "npx tsx --env-file=.env.local scripts/ingest/propsearch_full_scraper.ts",
     "scrape:propsearch:areas": "npx tsx --env-file=.env.local scripts/ingest/propsearch_full_scraper.ts --phase=1",
     "scrape:propsearch:buildings": "npx tsx --env-file=.env.local scripts/ingest/propsearch_full_scraper.ts --phase=2",
-    "scrape:propsearch:details": "npx tsx --env-file=.env.local scripts/ingest/propsearch_full_scraper.ts --phase=3"
+    "scrape:propsearch:details": "npx tsx --env-file=.env.local scripts/ingest/propsearch_full_scraper.ts --phase=3",
+    "migrate:prop-buildings": "npx tsx --env-file=.env.local scripts/migrate/prop-buildings.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.78.0",
