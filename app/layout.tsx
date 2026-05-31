@@ -3,15 +3,11 @@ import type { Metadata, Viewport } from 'next'
 import { DM_Sans, Playfair_Display } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
-import { WhatsAppButton } from "@/components/whatsapp-button"
-import { MobileStickyBar } from "@/components/mobile-sticky-bar"
-import { ExitIntentPopup } from "@/components/exit-intent-popup"
 import Script from "next/script"
 import { GoogleAnalytics } from '@next/third-parties/google'
 import { ThemeProvider } from "@/components/theme-provider"
 import { SessionProvider } from "@/components/auth/session-provider"
 import { SpeedInsights } from "@vercel/speed-insights/next"
-import { headers } from "next/headers"
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
@@ -24,37 +20,37 @@ const playfair = Playfair_Display({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://www.northcapitaldxb.com'),
-  title: 'NorthCapitalDXB | Invest in Dubai Real Estate',
+  metadataBase: new URL('https://thecityregistry.com'),
+  title: 'Dubai Real Estate Intelligence | The City Registry',
   description:
-    'Your trusted gateway to UAE property investment. Tax-free returns, booming market, and A-Z personal guidance for international investors looking to invest in Dubai real estate.',
+    'Institutional-grade Dubai property data. Transaction analytics, yield maps, community screener, and distress deal scanner — powered by DLD and Bayut data.',
   keywords: [
-    'invest in Dubai real estate',
-    'UAE property investment',
-    'Dubai real estate',
-    'tax-free investment',
-    'Dubai property',
-    'UAE investment',
+    'Dubai real estate data',
+    'Dubai property analytics',
+    'DLD transaction data',
+    'Dubai rental yield',
+    'Dubai property intelligence',
+    'UAE real estate',
   ],
   openGraph: {
-    title: 'NorthCapitalDXB | Invest in Dubai Real Estate',
+    title: 'Dubai Real Estate Intelligence | The City Registry',
     description:
-      'Your trusted gateway to UAE property investment. Tax-free returns, booming market, and A-Z personal guidance.',
+      'Institutional-grade Dubai property data. Transaction analytics, yield maps, community screener, and distress deal scanner.',
     type: 'website',
     images: [
       {
-        url: '/images/hero-dubai.jpg',
+        url: '/images/terminal-social.png',
         width: 1200,
         height: 630,
-        alt: 'North Capital DXB',
+        alt: 'The City Registry — Dubai Data Platform',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'NorthCapitalDXB | Invest in Dubai Real Estate',
-    description: 'Your trusted gateway to UAE property investment. Tax-free returns, booming market, and A-Z personal guidance.',
-    images: ['/images/hero-dubai.jpg'],
+    title: 'Dubai Real Estate Intelligence | The City Registry',
+    description: 'Institutional-grade Dubai property data. Powered by DLD and Bayut.',
+    images: ['/images/terminal-social.png'],
   },
 }
 
@@ -66,15 +62,11 @@ export const viewport: Viewport = {
   userScalable: true,
 }
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const headersList = await headers()
-  const site = headersList.get("x-site") ?? "northcapital"
-  const isNorthCapital = site === "northcapital"
-
   return (
     <html lang="en" suppressHydrationWarning>
       <body
@@ -90,9 +82,6 @@ export default async function RootLayout({
           disableTransitionOnChange
         >
           {children}
-          {isNorthCapital && <WhatsAppButton />}
-          {isNorthCapital && <MobileStickyBar />}
-          {/* <ExitIntentPopup /> */}
           <Analytics />
           <Script id="microsoft-clarity" strategy="afterInteractive">
             {`

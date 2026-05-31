@@ -101,7 +101,7 @@ export default async function MarketBriefingPage() {
                 <FileText className="h-4 w-4 text-accent" />
               </div>
               <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                North Capital Research — Institutional Briefing
+                Institutional Briefing
               </span>
             </div>
 
@@ -137,7 +137,7 @@ export default async function MarketBriefingPage() {
           {/* Disclaimer */}
           <div className="rounded-xl border border-border/40 bg-secondary/20 p-4">
             <p className="text-[11px] text-muted-foreground/60 leading-relaxed">
-              This briefing is generated automatically from DLD transaction data using AI analysis. It is for informational purposes only and does not constitute financial advice. Past performance is not indicative of future results. North Capital DXB — RERA Broker #95133.
+              This briefing is generated automatically from DLD transaction data using AI analysis. It is for informational purposes only and does not constitute financial advice. Past performance is not indicative of future results.
             </p>
           </div>
         </div>

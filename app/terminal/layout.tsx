@@ -1,13 +1,9 @@
 import React from "react"
 import type { Metadata } from "next"
-import Link from "next/link"
-import { Calendar } from "lucide-react"
 import { InvestorSidebar } from "@/components/terminal/sidebar"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { FeedbackModal } from "@/components/terminal/feedback-modal"
 import { MobileNav } from "@/components/terminal/mobile-nav"
-import { Button } from "@/components/ui/button"
-import { SITE_CONFIG } from "@/lib/constants"
 import { UserNav } from "@/components/auth/user-nav"
 import { headers } from "next/headers"
 import { CityRegistryTheme } from "@/components/city-registry-theme"
@@ -41,17 +37,18 @@ export async function generateMetadata(): Promise<Metadata> {
     }
 
     return {
-        title: 'Investor Terminal | North Capital DXB',
-        description: 'Institutional-grade real estate metrics, market intelligence, and distress deal scanning for the Dubai market.',
+        title: 'Dubai Real Estate Intelligence | The City Registry',
+        description: 'Institutional-grade Dubai property data. Transaction analytics, yield maps, community screener, and distress deal scanner.',
+        metadataBase: new URL('https://thecityregistry.com'),
         openGraph: {
-            title: 'Investor Terminal | North Capital DXB',
-            description: 'Institutional-grade real estate metrics, market intelligence, and distress deal scanning for the Dubai market.',
-            images: [{ url: '/images/terminal-social.png', width: 1200, height: 630, alt: 'North Capital Investor Terminal' }],
+            title: 'Dubai Real Estate Intelligence | The City Registry',
+            description: 'Institutional-grade Dubai property data. Transaction analytics, yield maps, community screener, and distress deal scanner.',
+            images: [{ url: '/images/terminal-social.png', width: 1200, height: 630, alt: 'The City Registry — Dubai Data Platform' }],
         },
         twitter: {
             card: 'summary_large_image',
-            title: 'Investor Terminal | North Capital DXB',
-            description: 'Institutional-grade real estate metrics, market intelligence, and distress deal scanning for the Dubai market.',
+            title: 'Dubai Real Estate Intelligence | The City Registry',
+            description: 'Institutional-grade Dubai property data. Powered by DLD and Bayut.',
             images: ['/images/terminal-social.png'],
         },
     }
@@ -127,10 +124,10 @@ function getTerminalSchema(isCityRegistry: boolean) {
     return {
         "@context": "https://schema.org",
         "@type": "Dataset",
-        "name": "North Capital Dubai Investor Terminal",
-        "description": "Institutional-grade real estate metrics, market intelligence, and distress deal scanning for the Dubai market. Aggregated macro-economic datasets from data.dubai and DLD.",
-        "url": "/terminal",
-        "creator": { "@type": "Organization", "name": "North Capital DXB" },
+        "name": "The City Registry — Dubai Real Estate Data Terminal",
+        "description": "Institutional-grade Dubai property market intelligence. Aggregated from Dubai Land Department (DLD) official transaction registry and Bayut property listings API.",
+        "url": "https://thecityregistry.com/terminal",
+        "creator": { "@type": "Organization", "name": "The City Registry", "url": "https://thecityregistry.com" },
         "variableMeasured": ["Rental Yields", "Price per Square Foot", "Market Occupancy", "Transaction Volume", "Distress Sale Discounts"],
     }
 }
@@ -159,49 +156,22 @@ export default async function InvestorTerminalLayout({
                             <MobileNav />
                             {/* Title — desktop only */}
                             <h1 className="hidden sm:flex text-[10px] sm:text-sm font-medium text-muted-foreground uppercase tracking-widest items-center gap-2">
-                                {isCityRegistry ? (
-                                    <>
+                                        <>
                                         <span className="text-foreground font-semibold tracking-wider">The City Registry</span>
                                         <span className="mx-2 opacity-20">/</span>
                                         <span className="font-mono text-[10px]" style={{ color: '#00BFA5' }}>UAE Real Estate Intelligence</span>
                                     </>
-                                ) : (
-                                    <>
-                                        <span>Investor Terminal</span>
-                                        <span className="mx-2 opacity-30">/</span>
-                                        <span className="text-foreground">v1.0.4</span>
-                                    </>
-                                )}
                             </h1>
                         </div>
                         <div className="flex items-center gap-3">
-                            {isCityRegistry && (
-                                <div
-                                    className="hidden sm:flex items-center rounded px-2 py-0.5 text-[10px] font-mono font-bold"
-                                    style={{ background: '#00BFA5', color: '#000' }}
-                                >
-                                    PRO
-                                </div>
-                            )}
-                            {!isCityRegistry && (
-                                <Button asChild variant="outline" size="sm" className="hidden sm:flex gap-2 border-accent/20 hover:bg-accent/10 hover:text-accent transition-colors">
-                                    <Link href={SITE_CONFIG.calendarLink} target="_blank">
-                                        <Calendar className="h-3 w-3" />
-                                        Book an Appointment
-                                    </Link>
-                                </Button>
-                            )}
                             <FeedbackModal />
                             <UserNav />
-                            {!isCityRegistry && <ThemeToggle />}
+                            <ThemeToggle />
                             {/* Live badge — desktop only */}
                             <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/50 shrink-0">
-                                {isCityRegistry
-                                    ? <div className="h-2 w-2 rounded-full animate-pulse" style={{ background: '#00BFA5' }} />
-                                    : <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                                }
+                                <div className="h-2 w-2 rounded-full animate-pulse" style={{ background: '#00BFA5' }} />
                                 <span className="text-[10px] uppercase tracking-tighter text-muted-foreground font-mono font-medium">
-                                    {isCityRegistry ? '↻ LIVE' : 'Market Open'}
+                                    ↻ LIVE
                                 </span>
                             </div>
                         </div>

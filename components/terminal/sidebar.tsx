@@ -4,7 +4,6 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
 import {
-  ArrowLeft,
   BarChart3,
   Building2,
   Calculator,
@@ -45,6 +44,7 @@ export const sidebarLinks = [
       { label: "Prop Buildings", href: "/terminal/prop-buildings", icon: Building2 },
       { label: "Building Comparator", href: "/terminal/building-comparator", icon: Building2 },
       { label: "Floor Plan Pricer", href: "/terminal/floor-plan-pricer", icon: Layers },
+      { label: "Building Listings", href: "/terminal/building-listings", icon: Search },
       { label: "Comparable Sales", href: "/terminal/transaction-search", icon: Search },
       { label: "Developer Track Record", href: "/terminal/developer-track", icon: Users },
     ]
@@ -69,9 +69,9 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <div className="flex flex-col h-full">
       <div className="flex h-16 items-center px-6 border-b border-border/50">
-        <Link href="/" className="flex items-center gap-2" onClick={onNavigate}>
+        <Link href="/terminal" className="flex items-center gap-2" onClick={onNavigate}>
           <span className="font-serif text-lg font-bold tracking-tight text-foreground">
-            {isCityRegistry ? "THE CITY REGISTRY" : "NORTH CAPITAL"}
+            THE CITY REGISTRY
           </span>
         </Link>
       </div>
@@ -112,36 +112,16 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       </div>
 
       <div className="p-4 border-t border-border/50 mt-auto space-y-4">
-        {isCityRegistry ? (
-          <div className="rounded-lg p-4" style={{ background: 'rgba(0,191,165,0.06)', border: '1px solid rgba(0,191,165,0.15)' }}>
-            <div className="flex items-center justify-between mb-1">
-              <p className="text-xs font-mono font-semibold text-foreground uppercase tracking-widest">Data Status</p>
-              <div className="rounded px-1.5 py-0.5 text-[9px] font-mono font-bold" style={{ background: '#00BFA5', color: '#000' }}>PRO</div>
-            </div>
-            <div className="mt-2 flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full animate-pulse" style={{ background: '#00BFA5' }} />
-              <p className="text-[10px] text-muted-foreground font-mono uppercase tracking-tight">DLD · Bayut · Live</p>
-            </div>
+        <div className="rounded-lg p-4" style={{ background: 'rgba(0,191,165,0.06)', border: '1px solid rgba(0,191,165,0.15)' }}>
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-xs font-mono font-semibold text-foreground uppercase tracking-widest">Data Status</p>
           </div>
-        ) : (
-          <div className="rounded-lg bg-secondary/50 p-4">
-            <p className="text-xs font-medium text-foreground">Investor Status</p>
-            <div className="mt-2 flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              <p className="text-[10px] text-muted-foreground uppercase tracking-tight">Verified Institutional</p>
-            </div>
+          <div className="mt-2 flex items-center gap-2">
+            <div className="h-2 w-2 rounded-full animate-pulse" style={{ background: '#00BFA5' }} />
+            <p className="text-[10px] text-muted-foreground font-mono uppercase tracking-tight">DLD · Bayut · Live</p>
           </div>
-        )}
+        </div>
 
-        {!isCityRegistry && (
-          <Link
-            href="/services"
-            className="flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-xs font-medium transition-colors hover:bg-secondary"
-          >
-            <ArrowLeft className="h-3 w-3" />
-            Back to Site
-          </Link>
-        )}
       </div>
     </div>
   )
