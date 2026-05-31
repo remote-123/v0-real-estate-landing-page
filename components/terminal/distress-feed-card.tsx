@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Badge } from "@/components/ui/badge"
-import { ArrowDownRight, ExternalLink, X, MessageCircle, Calendar, TrendingDown, Clock, MapPin } from "lucide-react"
-import { SITE_CONFIG } from "@/lib/constants"
+import { ArrowDownRight, ExternalLink, X, TrendingDown, Clock, MapPin } from "lucide-react"
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ReferenceLine,
   ResponsiveContainer, CartesianGrid,
@@ -124,7 +123,6 @@ export interface DistressFeedCardProps {
     listingId?: string
 }
 
-const WA_NUMBER = "971554006230"
 
 const DOM_TIER_LABEL = {
     fresh: { label: "Fresh listing", color: "text-accent border-accent/30" },
@@ -158,22 +156,6 @@ function ScoreMeter({ score }: { score: number }) {
     )
 }
 
-function fireWhatsAppIntent(deal: DistressFeedCardProps): void {
-    // Fire-and-forget — do NOT await, do NOT block navigation
-    fetch('/api/leads/whatsapp-intent', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            listing_id: deal.listingId ?? deal.rank.toString(),
-            title: deal.title,
-            location: deal.location,
-            price: deal.currentPrice,
-            psf: deal.psf,
-            distress_score: deal.distressScore,
-            area_benchmark_psf: deal.areaBenchmarkPsf,
-        }),
-    }).catch(() => { /* never block navigation on failure */ })
-}
 
 export function DealModal({ deal, onClose }: { deal: DistressFeedCardProps; onClose: () => void }) {
     const drop = deal.originalPrice - deal.currentPrice
@@ -182,10 +164,6 @@ export function DealModal({ deal, onClose }: { deal: DistressFeedCardProps; onCl
         ? ((deal.psf - deal.areaBenchmarkPsf) / deal.areaBenchmarkPsf) * 100
         : null
     const domTier = DOM_TIER_LABEL[deal.domTier]
-
-    const waMessage = encodeURIComponent(
-        `Hi, I saw a distress deal on North Capital DXB terminal:\n${deal.title}\n${deal.location}\nAED ${formatFull(deal.currentPrice)} (${dropPct}% below list)\n\nCan you help me evaluate this?`
-    )
 
     return (
         <div
@@ -311,25 +289,6 @@ export function DealModal({ deal, onClose }: { deal: DistressFeedCardProps; onCl
 
                     {/* CTAs */}
                     <div className="space-y-2 pt-1">
-                        <a
-                            href={`https://wa.me/${WA_NUMBER}?text=${waMessage}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={() => fireWhatsAppIntent(deal)}
-                            className="flex items-center justify-center gap-2 w-full rounded-lg bg-accent hover:bg-accent/90 text-accent-foreground px-4 py-3 text-sm font-semibold transition-colors"
-                        >
-                            <MessageCircle className="h-4 w-4" />
-                            Chat with an analyst on WhatsApp
-                        </a>
-                        <a
-                            href={SITE_CONFIG.calendarLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center justify-center gap-2 w-full rounded-lg border border-border/50 hover:bg-muted/30 text-foreground px-4 py-2.5 text-sm font-medium transition-colors"
-                        >
-                            <Calendar className="h-4 w-4" />
-                            Book a call
-                        </a>
                         {deal.externalUrl && (
                             <a
                                 href={deal.externalUrl}

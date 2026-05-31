@@ -1,11 +1,7 @@
 "use client"
 
 import { useRouter, useSearchParams } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { MessageCircle } from "lucide-react"
 
-const WA_NUMBER = "971554006230"
-const WA_MESSAGE = encodeURIComponent("Hi, I found a distress deal on North Capital DXB and I'd like to secure it. Can you help?")
 
 export function DistressFilters({ communities = [] }: { communities?: string[] }) {
     const router = useRouter()
@@ -42,12 +38,6 @@ export function DistressFilters({ communities = [] }: { communities?: string[] }
                         </button>
                     ))}
                 </div>
-                <Button asChild size="sm" className="gap-2 bg-accent hover:bg-accent/90 text-accent-foreground shrink-0">
-                    <a href={`https://wa.me/${WA_NUMBER}?text=${WA_MESSAGE}`} target="_blank" rel="noopener noreferrer">
-                        <MessageCircle className="h-3 w-3" />
-                        Secure a Deal
-                    </a>
-                </Button>
             </div>
 
             {/* Sorting Dropdown */}

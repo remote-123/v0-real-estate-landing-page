@@ -12,12 +12,16 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
     ? 'https://thecityregistry.com'
     : 'https://www.northcapitaldxb.com'
 
+  const disallow = isCityRegistry
+    ? ['/api/', '/admin/', '/_next/', '/sign-in', '/studio', '/about', '/contact', '/services', '/blog', '/areas', '/projects', '/calculator', '/tools', '/glossary']
+    : ['/api/', '/admin/', '/_next/', '/sign-in', '/studio']
+
   return {
     rules: [
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/api/', '/admin/', '/_next/', '/sign-in', '/studio'],
+        disallow,
       },
     ],
     sitemap: `${baseUrl}/sitemap.xml`,
