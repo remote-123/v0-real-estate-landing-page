@@ -1,44 +1,55 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
+import type { NextRequest } from "next/server"
 
 const CITY_REGISTRY_HOSTS = ["thecityregistry.com", "www.thecityregistry.com"]
 
-// Paths that exist for the agency brand but should 404 on the data terminal
-const BLOCKED_ON_CITY_REGISTRY = [
-  "/about",
-  "/contact",
-  "/services",
-  "/blog",
-  "/areas",
-  "/projects",
-  "/calculator",
-  "/tools",
-  "/glossary",
-]
+// Pages that belong to NorthCapital only — redirect away from cityregistry
+const NORTHCAPITAL_ONLY_PATHS = ["/blog", "/projects", "/services", "/about", "/contact", "/calculator", "/glossary", "/areas", "/sign-in"]
 
-export function middleware(request: NextRequest) {
-  const host = request.headers.get("host") ?? ""
-  const isCityRegistry = CITY_REGISTRY_HOSTS.some((h) => host.includes(h))
-  const { pathname } = request.nextUrl
+// Pages that belong to City Registry only — redirect away from northcapital
+const CITYREGISTRY_ONLY_PATHS = ["/terminal"]
 
-  // Redirect blocked marketing pages to /terminal on cityregistry domain
+export function middleware(req: NextRequest) {
+  const host = req.headers.get("host") ?? ""
+  const { pathname, searchParams } = req.nextUrl
+
+  // Dev preview: ?site=cityregistry on localhost bypasses host check
+  const devSite = process.env.NODE_ENV === "development" ? searchParams.get("site") : null
+  // Vercel preview deployments (*.vercel.app) are treated as cityregistry for testing
+  const isVercelPreview = host.endsWith(".vercel.app")
+  const isCityRegistry = devSite === "cityregistry" || isVercelPreview || CITY_REGISTRY_HOSTS.some((h) => host.includes(h))
+
   if (isCityRegistry) {
-    const isBlocked = BLOCKED_ON_CITY_REGISTRY.some(
-      (p) => pathname === p || pathname.startsWith(p + "/")
-    )
-    if (isBlocked) {
-      return NextResponse.redirect(new URL("/terminal", request.url), 308)
+    // City Registry root → landing page (handled by app/page.tsx with isCityRegistry check)
+    // Block NorthCapital-only paths → redirect to northcapitaldxb.com
+    const isNorthCapitalPath = NORTHCAPITAL_ONLY_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"))
+    if (isNorthCapitalPath) {
+      return NextResponse.redirect(`https://www.northcapitaldxb.com${pathname}`)
+    }
+  } else if (process.env.NODE_ENV !== "development") {
+    // NorthCapital: redirect /terminal/* → thecityregistry.com/terminal/*
+    // Skipped in dev so terminal pages are accessible on localhost without query params
+    const isTerminalPath = CITYREGISTRY_ONLY_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"))
+    if (isTerminalPath) {
+      return NextResponse.redirect(`https://thecityregistry.com${pathname}`)
+    }
+  } else {
+    // Dev: serve terminal with cityregistry theme (no redirect, correct branding)
+    const isTerminalPath = CITYREGISTRY_ONLY_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"))
+    if (isTerminalPath) {
+      const res = NextResponse.next()
+      res.headers.set("x-site", "cityregistry")
+      return res
     }
   }
 
-  // Pass x-site header downstream so pages can branch on brand
-  const response = NextResponse.next()
-  response.headers.set("x-site", isCityRegistry ? "cityregistry" : "northcapital")
-  return response
+  const res = NextResponse.next()
+  res.headers.set("x-site", isCityRegistry ? "cityregistry" : "northcapital")
+  return res
 }
 
 export const config = {
   matcher: [
-    // Run on all paths except static assets and Next internals
-    "/((?!_next/static|_next/image|favicon.ico|images/|icons/|fonts/).*)",
+    "/((?!_next/static|_next/image|favicon.ico|images|icons|robots.txt|sitemap.xml).*)",
   ],
 }
