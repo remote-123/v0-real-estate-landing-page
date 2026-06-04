@@ -1,6 +1,7 @@
 import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { RentalTable, type RentalListing } from "@/components/terminal/rental-table"
 import { sql } from "@/lib/db"
+import { unstable_cache } from 'next/cache'
 import { auth } from "@/auth"
 import { isTerminalUnlocked } from "@/lib/terminal-gate"
 
@@ -79,11 +80,19 @@ async function enrichWithBuildingAge(listings: RentalListing[]): Promise<RentalL
     })
 }
 
+const fetchAllListings = unstable_cache(
+  async (): Promise<RentalListing[]> => {
+    const raw = await fetchListingsFromDB()
+    return enrichWithBuildingAge(raw)
+  },
+  ['rental-drops-data'],
+  { revalidate: 3600 }
+)
+
 const FREE_ROWS = 3
 
 export default async function RentalDropsPage() {
-    const [session, raw] = await Promise.all([auth(), fetchListingsFromDB()])
-    const allListings = await enrichWithBuildingAge(raw)
+    const [session, allListings] = await Promise.all([auth(), fetchAllListings()])
     const isAuthenticated = await isTerminalUnlocked(session)
     const listings = isAuthenticated ? allListings : allListings.slice(0, FREE_ROWS)
 

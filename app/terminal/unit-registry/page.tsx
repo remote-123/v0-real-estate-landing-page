@@ -1,5 +1,6 @@
 import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { sql } from "@/lib/db"
+import { unstable_cache } from 'next/cache'
 import { auth } from "@/auth"
 import { isTerminalUnlocked } from "@/lib/terminal-gate"
 import { Building2 } from "lucide-react"
@@ -16,19 +17,23 @@ export async function generateMetadata() {
   })
 }
 
-async function fetchAreaList(): Promise<string[]> {
-  try {
-    const rows = await sql<{ area_name_en: string }[]>`
-      SELECT DISTINCT area_name_en
-      FROM dld_units
-      WHERE area_name_en IS NOT NULL AND area_name_en != ''
-      ORDER BY area_name_en
-    `
-    return rows.map((r) => r.area_name_en)
-  } catch {
-    return []
-  }
-}
+const fetchAreaList = unstable_cache(
+  async (): Promise<string[]> => {
+    try {
+      const rows = await sql<{ area_name_en: string }[]>`
+        SELECT DISTINCT area_name_en
+        FROM dld_units
+        WHERE area_name_en IS NOT NULL AND area_name_en != ''
+        ORDER BY area_name_en
+      `
+      return rows.map((r) => r.area_name_en)
+    } catch {
+      return []
+    }
+  },
+  ['unit-registry-areas'],
+  { revalidate: 86400 }
+)
 
 export default async function UnitRegistryPage() {
   const [session, areas] = await Promise.all([auth(), fetchAreaList()])

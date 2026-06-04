@@ -3,6 +3,7 @@ import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { CommunitiesTable } from '@/components/terminal/communities-table'
 import { type Community } from '@/lib/types/community'
 import { sql } from '@/lib/db'
+import { unstable_cache } from 'next/cache'
 import { formatAreaName } from '@/lib/area-names'
 import { auth } from '@/auth'
 import { isTerminalUnlocked } from '@/lib/terminal-gate'
@@ -57,7 +58,8 @@ function mapToCommunity(r: CommunityRow): Community {
   }
 }
 
-async function fetchCommunities(): Promise<Community[]> {
+const fetchCommunities = unstable_cache(
+  async (): Promise<Community[]> => {
   try {
     const rows = await sql<CommunityRow[]>`
       WITH latest_month AS (
@@ -139,7 +141,10 @@ async function fetchCommunities(): Promise<Community[]> {
   } catch {
     return []
   }
-}
+  },
+  ['communities-data'],
+  { revalidate: 3600 }
+)
 
 const FREE_ROWS = 3
 

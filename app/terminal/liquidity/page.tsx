@@ -1,5 +1,6 @@
 import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { sql } from "@/lib/db"
+import { unstable_cache } from 'next/cache'
 import { BarChart3, TrendingUp, DollarSign, AlertTriangle } from "lucide-react"
 import { StatCard } from "@/components/terminal/stat-card"
 import { LiquidityChart, type LiquidityPoint } from "@/components/terminal/liquidity-chart"
@@ -33,46 +34,50 @@ type AreaRow = {
   mortgage_value_bn: string
 }
 
-async function fetchData() {
-  try {
-    const [monthly, areas] = await Promise.all([
-      sql<MonthRow[]>`
-        SELECT
-          txn_month::text,
-          trans_group_en,
-          SUM(txn_count)::integer AS deals,
-          ROUND((SUM(total_value) / 1e9)::numeric, 3) AS value_bn
-        FROM mv_txn_monthly_unified
-        CROSS JOIN (SELECT MAX(txn_month) AS max_m FROM mv_txn_monthly_unified) l
-        WHERE txn_month >= l.max_m - INTERVAL '23 months'
-          AND trans_group_en IN ('Sales', 'Mortgages')
-          AND area_name_en IS NOT NULL
-        GROUP BY txn_month, trans_group_en
-        ORDER BY txn_month ASC
-      `,
-      sql<AreaRow[]>`
-        WITH latest AS (SELECT MAX(txn_month) AS m FROM mv_txn_monthly_unified)
-        SELECT
-          area_name_en,
-          SUM(CASE WHEN trans_group_en = 'Mortgages' THEN txn_count ELSE 0 END)::integer AS mortgage_deals,
-          SUM(CASE WHEN trans_group_en = 'Sales'     THEN txn_count ELSE 0 END)::integer AS sales_deals,
-          ROUND((SUM(CASE WHEN trans_group_en = 'Mortgages' THEN total_value ELSE 0 END) / 1e9)::numeric, 3) AS mortgage_value_bn
-        FROM mv_txn_monthly_unified
-        CROSS JOIN latest
-        WHERE txn_month = latest.m
-          AND area_name_en IS NOT NULL
-        GROUP BY area_name_en
-        HAVING SUM(CASE WHEN trans_group_en = 'Mortgages' THEN txn_count ELSE 0 END) > 0
-        ORDER BY mortgage_deals DESC
-        LIMIT 40
-      `,
-    ])
-    return { monthly, areas }
-  } catch (e) {
-    console.error("liquidity fetch error:", e)
-    return { monthly: [], areas: [] }
-  }
-}
+const fetchData = unstable_cache(
+  async (): Promise<{ monthly: MonthRow[]; areas: AreaRow[] }> => {
+    try {
+      const [monthly, areas] = await Promise.all([
+        sql<MonthRow[]>`
+          SELECT
+            txn_month::text,
+            trans_group_en,
+            SUM(txn_count)::integer AS deals,
+            ROUND((SUM(total_value) / 1e9)::numeric, 3) AS value_bn
+          FROM mv_txn_monthly_unified
+          CROSS JOIN (SELECT MAX(txn_month) AS max_m FROM mv_txn_monthly_unified) l
+          WHERE txn_month >= l.max_m - INTERVAL '23 months'
+            AND trans_group_en IN ('Sales', 'Mortgages')
+            AND area_name_en IS NOT NULL
+          GROUP BY txn_month, trans_group_en
+          ORDER BY txn_month ASC
+        `,
+        sql<AreaRow[]>`
+          WITH latest AS (SELECT MAX(txn_month) AS m FROM mv_txn_monthly_unified)
+          SELECT
+            area_name_en,
+            SUM(CASE WHEN trans_group_en = 'Mortgages' THEN txn_count ELSE 0 END)::integer AS mortgage_deals,
+            SUM(CASE WHEN trans_group_en = 'Sales'     THEN txn_count ELSE 0 END)::integer AS sales_deals,
+            ROUND((SUM(CASE WHEN trans_group_en = 'Mortgages' THEN total_value ELSE 0 END) / 1e9)::numeric, 3) AS mortgage_value_bn
+          FROM mv_txn_monthly_unified
+          CROSS JOIN latest
+          WHERE txn_month = latest.m
+            AND area_name_en IS NOT NULL
+          GROUP BY area_name_en
+          HAVING SUM(CASE WHEN trans_group_en = 'Mortgages' THEN txn_count ELSE 0 END) > 0
+          ORDER BY mortgage_deals DESC
+          LIMIT 40
+        `,
+      ])
+      return { monthly, areas }
+    } catch (e) {
+      console.error("liquidity fetch error:", e)
+      return { monthly: [], areas: [] }
+    }
+  },
+  ['liquidity-data'],
+  { revalidate: 3600 }
+)
 
 function pivotMonthly(rows: MonthRow[]): LiquidityPoint[] {
   const map = new Map<string, { label: string; mortgages: number; sales: number }>()

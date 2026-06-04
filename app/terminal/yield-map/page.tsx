@@ -1,6 +1,7 @@
 import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { TrendingUp } from "lucide-react"
 import { sql } from "@/lib/db"
+import { unstable_cache } from 'next/cache'
 import { StatCard } from "@/components/terminal/stat-card"
 import { YieldMapTable } from "@/components/terminal/yield-map-table"
 import type { YieldRow } from "@/components/terminal/yield-map-table"
@@ -18,59 +19,63 @@ export async function generateMetadata() {
   })
 }
 
-async function fetchYieldData(): Promise<YieldRow[]> {
-  try {
-    const rows = await sql<YieldRow[]>`
-      WITH latest AS (
-        SELECT MAX(txn_month) AS max_month FROM mv_txn_monthly_unified WHERE trans_group_en = 'Sales'
-      ),
-      sales AS (
-        SELECT area_name_en, rooms_en,
-          SUM(txn_count * avg_price) / NULLIF(SUM(txn_count), 0) AS avg_sale_price,
-          SUM(txn_count) AS sale_txns
-        FROM mv_txn_monthly_unified
-        CROSS JOIN latest
-        WHERE trans_group_en = 'Sales'
-          AND property_type_en = 'Unit'
-          AND txn_month >= latest.max_month - INTERVAL '11 months'
-          AND area_name_en IS NOT NULL
-          AND rooms_en IS NOT NULL
-        GROUP BY area_name_en, rooms_en
-      ),
-      rents AS (
-        SELECT area_name_en, rooms_en,
-          SUM(txn_count * avg_rent) / NULLIF(SUM(txn_count), 0) AS avg_annual_rent,
-          SUM(txn_count) AS rent_txns
-        FROM mv_txn_monthly_unified
-        CROSS JOIN latest
-        WHERE trans_group_en = 'Rent'
-          AND property_type_en = 'Unit'
-          AND txn_month >= latest.max_month - INTERVAL '11 months'
-          AND area_name_en IS NOT NULL
-          AND rooms_en IS NOT NULL
-        GROUP BY area_name_en, rooms_en
-      )
-      SELECT
-        s.area_name_en,
-        s.rooms_en,
-        ROUND(s.avg_sale_price::numeric, 0)::integer AS avg_sale_price,
-        ROUND((r.avg_annual_rent * 12)::numeric, 0)::integer AS avg_annual_rent,
-        ROUND(((r.avg_annual_rent * 12) / NULLIF(s.avg_sale_price, 0) * 100)::numeric, 2) AS gross_yield_pct,
-        s.sale_txns::integer,
-        r.rent_txns::integer
-      FROM sales s
-      JOIN rents r USING (area_name_en, rooms_en)
-      WHERE s.sale_txns >= 10 AND r.rent_txns >= 10
-        AND s.avg_sale_price > 100000
-        AND r.avg_annual_rent > 0
-      ORDER BY gross_yield_pct DESC
-    `
-    return rows
-  } catch (error) {
-    console.error("yield-map fetch error:", error)
-    return []
-  }
-}
+const fetchYieldData = unstable_cache(
+  async (): Promise<YieldRow[]> => {
+    try {
+      const rows = await sql<YieldRow[]>`
+        WITH latest AS (
+          SELECT MAX(txn_month) AS max_month FROM mv_txn_monthly_unified WHERE trans_group_en = 'Sales'
+        ),
+        sales AS (
+          SELECT area_name_en, rooms_en,
+            SUM(txn_count * avg_price) / NULLIF(SUM(txn_count), 0) AS avg_sale_price,
+            SUM(txn_count) AS sale_txns
+          FROM mv_txn_monthly_unified
+          CROSS JOIN latest
+          WHERE trans_group_en = 'Sales'
+            AND property_type_en = 'Unit'
+            AND txn_month >= latest.max_month - INTERVAL '11 months'
+            AND area_name_en IS NOT NULL
+            AND rooms_en IS NOT NULL
+          GROUP BY area_name_en, rooms_en
+        ),
+        rents AS (
+          SELECT area_name_en, rooms_en,
+            SUM(txn_count * avg_rent) / NULLIF(SUM(txn_count), 0) AS avg_annual_rent,
+            SUM(txn_count) AS rent_txns
+          FROM mv_txn_monthly_unified
+          CROSS JOIN latest
+          WHERE trans_group_en = 'Rent'
+            AND property_type_en = 'Unit'
+            AND txn_month >= latest.max_month - INTERVAL '11 months'
+            AND area_name_en IS NOT NULL
+            AND rooms_en IS NOT NULL
+          GROUP BY area_name_en, rooms_en
+        )
+        SELECT
+          s.area_name_en,
+          s.rooms_en,
+          ROUND(s.avg_sale_price::numeric, 0)::integer AS avg_sale_price,
+          ROUND((r.avg_annual_rent * 12)::numeric, 0)::integer AS avg_annual_rent,
+          ROUND(((r.avg_annual_rent * 12) / NULLIF(s.avg_sale_price, 0) * 100)::numeric, 2) AS gross_yield_pct,
+          s.sale_txns::integer,
+          r.rent_txns::integer
+        FROM sales s
+        JOIN rents r USING (area_name_en, rooms_en)
+        WHERE s.sale_txns >= 10 AND r.rent_txns >= 10
+          AND s.avg_sale_price > 100000
+          AND r.avg_annual_rent > 0
+        ORDER BY gross_yield_pct DESC
+      `
+      return rows
+    } catch (error) {
+      console.error("yield-map fetch error:", error)
+      return []
+    }
+  },
+  ['yield-map-data'],
+  { revalidate: 3600 }
+)
 
 function formatAed(val: number): string {
   if (val >= 1_000_000) return `AED ${(val / 1_000_000).toFixed(2)}M`

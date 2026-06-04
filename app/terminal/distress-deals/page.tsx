@@ -4,6 +4,7 @@ import { DistressTable } from "@/components/terminal/distress-table"
 import { DistressFilters } from "@/components/terminal/distress-filters"
 import { EmailCaptureWidget } from "@/components/terminal/email-capture-widget"
 import { sql } from "@/lib/db"
+import { unstable_cache } from 'next/cache'
 import { auth } from "@/auth"
 import { isTerminalUnlocked } from "@/lib/terminal-gate"
 
@@ -123,7 +124,8 @@ function translateBrandToDld(token: string): string {
 
 // Returns a map keyed by "area_lower|TYPE" e.g. "marsa dubai|APARTMENT"
 // meter_sale_price is AED/sqm — divide by 10.764 to get AED/sqft
-async function fetchAreaBenchmarks(): Promise<Map<string, number>> {
+const fetchAreaBenchmarks = unstable_cache(
+  async (): Promise<[string, number][]> => {
     try {
         const rows = await sql<{ area_name_en: string; property_type: string; avg_psf: number }[]>`
       WITH latest AS (
@@ -152,13 +154,15 @@ async function fetchAreaBenchmarks(): Promise<Map<string, number>> {
       GROUP BY area_name_en, property_type
       HAVING SUM(txn_count) >= 5
     `
-        const map = new Map<string, number>()
-        for (const r of rows) {
-            map.set(`${r.area_name_en.toLowerCase()}|${r.property_type}`, Number(r.avg_psf))
-        }
-        return map
-    } catch { return new Map() }
-}
+        return rows.map(r => [
+          `${r.area_name_en.toLowerCase()}|${r.property_type}`,
+          Number(r.avg_psf),
+        ] as [string, number])
+    } catch { return [] }
+  },
+  ['distress-benchmarks'],
+  { revalidate: 3600 }
+)
 
 function matchBenchmark(location: string, type: string, benchmarks: Map<string, number>): number | null {
     // Translate each token from brand name to DLD name before matching
@@ -238,11 +242,12 @@ export default async function DistressDealsPage(props: {
     const sortFilter = typeof searchParams.sort === 'string' ? searchParams.sort : 'biggest-drop'
     const areaFilter = typeof searchParams.area === 'string' ? searchParams.area : ''
 
-    const [rawFetched, benchmarks, session] = await Promise.all([
+    const [rawFetched, benchmarkEntries, session] = await Promise.all([
         fetchPropertyFinderDeals(),
         fetchAreaBenchmarks(),
         auth(),
     ])
+    const benchmarks = new Map<string, number>(benchmarkEntries)
     const isAuthenticated = await isTerminalUnlocked(session)
 
     let rawDeals = rawFetched.map((deal: any) => {

@@ -1,5 +1,6 @@
 import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { sql } from "@/lib/db"
+import { unstable_cache } from 'next/cache'
 import { formatAreaName } from "@/lib/area-names"
 import { auth } from "@/auth"
 import { isTerminalUnlocked } from "@/lib/terminal-gate"
@@ -29,7 +30,8 @@ interface BullCaseRow {
   bull_score: number
 }
 
-async function fetchBullCases(): Promise<BullCaseRow[]> {
+const fetchBullCases = unstable_cache(
+  async (): Promise<BullCaseRow[]> => {
   try {
     const rows = await sql<{
       area_name_en: string
@@ -160,7 +162,10 @@ async function fetchBullCases(): Promise<BullCaseRow[]> {
     console.error("[bull-cases] fetchBullCases error:", err)
     return []
   }
-}
+  },
+  ['bull-cases-data'],
+  { revalidate: 3600 }
+)
 
 function bullLabel(score: number): { label: string; color: string; bg: string } {
   if (score >= 70) return { label: "STRONG",   color: "#10b981", bg: "#05966922" }

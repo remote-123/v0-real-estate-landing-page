@@ -1,5 +1,6 @@
 import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { sql } from "@/lib/db"
+import { unstable_cache } from 'next/cache'
 import { Building2, CalendarClock, Layers, MapPin } from "lucide-react"
 import { StatCard } from "@/components/terminal/stat-card"
 import { SupplyPipelineTable } from "@/components/terminal/supply-pipeline-table"
@@ -30,30 +31,31 @@ export interface Project {
   no_of_buildings: number | null
 }
 
-async function fetchProjects(): Promise<{
-  active: Project[]
-  completedCount: number
-}> {
-  try {
-    const [active, completedRows] = await Promise.all([
-      sql<Project[]>`
-        SELECT project_id, project_name_en, area_name_en, master_project_en,
-               developer_name, project_status, completion_date, percent_completed,
-               no_of_units, no_of_buildings
-        FROM dld_projects
-        WHERE project_status IN ('ACTIVE', 'NOT_STARTED', 'PENDING', 'CONDITIONAL_ACTIVATING')
-        ORDER BY completion_date ASC NULLS LAST
-      `,
-      sql<[{ count: string }]>`
-        SELECT count(*) FROM dld_projects WHERE project_status = 'FINISHED'
-      `,
-    ])
-    return { active, completedCount: Number(completedRows[0]?.count ?? 0) }
-  } catch (error) {
-    console.error("supply-pipeline fetch error:", error)
-    return { active: [], completedCount: 0 }
-  }
-}
+const fetchProjects = unstable_cache(
+  async (): Promise<{ active: Project[]; completedCount: number }> => {
+    try {
+      const [active, completedRows] = await Promise.all([
+        sql<Project[]>`
+          SELECT project_id, project_name_en, area_name_en, master_project_en,
+                 developer_name, project_status, completion_date, percent_completed,
+                 no_of_units, no_of_buildings
+          FROM dld_projects
+          WHERE project_status IN ('ACTIVE', 'NOT_STARTED', 'PENDING', 'CONDITIONAL_ACTIVATING')
+          ORDER BY completion_date ASC NULLS LAST
+        `,
+        sql<[{ count: string }]>`
+          SELECT count(*) FROM dld_projects WHERE project_status = 'FINISHED'
+        `,
+      ])
+      return { active, completedCount: Number(completedRows[0]?.count ?? 0) }
+    } catch (error) {
+      console.error("supply-pipeline fetch error:", error)
+      return { active: [], completedCount: 0 }
+    }
+  },
+  ['supply-pipeline-data'],
+  { revalidate: 86400 }
+)
 
 function computeStats(projects: Project[]) {
   const totalUnits = projects.reduce((sum, p) => sum + (p.no_of_units ?? 0), 0)

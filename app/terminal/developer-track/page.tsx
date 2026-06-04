@@ -1,5 +1,6 @@
 import { terminalPageMeta, getTerminalSiteInfo } from "@/lib/terminal-metadata"
 import { sql } from "@/lib/db"
+import { unstable_cache } from 'next/cache'
 import { Building2, TrendingUp, BarChart3 } from "lucide-react"
 import { StatCard } from "@/components/terminal/stat-card"
 import { formatAreaName } from "@/lib/area-names"
@@ -29,47 +30,51 @@ interface DeveloperRow {
   avg_completion_pct: number
 }
 
-async function fetchDeveloperData(): Promise<{
-  developers: DeveloperRow[]
-  totalDevelopers: number
-  topDeveloper: string
-  avgProjectUnits: number
-}> {
-  try {
-    const rows = await sql<DeveloperRow[]>`
-      SELECT
-        developer_name,
-        COUNT(*)::integer                                                                                           AS total_projects,
-        COALESCE(SUM(no_of_units), 0)::integer                                                                     AS total_units,
-        COALESCE(SUM(CASE WHEN project_status IN ('ACTIVE','NOT_STARTED','PENDING') THEN no_of_units ELSE 0 END), 0)::integer
-                                                                                                                   AS pipeline_units,
-        COUNT(CASE WHEN project_status IN ('ACTIVE','NOT_STARTED','PENDING') THEN 1 END)::integer                 AS active_projects,
-        COUNT(CASE WHEN project_status = 'FINISHED' THEN 1 END)::integer                                          AS finished_projects,
-        MODE() WITHIN GROUP (ORDER BY area_name_en)                                                                AS top_area,
-        ROUND(AVG(COALESCE(percent_completed, 0))::numeric, 1)                                                    AS avg_completion_pct
-      FROM dld_projects
-      WHERE developer_name IS NOT NULL
-        AND developer_name != ''
-        AND no_of_units > 0
-      GROUP BY developer_name
-      HAVING COUNT(*) >= 2
-      ORDER BY total_units DESC
-      LIMIT 60
-    `
+const fetchDeveloperData = unstable_cache(
+  async (): Promise<{
+    developers: DeveloperRow[]
+    totalDevelopers: number
+    topDeveloper: string
+    avgProjectUnits: number
+  }> => {
+    try {
+      const rows = await sql<DeveloperRow[]>`
+        SELECT
+          developer_name,
+          COUNT(*)::integer                                                                                           AS total_projects,
+          COALESCE(SUM(no_of_units), 0)::integer                                                                     AS total_units,
+          COALESCE(SUM(CASE WHEN project_status IN ('ACTIVE','NOT_STARTED','PENDING') THEN no_of_units ELSE 0 END), 0)::integer
+                                                                                                                     AS pipeline_units,
+          COUNT(CASE WHEN project_status IN ('ACTIVE','NOT_STARTED','PENDING') THEN 1 END)::integer                 AS active_projects,
+          COUNT(CASE WHEN project_status = 'FINISHED' THEN 1 END)::integer                                          AS finished_projects,
+          MODE() WITHIN GROUP (ORDER BY area_name_en)                                                                AS top_area,
+          ROUND(AVG(COALESCE(percent_completed, 0))::numeric, 1)                                                    AS avg_completion_pct
+        FROM dld_projects
+        WHERE developer_name IS NOT NULL
+          AND developer_name != ''
+          AND no_of_units > 0
+        GROUP BY developer_name
+        HAVING COUNT(*) >= 2
+        ORDER BY total_units DESC
+        LIMIT 60
+      `
 
-    const totalDevelopers = rows.length
-    const topDeveloper = rows[0]?.developer_name ?? "—"
-    const avgProjectUnits =
-      rows.length > 0
-        ? Math.round(rows.reduce((s, r) => s + Number(r.total_units), 0) / rows.length)
-        : 0
+      const totalDevelopers = rows.length
+      const topDeveloper = rows[0]?.developer_name ?? "—"
+      const avgProjectUnits =
+        rows.length > 0
+          ? Math.round(rows.reduce((s, r) => s + Number(r.total_units), 0) / rows.length)
+          : 0
 
-    return { developers: rows, totalDevelopers, topDeveloper, avgProjectUnits }
-  } catch (error) {
-    console.error("[developer-track] fetch error:", error)
-    return { developers: [], totalDevelopers: 0, topDeveloper: "—", avgProjectUnits: 0 }
-  }
-}
+      return { developers: rows, totalDevelopers, topDeveloper, avgProjectUnits }
+    } catch (error) {
+      console.error("[developer-track] fetch error:", error)
+      return { developers: [], totalDevelopers: 0, topDeveloper: "—", avgProjectUnits: 0 }
+    }
+  },
+  ['developer-track-data'],
+  { revalidate: 86400 }
+)
 
 function pipelineBar(pipeline: number, total: number): string {
   if (total === 0) return "0%"

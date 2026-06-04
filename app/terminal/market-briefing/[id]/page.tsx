@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation"
 import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { sql } from "@/lib/db"
+import { unstable_cache } from 'next/cache'
 import { FileText, ChevronRight, ChevronLeft } from "lucide-react"
 import Link from "next/link"
 import { auth } from "@/auth"
@@ -22,36 +23,40 @@ interface NavLinks {
   next: { id: number; week_label: string } | null
 }
 
-async function fetchBriefing(id: number): Promise<{ briefing: Briefing | null; nav: NavLinks }> {
-  try {
-    const [rows, prevRows, nextRows] = await Promise.all([
-      sql<Briefing[]>`
-        SELECT id, content, generated_at, week_label, data_snapshot
-        FROM market_briefings WHERE id = ${id}
-      `,
-      sql<{ id: number; week_label: string }[]>`
-        SELECT id, week_label FROM market_briefings
-        WHERE id < ${id} ORDER BY id DESC LIMIT 1
-      `,
-      sql<{ id: number; week_label: string }[]>`
-        SELECT id, week_label FROM market_briefings
-        WHERE id > ${id} ORDER BY id ASC LIMIT 1
-      `,
-    ])
+const fetchBriefing = unstable_cache(
+  async (id: number): Promise<{ briefing: Briefing | null; nav: NavLinks }> => {
+    try {
+      const [rows, prevRows, nextRows] = await Promise.all([
+        sql<Briefing[]>`
+          SELECT id, content, generated_at, week_label, data_snapshot
+          FROM market_briefings WHERE id = ${id}
+        `,
+        sql<{ id: number; week_label: string }[]>`
+          SELECT id, week_label FROM market_briefings
+          WHERE id < ${id} ORDER BY id DESC LIMIT 1
+        `,
+        sql<{ id: number; week_label: string }[]>`
+          SELECT id, week_label FROM market_briefings
+          WHERE id > ${id} ORDER BY id ASC LIMIT 1
+        `,
+      ])
 
-    return {
-      briefing: rows[0]
-        ? { ...rows[0], id: Number(rows[0].id) }
-        : null,
-      nav: {
-        prev: prevRows[0] ? { id: Number(prevRows[0].id), week_label: prevRows[0].week_label } : null,
-        next: nextRows[0] ? { id: Number(nextRows[0].id), week_label: nextRows[0].week_label } : null,
-      },
+      return {
+        briefing: rows[0]
+          ? { ...rows[0], id: Number(rows[0].id) }
+          : null,
+        nav: {
+          prev: prevRows[0] ? { id: Number(prevRows[0].id), week_label: prevRows[0].week_label } : null,
+          next: nextRows[0] ? { id: Number(nextRows[0].id), week_label: nextRows[0].week_label } : null,
+        },
+      }
+    } catch {
+      return { briefing: null, nav: { prev: null, next: null } }
     }
-  } catch {
-    return { briefing: null, nav: { prev: null, next: null } }
-  }
-}
+  },
+  ['market-briefing'],
+  { revalidate: 3600 }
+)
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params

@@ -1,5 +1,6 @@
 import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { sql } from '@/lib/db'
+import { unstable_cache } from 'next/cache'
 import { BuildingsTable } from '@/components/terminal/buildings-table'
 import { AreaSelector } from '@/components/terminal/area-selector'
 import { auth } from "@/auth"
@@ -35,23 +36,39 @@ type BuildingRow = {
   amenities: string | null
 }
 
-async function fetchAreas(): Promise<string[]> {
-  try {
-    const rows = await sql<{ area_name_en: string }[]>`
-      SELECT DISTINCT area_name_en
-      FROM buildings_enriched
-      WHERE area_name_en IS NOT NULL
-      ORDER BY area_name_en
-    `
-    return rows.map(r => r.area_name_en)
-  } catch {
-    return []
-  }
-}
+const fetchAreas = unstable_cache(
+  async (): Promise<string[]> => {
+    try {
+      const rows = await sql<{ area_name_en: string }[]>`
+        SELECT DISTINCT area_name_en
+        FROM buildings_enriched
+        WHERE area_name_en IS NOT NULL
+        ORDER BY area_name_en
+      `
+      return rows.map(r => r.area_name_en)
+    } catch {
+      return []
+    }
+  },
+  ['buildings-areas'],
+  { revalidate: 86400 }
+)
 
-async function fetchBuildings(area: string | null): Promise<BuildingRow[]> {
-  try {
-    if (area) {
+const fetchBuildings = unstable_cache(
+  async (area: string | null): Promise<BuildingRow[]> => {
+    try {
+      if (area) {
+        return await sql<BuildingRow[]>`
+          SELECT
+            building_key, slug, global_slug, building_name_en, area_name_en,
+            primary_sub_type, developer_name, completion_year, propsearch_status,
+            osm_lat, osm_lng, total_floors, total_units, property_types, amenities
+          FROM buildings_enriched
+          WHERE building_name_en IS NOT NULL
+            AND area_name_en = ${area}
+          ORDER BY building_name_en
+        `
+      }
       return await sql<BuildingRow[]>`
         SELECT
           building_key, slug, global_slug, building_name_en, area_name_en,
@@ -59,24 +76,16 @@ async function fetchBuildings(area: string | null): Promise<BuildingRow[]> {
           osm_lat, osm_lng, total_floors, total_units, property_types, amenities
         FROM buildings_enriched
         WHERE building_name_en IS NOT NULL
-          AND area_name_en = ${area}
         ORDER BY building_name_en
+        LIMIT 200
       `
+    } catch {
+      return []
     }
-    return await sql<BuildingRow[]>`
-      SELECT
-        building_key, slug, global_slug, building_name_en, area_name_en,
-        primary_sub_type, developer_name, completion_year, propsearch_status,
-        osm_lat, osm_lng, total_floors, total_units, property_types, amenities
-      FROM buildings_enriched
-      WHERE building_name_en IS NOT NULL
-      ORDER BY building_name_en
-      LIMIT 200
-    `
-  } catch {
-    return []
-  }
-}
+  },
+  ['buildings-data'],
+  { revalidate: 86400 }
+)
 
 const FREE_ROWS = 5
 

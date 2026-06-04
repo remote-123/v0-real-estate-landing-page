@@ -1,5 +1,6 @@
 import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { sql } from "@/lib/db"
+import { unstable_cache } from 'next/cache'
 import { Building2, Calendar, MapPin, Layers } from "lucide-react"
 import { StatCard } from "@/components/terminal/stat-card"
 import { ServiceChargesTable } from "@/components/terminal/service-charges-table"
@@ -24,30 +25,34 @@ export interface ServiceChargeRow {
   total_service_cost: number
 }
 
-async function fetchServiceCharges(): Promise<ServiceChargeRow[]> {
-  try {
-    const rows = await sql<ServiceChargeRow[]>`
-      SELECT
-        project_name,
-        master_community_name_en,
-        management_company_name_en,
-        budget_year,
-        sum(service_cost) AS total_service_cost
-      FROM dld_service_charges
-      WHERE usage_name_en = 'Residential'
-      GROUP BY project_name, master_community_name_en, management_company_name_en, budget_year
-      ORDER BY total_service_cost DESC
-      LIMIT 2000
-    `
-    return rows.map(r => ({
-      ...r,
-      total_service_cost: Number(r.total_service_cost),
-    }))
-  } catch (error) {
-    console.error("Service charges fetch error:", error)
-    return []
-  }
-}
+const fetchServiceCharges = unstable_cache(
+  async (): Promise<ServiceChargeRow[]> => {
+    try {
+      const rows = await sql<ServiceChargeRow[]>`
+        SELECT
+          project_name,
+          master_community_name_en,
+          management_company_name_en,
+          budget_year,
+          sum(service_cost) AS total_service_cost
+        FROM dld_service_charges
+        WHERE usage_name_en = 'Residential'
+        GROUP BY project_name, master_community_name_en, management_company_name_en, budget_year
+        ORDER BY total_service_cost DESC
+        LIMIT 2000
+      `
+      return rows.map(r => ({
+        ...r,
+        total_service_cost: Number(r.total_service_cost),
+      }))
+    } catch (error) {
+      console.error("Service charges fetch error:", error)
+      return []
+    }
+  },
+  ['service-charges-data'],
+  { revalidate: 86400 }
+)
 
 const FREE_ROWS = 5
 

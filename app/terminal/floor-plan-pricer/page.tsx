@@ -1,5 +1,6 @@
 import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { sql } from "@/lib/db"
+import { unstable_cache } from 'next/cache'
 import { PricerControls } from "@/components/terminal/pricer-controls"
 import { auth } from "@/auth"
 import { isTerminalUnlocked } from "@/lib/terminal-gate"
@@ -25,35 +26,39 @@ export interface PricerRow {
   txn_count: number
 }
 
-async function fetchPricerData(): Promise<PricerRow[]> {
-  try {
-    const rows = await sql<PricerRow[]>`
-      SELECT
-        area_name_en,
-        rooms_en,
-        ROUND(PERCENTILE_CONT(0.10) WITHIN GROUP (ORDER BY meter_sale_price)::numeric, 0)::integer AS p10,
-        ROUND(PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY meter_sale_price)::numeric, 0)::integer AS p25,
-        ROUND(PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY meter_sale_price)::numeric, 0)::integer AS p50,
-        ROUND(PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY meter_sale_price)::numeric, 0)::integer AS p75,
-        ROUND(PERCENTILE_CONT(0.90) WITHIN GROUP (ORDER BY meter_sale_price)::numeric, 0)::integer AS p90,
-        COUNT(*)::integer AS txn_count
-      FROM dld_transactions
-      WHERE trans_group_en = 'Sales'
-        AND meter_sale_price > 200
-        AND meter_sale_price < 15000
-        AND instance_date >= '2020-01-01'
-        AND area_name_en IS NOT NULL
-        AND rooms_en IS NOT NULL
-      GROUP BY area_name_en, rooms_en
-      HAVING COUNT(*) >= 20
-      ORDER BY area_name_en, rooms_en
-    `
-    return rows
-  } catch (error) {
-    console.error("floor-plan-pricer fetch error:", error)
-    return []
-  }
-}
+const fetchPricerData = unstable_cache(
+  async (): Promise<PricerRow[]> => {
+    try {
+      const rows = await sql<PricerRow[]>`
+        SELECT
+          area_name_en,
+          rooms_en,
+          ROUND(PERCENTILE_CONT(0.10) WITHIN GROUP (ORDER BY meter_sale_price)::numeric, 0)::integer AS p10,
+          ROUND(PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY meter_sale_price)::numeric, 0)::integer AS p25,
+          ROUND(PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY meter_sale_price)::numeric, 0)::integer AS p50,
+          ROUND(PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY meter_sale_price)::numeric, 0)::integer AS p75,
+          ROUND(PERCENTILE_CONT(0.90) WITHIN GROUP (ORDER BY meter_sale_price)::numeric, 0)::integer AS p90,
+          COUNT(*)::integer AS txn_count
+        FROM dld_transactions
+        WHERE trans_group_en = 'Sales'
+          AND meter_sale_price > 200
+          AND meter_sale_price < 15000
+          AND instance_date >= '2020-01-01'
+          AND area_name_en IS NOT NULL
+          AND rooms_en IS NOT NULL
+        GROUP BY area_name_en, rooms_en
+        HAVING COUNT(*) >= 20
+        ORDER BY area_name_en, rooms_en
+      `
+      return rows
+    } catch (error) {
+      console.error("floor-plan-pricer fetch error:", error)
+      return []
+    }
+  },
+  ['floor-plan-pricer-data'],
+  { revalidate: 86400 }
+)
 
 const FREE_ROWS = 3
 

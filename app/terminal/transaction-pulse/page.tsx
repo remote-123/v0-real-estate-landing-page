@@ -1,6 +1,7 @@
 import { terminalPageMeta, getTerminalSiteInfo } from "@/lib/terminal-metadata"
 import { Activity, TrendingUp, DollarSign, BarChart2 } from "lucide-react"
 import { sql } from "@/lib/db"
+import { unstable_cache } from 'next/cache'
 import { StatCard } from "@/components/terminal/stat-card"
 import { TransactionPulseChart, type MonthlyRow } from "@/components/terminal/transaction-pulse-chart"
 import { TransactionHeatmap } from "@/components/terminal/transaction-heatmap"
@@ -20,38 +21,42 @@ export async function generateMetadata() {
 
 type DayRow = { day: string; daily_txns: number }
 
-async function fetchData(): Promise<{ monthly: MonthlyRow[]; daily: DayRow[] }> {
-  try {
-    const [monthly, daily] = await Promise.all([
-      sql<MonthlyRow[]>`
-        SELECT
-          txn_month::text AS txn_month,
-          trans_group_en,
-          SUM(txn_count)::integer AS deals,
-          ROUND((SUM(total_value) / 1e9)::numeric, 2) AS value_bn,
-          ROUND(AVG(avg_price_sqm)::numeric, 0) AS avg_psm
-        FROM mv_txn_monthly_unified
-        CROSS JOIN (SELECT MAX(txn_month) AS max_month FROM mv_txn_monthly_unified) latest
-        WHERE txn_month >= latest.max_month - INTERVAL '23 months'
-          AND trans_group_en IN ('Sales', 'Mortgages', 'Gifts')
-        GROUP BY txn_month, trans_group_en
-        ORDER BY txn_month ASC
-      `,
-      sql<DayRow[]>`
-        SELECT instance_date::text AS day, COUNT(*)::integer AS daily_txns
-        FROM dld_transactions
-        WHERE instance_date >= (SELECT MAX(instance_date) FROM dld_transactions) - INTERVAL '364 days'
-          AND instance_date <= (SELECT MAX(instance_date) FROM dld_transactions)
-        GROUP BY instance_date
-        ORDER BY instance_date ASC
-      `,
-    ])
-    return { monthly, daily }
-  } catch (error) {
-    console.error("transaction-pulse fetch error:", error)
-    return { monthly: [], daily: [] }
-  }
-}
+const fetchData = unstable_cache(
+  async (): Promise<{ monthly: MonthlyRow[]; daily: DayRow[] }> => {
+    try {
+      const [monthly, daily] = await Promise.all([
+        sql<MonthlyRow[]>`
+          SELECT
+            txn_month::text AS txn_month,
+            trans_group_en,
+            SUM(txn_count)::integer AS deals,
+            ROUND((SUM(total_value) / 1e9)::numeric, 2) AS value_bn,
+            ROUND(AVG(avg_price_sqm)::numeric, 0) AS avg_psm
+          FROM mv_txn_monthly_unified
+          CROSS JOIN (SELECT MAX(txn_month) AS max_month FROM mv_txn_monthly_unified) latest
+          WHERE txn_month >= latest.max_month - INTERVAL '23 months'
+            AND trans_group_en IN ('Sales', 'Mortgages', 'Gifts')
+          GROUP BY txn_month, trans_group_en
+          ORDER BY txn_month ASC
+        `,
+        sql<DayRow[]>`
+          SELECT instance_date::text AS day, COUNT(*)::integer AS daily_txns
+          FROM dld_transactions
+          WHERE instance_date >= (SELECT MAX(instance_date) FROM dld_transactions) - INTERVAL '364 days'
+            AND instance_date <= (SELECT MAX(instance_date) FROM dld_transactions)
+          GROUP BY instance_date
+          ORDER BY instance_date ASC
+        `,
+      ])
+      return { monthly, daily }
+    } catch (error) {
+      console.error("transaction-pulse fetch error:", error)
+      return { monthly: [], daily: [] }
+    }
+  },
+  ['txn-pulse-data'],
+  { revalidate: 3600 }
+)
 
 // postgres.js returns numeric columns as strings — coerce to numbers
 function coerceRow(r: MonthlyRow): MonthlyRow {

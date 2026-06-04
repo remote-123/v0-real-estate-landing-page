@@ -1,5 +1,6 @@
 import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { sql } from "@/lib/db"
+import { unstable_cache } from 'next/cache'
 import { formatAreaName } from "@/lib/area-names"
 import { auth } from "@/auth"
 import { isTerminalUnlocked } from "@/lib/terminal-gate"
@@ -28,7 +29,8 @@ interface BearCaseRow {
   bear_score: number
 }
 
-async function fetchBearCases(): Promise<BearCaseRow[]> {
+const fetchBearCases = unstable_cache(
+  async (): Promise<BearCaseRow[]> => {
   try {
     const rows = await sql<{
       area_name_en: string
@@ -130,7 +132,10 @@ async function fetchBearCases(): Promise<BearCaseRow[]> {
     console.error("[bear-cases] fetchBearCases error:", err)
     return []
   }
-}
+  },
+  ['bear-cases-data'],
+  { revalidate: 3600 }
+)
 
 function bearLabel(score: number): { label: string; color: string; bg: string } {
   if (score >= 65) return { label: "EXTREME", color: "#ef4444", bg: "#7f1d1d22" }

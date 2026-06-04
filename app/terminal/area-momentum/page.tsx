@@ -1,5 +1,6 @@
 import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { sql } from "@/lib/db"
+import { unstable_cache } from 'next/cache'
 import { TrendingUp, Zap, BarChart3 } from "lucide-react"
 import { StatCard } from "@/components/terminal/stat-card"
 import { formatAreaName } from "@/lib/area-names"
@@ -26,54 +27,58 @@ interface AreaRow {
   momentum_score: number | string
 }
 
-async function fetchAreas(): Promise<AreaRow[]> {
-  try {
-    const rows = await sql<AreaRow[]>`
-      WITH latest AS (SELECT MAX(txn_month) AS m FROM mv_txn_monthly_unified WHERE trans_group_en = 'Sales'),
-      monthly AS (
+const fetchAreas = unstable_cache(
+  async (): Promise<AreaRow[]> => {
+    try {
+      const rows = await sql<AreaRow[]>`
+        WITH latest AS (SELECT MAX(txn_month) AS m FROM mv_txn_monthly_unified WHERE trans_group_en = 'Sales'),
+        monthly AS (
+          SELECT
+            area_name_en,
+            txn_month,
+            SUM(txn_count * avg_price_sqm) / NULLIF(SUM(txn_count), 0) AS avg_psm,
+            SUM(txn_count) AS vol
+          FROM mv_txn_monthly_unified
+          CROSS JOIN latest
+          WHERE trans_group_en = 'Sales'
+            AND property_type_en = 'Unit'
+            AND area_name_en IS NOT NULL
+            AND txn_month >= latest.m - INTERVAL '2 months'
+          GROUP BY area_name_en, txn_month
+        ),
+        curr AS (
+          SELECT area_name_en, avg_psm AS curr_psm, vol AS curr_vol
+          FROM monthly CROSS JOIN latest
+          WHERE txn_month = latest.m
+        ),
+        prev AS (
+          SELECT area_name_en, avg_psm AS prev_psm, vol AS prev_vol
+          FROM monthly CROSS JOIN latest
+          WHERE txn_month = latest.m - INTERVAL '1 month'
+        )
         SELECT
-          area_name_en,
-          txn_month,
-          SUM(txn_count * avg_price_sqm) / NULLIF(SUM(txn_count), 0) AS avg_psm,
-          SUM(txn_count) AS vol
-        FROM mv_txn_monthly_unified
-        CROSS JOIN latest
-        WHERE trans_group_en = 'Sales'
-          AND property_type_en = 'Unit'
-          AND area_name_en IS NOT NULL
-          AND txn_month >= latest.m - INTERVAL '2 months'
-        GROUP BY area_name_en, txn_month
-      ),
-      curr AS (
-        SELECT area_name_en, avg_psm AS curr_psm, vol AS curr_vol
-        FROM monthly CROSS JOIN latest
-        WHERE txn_month = latest.m
-      ),
-      prev AS (
-        SELECT area_name_en, avg_psm AS prev_psm, vol AS prev_vol
-        FROM monthly CROSS JOIN latest
-        WHERE txn_month = latest.m - INTERVAL '1 month'
-      )
-      SELECT
-        c.area_name_en,
-        ROUND((c.curr_psm / 10.764)::numeric, 0)::integer AS curr_psf,
-        ROUND(((c.curr_psm - p.prev_psm) / NULLIF(p.prev_psm, 0) * 100)::numeric, 2) AS price_mom_pct,
-        c.curr_vol::integer AS curr_vol,
-        ROUND(((c.curr_vol::numeric - p.prev_vol) / NULLIF(p.prev_vol, 0) * 100)::numeric, 1) AS vol_mom_pct,
-        ROUND((((c.curr_psm - p.prev_psm) / NULLIF(p.prev_psm, 0)) + ((c.curr_vol::numeric - p.prev_vol) / NULLIF(p.prev_vol, 0))) * 50, 1) AS momentum_score
-      FROM curr c
-      JOIN prev p USING (area_name_en)
-      WHERE c.curr_vol >= 5 AND p.prev_vol >= 5
-        AND c.curr_psm > 0 AND p.prev_psm > 0
-      ORDER BY momentum_score DESC
-      LIMIT 80
-    `
-    return rows
-  } catch (error) {
-    console.error("area-momentum fetch error:", error)
-    return []
-  }
-}
+          c.area_name_en,
+          ROUND((c.curr_psm / 10.764)::numeric, 0)::integer AS curr_psf,
+          ROUND(((c.curr_psm - p.prev_psm) / NULLIF(p.prev_psm, 0) * 100)::numeric, 2) AS price_mom_pct,
+          c.curr_vol::integer AS curr_vol,
+          ROUND(((c.curr_vol::numeric - p.prev_vol) / NULLIF(p.prev_vol, 0) * 100)::numeric, 1) AS vol_mom_pct,
+          ROUND((((c.curr_psm - p.prev_psm) / NULLIF(p.prev_psm, 0)) + ((c.curr_vol::numeric - p.prev_vol) / NULLIF(p.prev_vol, 0))) * 50, 1) AS momentum_score
+        FROM curr c
+        JOIN prev p USING (area_name_en)
+        WHERE c.curr_vol >= 5 AND p.prev_vol >= 5
+          AND c.curr_psm > 0 AND p.prev_psm > 0
+        ORDER BY momentum_score DESC
+        LIMIT 80
+      `
+      return rows
+    } catch (error) {
+      console.error("area-momentum fetch error:", error)
+      return []
+    }
+  },
+  ['area-momentum-data'],
+  { revalidate: 3600 }
+)
 
 function pct(val: number | string) {
   const n = Number(val)

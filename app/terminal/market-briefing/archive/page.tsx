@@ -1,5 +1,6 @@
 import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { sql } from "@/lib/db"
+import { unstable_cache } from 'next/cache'
 import { FileText, ChevronRight } from "lucide-react"
 import Link from "next/link"
 import { auth } from "@/auth"
@@ -23,25 +24,28 @@ interface BriefingSummary {
   excerpt: string
 }
 
-async function fetchBriefings(): Promise<BriefingSummary[]> {
-  try {
-    const rows = await sql<{ id: number; week_label: string; generated_at: string; content: string }[]>`
-      SELECT id, week_label, generated_at, content
-      FROM market_briefings
-      ORDER BY generated_at DESC
-      LIMIT 52
-    `
-    return rows.map((r) => ({
-      id: Number(r.id),
-      week_label: r.week_label,
-      generated_at: String(r.generated_at),
-      // First 200 chars of content as excerpt, ending at a word boundary
-      excerpt: r.content.slice(0, 200).replace(/\s\S*$/, "") + "…",
-    }))
-  } catch {
-    return []
-  }
-}
+const fetchBriefings = unstable_cache(
+  async (): Promise<BriefingSummary[]> => {
+    try {
+      const rows = await sql<{ id: number; week_label: string; generated_at: string; content: string }[]>`
+        SELECT id, week_label, generated_at, content
+        FROM market_briefings
+        ORDER BY generated_at DESC
+        LIMIT 52
+      `
+      return rows.map((r) => ({
+        id: Number(r.id),
+        week_label: r.week_label,
+        generated_at: String(r.generated_at),
+        excerpt: r.content.slice(0, 200).replace(/\s\S*$/, "") + "…",
+      }))
+    } catch {
+      return []
+    }
+  },
+  ['market-briefing-archive'],
+  { revalidate: 3600 }
+)
 
 function formatDate(iso: string): string {
   try {

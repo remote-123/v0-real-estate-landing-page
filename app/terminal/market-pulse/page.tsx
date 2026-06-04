@@ -1,5 +1,6 @@
 import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { sql } from "@/lib/db"
+import { unstable_cache } from 'next/cache'
 import { formatAreaName } from "@/lib/area-names"
 import { auth } from "@/auth"
 import { isTerminalUnlocked } from "@/lib/terminal-gate"
@@ -77,7 +78,8 @@ interface PulseData {
 
 // ── Data fetch ─────────────────────────────────────────────────────────────────
 
-async function fetchPulseData(): Promise<PulseData | null> {
+const fetchPulseData = unstable_cache(
+  async (): Promise<PulseData | null> => {
   try {
     const [summaryRows, bullRows, bearRows, volRows, pipeRows] = await Promise.all([
 
@@ -352,7 +354,10 @@ async function fetchPulseData(): Promise<PulseData | null> {
     console.error("[market-pulse] fetchPulseData error:", err)
     return null
   }
-}
+  },
+  ['market-pulse-data'],
+  { revalidate: 3600 }
+)
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
