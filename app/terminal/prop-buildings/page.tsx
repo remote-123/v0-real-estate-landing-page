@@ -1,5 +1,6 @@
 import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { sql } from "@/lib/db"
+import { unstable_cache } from "next/cache"
 import { PropBuildingsTable, type PropBuildingRow } from "@/components/terminal/prop-buildings-table"
 import { AreaSelector } from "@/components/terminal/area-selector"
 import { Suspense } from "react"
@@ -14,20 +15,43 @@ export async function generateMetadata() {
   })
 }
 
-async function fetchAreas(): Promise<string[]> {
-  try {
-    const rows = await sql<{ slug: string; name: string }[]>`
-      SELECT slug, name FROM prop_areas ORDER BY name
-    `
-    // Return names (what we store in prop_building_details.area_slug is the slug,
-    // but AreaSelector works on the value we pass — we'll use slug for filtering)
-    return rows.map(r => r.slug)
-  } catch { return [] }
-}
+const fetchAreas = unstable_cache(
+  async (): Promise<string[]> => {
+    try {
+      const rows = await sql<{ slug: string; name: string }[]>`
+        SELECT slug, name FROM prop_areas ORDER BY name
+      `
+      return rows.map(r => r.slug)
+    } catch { return [] }
+  },
+  ['prop-buildings-areas'],
+  { revalidate: 3600 }
+)
 
-async function fetchBuildings(areaSlug: string | null): Promise<PropBuildingRow[]> {
-  try {
-    if (areaSlug) {
+const fetchBuildings = unstable_cache(
+  async (areaSlug: string | null): Promise<PropBuildingRow[]> => {
+    try {
+      if (areaSlug) {
+        return await sql<PropBuildingRow[]>`
+          SELECT
+            pbd.building_slug,
+            pbd.name,
+            pbd.area_slug,
+            COALESCE(pa.name, pbd.area_slug) AS area_name,
+            pbd.status,
+            pbd.completion_year,
+            pbd.total_floors,
+            pbd.total_units,
+            pbd.building_type,
+            pbd.developer,
+            pbd.is_freehold,
+            pbd.property_types
+          FROM prop_building_details pbd
+          LEFT JOIN prop_areas pa ON pbd.area_slug = pa.slug
+          WHERE pbd.area_slug = ${areaSlug}
+          ORDER BY COALESCE(pbd.name, pbd.building_slug)
+        `
+      }
       return await sql<PropBuildingRow[]>`
         SELECT
           pbd.building_slug,
@@ -44,54 +68,41 @@ async function fetchBuildings(areaSlug: string | null): Promise<PropBuildingRow[
           pbd.property_types
         FROM prop_building_details pbd
         LEFT JOIN prop_areas pa ON pbd.area_slug = pa.slug
-        WHERE pbd.area_slug = ${areaSlug}
         ORDER BY COALESCE(pbd.name, pbd.building_slug)
+        LIMIT 400
       `
-    }
-    return await sql<PropBuildingRow[]>`
-      SELECT
-        pbd.building_slug,
-        pbd.name,
-        pbd.area_slug,
-        COALESCE(pa.name, pbd.area_slug) AS area_name,
-        pbd.status,
-        pbd.completion_year,
-        pbd.total_floors,
-        pbd.total_units,
-        pbd.building_type,
-        pbd.developer,
-        pbd.is_freehold,
-        pbd.property_types
-      FROM prop_building_details pbd
-      LEFT JOIN prop_areas pa ON pbd.area_slug = pa.slug
-      ORDER BY COALESCE(pbd.name, pbd.building_slug)
-      LIMIT 400
-    `
-  } catch { return [] }
-}
+    } catch { return [] }
+  },
+  ['prop-buildings-list'],
+  { revalidate: 3600 }
+)
 
-async function fetchStats() {
-  try {
-    const [totals, areas] = await Promise.all([
-      sql<{ total: string; with_year: string; avg_year: string }[]>`
-        SELECT
-          COUNT(*)::text AS total,
-          COUNT(completion_year)::text AS with_year,
-          ROUND(AVG(completion_year))::text AS avg_year
-        FROM prop_building_details
-      `,
-      sql<{ count: string }[]>`SELECT COUNT(*)::text AS count FROM prop_areas`,
-    ])
-    return {
-      total: parseInt(totals[0]?.total ?? '0', 10),
-      withYear: parseInt(totals[0]?.with_year ?? '0', 10),
-      avgYear: totals[0]?.avg_year ?? null,
-      areas: parseInt(areas[0]?.count ?? '0', 10),
+const fetchStats = unstable_cache(
+  async () => {
+    try {
+      const [totals, areas] = await Promise.all([
+        sql<{ total: string; with_year: string; avg_year: string }[]>`
+          SELECT
+            COUNT(*)::text AS total,
+            COUNT(completion_year)::text AS with_year,
+            ROUND(AVG(completion_year))::text AS avg_year
+          FROM prop_building_details
+        `,
+        sql<{ count: string }[]>`SELECT COUNT(*)::text AS count FROM prop_areas`,
+      ])
+      return {
+        total: parseInt(totals[0]?.total ?? '0', 10),
+        withYear: parseInt(totals[0]?.with_year ?? '0', 10),
+        avgYear: totals[0]?.avg_year ?? null,
+        areas: parseInt(areas[0]?.count ?? '0', 10),
+      }
+    } catch {
+      return { total: 0, withYear: 0, avgYear: null, areas: 0 }
     }
-  } catch {
-    return { total: 0, withYear: 0, avgYear: null, areas: 0 }
-  }
-}
+  },
+  ['prop-building-stats'],
+  { revalidate: 3600 }
+)
 
 export default async function PropBuildingsPage({
   searchParams,

@@ -2,6 +2,51 @@ import { MetadataRoute } from 'next'
 import { headers } from 'next/headers'
 import { client } from '@/sanity/lib/client'
 import { sql } from '@/lib/db'
+import { unstable_cache } from 'next/cache'
+
+const fetchCityRegistryAreas = unstable_cache(
+  async () => {
+    const [areaRows, topAreas] = await Promise.all([
+      sql<{ area_name_en: string }[]>`
+        SELECT DISTINCT area_name_en FROM mv_txn_monthly
+        WHERE area_name_en IS NOT NULL ORDER BY area_name_en
+      `,
+      sql<{ area_name_en: string }[]>`
+        SELECT area_name_en, SUM(txn_count) AS total
+        FROM mv_txn_monthly
+        WHERE area_name_en IS NOT NULL AND trans_group_en = 'Sales'
+        GROUP BY area_name_en ORDER BY total DESC LIMIT 60
+      `,
+    ])
+    return { areaRows, topAreas }
+  },
+  ['sitemap-cityregistry-areas'],
+  { revalidate: 86400 }
+)
+
+const fetchMainSiteAreas = unstable_cache(
+  async () => {
+    const [areaRows, topAreas] = await Promise.all([
+      sql<{ area_name_en: string }[]>`
+        SELECT DISTINCT area_name_en
+        FROM mv_txn_monthly_unified
+        WHERE area_name_en IS NOT NULL
+        ORDER BY area_name_en
+      `,
+      sql<{ area_name_en: string }[]>`
+        SELECT area_name_en, SUM(txn_count) AS total
+        FROM mv_txn_monthly_unified
+        WHERE area_name_en IS NOT NULL AND trans_group_en = 'Sales'
+        GROUP BY area_name_en
+        ORDER BY total DESC
+        LIMIT 60
+      `,
+    ])
+    return { areaRows, topAreas }
+  },
+  ['sitemap-main-areas'],
+  { revalidate: 86400 }
+)
 
 function toSlug(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
@@ -45,35 +90,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ].map((route) => ({
       url: `${baseUrl}${route}`,
       lastModified: new Date(),
-      changeFrequency: 'hourly' as const,
+      changeFrequency: 'monthly' as const,
       priority: route === '/terminal' ? 1.0 : 0.85,
     }))
 
     let communityUrls: MetadataRoute.Sitemap = []
     let areaDeepDiveUrls: MetadataRoute.Sitemap = []
     try {
-      const [areaRows, topAreas] = await Promise.all([
-        sql<{ area_name_en: string }[]>`
-          SELECT DISTINCT area_name_en FROM mv_txn_monthly
-          WHERE area_name_en IS NOT NULL ORDER BY area_name_en
-        `,
-        sql<{ area_name_en: string }[]>`
-          SELECT area_name_en, SUM(txn_count) AS total
-          FROM mv_txn_monthly
-          WHERE area_name_en IS NOT NULL AND trans_group_en = 'Sales'
-          GROUP BY area_name_en ORDER BY total DESC LIMIT 60
-        `,
-      ])
+      const { areaRows, topAreas } = await fetchCityRegistryAreas()
       communityUrls = areaRows.map((row) => ({
         url: `${baseUrl}/terminal/communities/${toSlug(row.area_name_en)}`,
         lastModified: new Date(),
-        changeFrequency: 'daily' as const,
+        changeFrequency: 'monthly' as const,
         priority: 0.75,
       }))
       areaDeepDiveUrls = topAreas.map((row) => ({
         url: `${baseUrl}/terminal/areas/${toSlug(row.area_name_en)}`,
         lastModified: new Date(),
-        changeFrequency: 'daily' as const,
+        changeFrequency: 'monthly' as const,
         priority: 0.80,
       }))
     } catch { /* skip if DB unavailable */ }
@@ -151,7 +185,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ].map((route) => ({
     url: `${baseUrl}${route}`,
     lastModified: new Date(),
-    changeFrequency: route.startsWith('/terminal') ? ('hourly' as const) : ('daily' as const),
+    changeFrequency: 'monthly' as const,
     priority: route === '' ? 1 : route.startsWith('/terminal') ? 0.85 : 0.9,
   }))
 
@@ -160,38 +194,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let areaDeepDiveUrls: MetadataRoute.Sitemap = []
   let publicAreaUrls: MetadataRoute.Sitemap = []
   try {
-    const [areaRows, topAreas] = await Promise.all([
-      sql<{ area_name_en: string }[]>`
-        SELECT DISTINCT area_name_en
-        FROM mv_txn_monthly_unified
-        WHERE area_name_en IS NOT NULL
-        ORDER BY area_name_en
-      `,
-      sql<{ area_name_en: string }[]>`
-        SELECT area_name_en, SUM(txn_count) AS total
-        FROM mv_txn_monthly_unified
-        WHERE area_name_en IS NOT NULL AND trans_group_en = 'Sales'
-        GROUP BY area_name_en
-        ORDER BY total DESC
-        LIMIT 60
-      `,
-    ])
+    const { areaRows, topAreas } = await fetchMainSiteAreas()
     communityUrls = areaRows.map((row) => ({
       url: `${baseUrl}/terminal/communities/${toSlug(row.area_name_en)}`,
       lastModified: new Date(),
-      changeFrequency: 'daily' as const,
+      changeFrequency: 'monthly' as const,
       priority: 0.75,
     }))
     areaDeepDiveUrls = topAreas.map((row) => ({
       url: `${baseUrl}/terminal/areas/${toSlug(row.area_name_en)}`,
       lastModified: new Date(),
-      changeFrequency: 'daily' as const,
+      changeFrequency: 'monthly' as const,
       priority: 0.80,
     }))
     publicAreaUrls = topAreas.map((row) => ({
       url: `${baseUrl}/areas/${toSlug(row.area_name_en)}`,
       lastModified: new Date(),
-      changeFrequency: 'daily' as const,
+      changeFrequency: 'monthly' as const,
       priority: 0.78,
     }))
   } catch {

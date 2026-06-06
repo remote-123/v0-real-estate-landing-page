@@ -456,7 +456,18 @@ async function main() {
   console.log(`stage=${STAGE ?? 'all'}  area=${AREA ?? 'all'}  limit=${LIMIT}  rescrape=${RESCRAPE}`)
 
   try {
-    if (!STAGE || STAGE === '1') { const areas = await stage1(); if (!STAGE) await stage2(areas) }
+    if (STAGE === 'count') {
+      const [a, b, d] = await Promise.all([
+        sql`SELECT COUNT(*) as c FROM prop_areas`,
+        sql`SELECT COUNT(*) as c FROM prop_buildings`,
+        sql`SELECT COUNT(*) as c FROM prop_building_details`,
+      ])
+      console.log(`  prop_areas:           ${a[0].c}`)
+      console.log(`  prop_buildings:       ${b[0].c}`)
+      console.log(`  prop_building_details:${d[0].c}`)
+      const remaining = Number(b[0].c) - Number(d[0].c)
+      console.log(`  remaining (stage 3):  ${remaining}`)
+    } else if (!STAGE || STAGE === '1') { const areas = await stage1(); if (!STAGE) await stage2(areas) }
     if (STAGE === '2') await stage2()
     if (!STAGE) await stage3()
     if (STAGE === '3') await stage3()

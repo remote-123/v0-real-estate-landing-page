@@ -19,6 +19,7 @@
     "ingest:dld-buildings-registry": "npx tsx scripts/ingest/dld_buildings_registry.ts",
     "ingest:dld-units": "npx tsx scripts/ingest/dld_units.ts",
     "ingest:dld-transactions": "npx tsx scripts/ingest/dld_transactions.ts",
+    "ingest:dld-transactions-v2": "npx tsx --env-file=.env.local scripts/ingest/dld_transactions_v2.ts",
     "ingest:buildings-enriched": "npx tsx --env-file=.env.local scripts/ingest/buildings_enriched.ts",
     "ingest:propsearch": "npx tsx --env-file=.env.local scripts/ingest/propsearch_scraper.ts",
     "announce-deploy": "npx tsx scripts/announce-deploy.ts",

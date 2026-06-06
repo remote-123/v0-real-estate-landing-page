@@ -7,6 +7,7 @@ Before starting any task, check `.agent/skills/` and `.claude/agents/skills/` fo
 ## Behavioral Rules (Always Enforced)
 
 - Do what has been asked; nothing more, nothing less
+- think, plan, ask before you code anything
 - Utilize Skills & Agents to achieve the goal
 - NEVER create files unless they're absolutely necessary for achieving your goal
 - ALWAYS prefer editing an existing file to creating a new one
@@ -18,18 +19,25 @@ Before starting any task, check `.agent/skills/` and `.claude/agents/skills/` fo
 - Summarize your work in the `docs/DAILY_LOG.md` file after every task
 - **Vault** (`vault/`) is the project's Obsidian knowledge base — treat it as living documentation and second brain
   - At session start, consult relevant vault notes before diving into unfamiliar areas
-  - After completing any task that changes architecture, DB schema, API routes, ops, or strategy — update the relevant vault note(s) alongside DAILY_LOG.md
+  - After completing any task that changes architecture, DB schema, API routes, ops, strategy, OR cost/performance — update the relevant vault note(s) alongside DAILY_LOG.md
   - Vault structure: `00-Index/MOC.md` (master index), `01-Architecture/`, `02-Features/`, `03-Data/`, `04-Ops/`, `05-Decisions/`, `06-Strategy/`
+- **Auto-memory** (`memory/MEMORY.md` + `memory/*.md`) — Claude Code's cross-session context. Separate from vault.
+  - At session start, read `memory/MEMORY.md` to restore context before starting work
+  - After ANY significant change — new feature, infra change, cost/billing optimization, new DB pattern, schema change, new API route, cron setup, discovered bug pattern — save a memory entry
+  - Triggers that ALWAYS require a memory write: adding caching (unstable_cache, Redis), changing DB connection config, adding/modifying cron jobs, changing auth, adding new terminal pages, any Neon billing/cost optimization
+  - Memory vs vault vs DAILY_LOG: DAILY_LOG = what happened today (ephemeral). Vault = long-term project knowledge (architecture, decisions). Memory = session context for Claude (patterns, gotchas, current state of tables/routes).
 
 ## File Organization
 
 - NEVER save to root folder — use the directories below
-- Use `/src` for source code files
-- Use `/tests` for test files
-- Use `/docs` for documentation and markdown files
-- Use `/config` for configuration files
-- Use `/scripts` for utility scripts
-- Use `/examples` for example code
+- `app/` — Next.js App Router pages and API routes
+- `components/` — React components
+- `lib/` — shared utilities, DB client, helpers
+- `scripts/` — ingestion and utility scripts (TypeScript, run via tsx)
+- `docs/` — documentation and markdown files (including DAILY_LOG.md)
+- `vault/` — Obsidian knowledge base (never auto-generate vault notes; update existing ones)
+- `memory/` — Claude Code auto-memory files
+- `dld_data/` — CSV data files (gitignored)
 
 ## Project Architecture
 
@@ -47,6 +55,26 @@ Before starting any task, check `.agent/skills/` and `.claude/agents/skills/` fo
 - **Memory**: hybrid
 - **HNSW**: Enabled
 - **Neural**: Enabled
+
+## Session Checklist
+
+### Session Start
+1. Read `memory/MEMORY.md` — restore context on tables, routes, recent changes
+2. Check `vault/00-Index/MOC.md` if working in unfamiliar area
+3. Check git log (`git log --oneline -10`) to understand recent state
+
+### Session End / After Significant Task
+1. Write `docs/DAILY_LOG.md` entry
+2. Update `memory/MEMORY.md` + relevant `memory/*.md` if anything significant changed
+3. Update relevant `vault/` note if architecture, schema, ops, or strategy changed
+
+## Neon Patterns (Project-Specific)
+
+- DB client: `lib/db.ts` — `postgres(DATABASE_URL, { ssl: 'require', max: 1 })`. `max:1` is intentional — Vercel serverless, not a pool server.
+- `DATABASE_URL` = Neon pooled connection string (from Vercel env)
+- postgres.js returns `NUMERIC` columns as strings — always coerce: `Number(row.field)` before arithmetic or `.toFixed()`
+- **Caching**: Use `unstable_cache` from `next/cache` on all terminal server components that run expensive queries. Neon bills compute-unit-hours; static/infrequently-changing data must be cached. Revalidate: 3600s (1h) minimum.
+- Neon MCP cannot see this project (Vercel-integrated). Query DB via scripts loading `.env.local` directly.
 
 ## Build & Test
 
