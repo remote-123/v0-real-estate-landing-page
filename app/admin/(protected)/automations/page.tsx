@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import type { LucideIcon } from 'lucide-react'
-import { Clock, Globe, Mail, MessageSquare, FileText, Zap, Heart } from 'lucide-react'
+import { Clock, Globe, Mail, FileText, Zap } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
 
@@ -58,50 +58,6 @@ const AUTOMATIONS: Automation[] = [
     status: 'missing',
   },
   {
-    name: 'Generate X Posts',
-    route: '/api/cron/generate-x-posts',
-    trigger: 'cron-job.org',
-    schedule: 'Daily',
-    what: 'Fetches top distress deals from PF, uses Gemini to write 3 X posts, sends drafts to Telegram for copy-paste',
-    outputs: 'Telegram (X post drafts)',
-    auth: 'Bearer CRON_SECRET',
-    external: ['RapidAPI / PropertyFinder', 'Gemini 2.5 Flash', 'Telegram'],
-    status: 'active',
-  },
-  {
-    name: 'Generate LinkedIn Posts',
-    route: '/api/cron/generate-linkedin-posts',
-    trigger: 'cron-job.org',
-    schedule: 'Daily',
-    what: 'Rotates 3 LinkedIn formats (Distress Spotlight / Market Take / Data Drop), sends draft to Telegram',
-    outputs: 'Telegram (LinkedIn draft)',
-    auth: 'Bearer CRON_SECRET',
-    external: ['RapidAPI / PropertyFinder', 'Gemini 2.5 Flash', 'Telegram'],
-    status: 'active',
-  },
-  {
-    name: 'Generate Video Shorts',
-    route: '/api/cron/generate-video-shorts',
-    trigger: 'cron-job.org',
-    schedule: 'Daily',
-    what: 'Top PF distress deal → 15s 9:16 Shotstack video with HTML overlay → MP4 URL sent to Telegram',
-    outputs: 'Telegram (MP4 link)',
-    auth: 'Bearer CRON_SECRET',
-    external: ['RapidAPI / PropertyFinder', 'Shotstack', 'Telegram'],
-    status: 'active',
-  },
-  {
-    name: 'Telegram Distress Digest',
-    route: '/api/cron/telegram-distress-digest',
-    trigger: 'cron-job.org',
-    schedule: 'Daily',
-    what: 'Top 10 distress deals merged from Bayut + PF, sorted by discount %, sent to Telegram',
-    outputs: 'Telegram message',
-    auth: 'Bearer CRON_SECRET',
-    external: ['RapidAPI / Bayut14', 'RapidAPI / PropertyFinder', 'Telegram'],
-    status: 'active',
-  },
-  {
     name: 'Generate Market Briefing',
     route: '/api/cron/generate-market-briefing',
     trigger: 'cron-job.org',
@@ -145,16 +101,6 @@ const AUTOMATIONS: Automation[] = [
     status: 'active',
   },
   {
-    name: 'Blog → X Post',
-    route: '/api/ai-blog-to-xpost',
-    trigger: 'Sanity webhook (on publish)',
-    what: 'Published blog post → Gemini writes X post draft → Telegram',
-    outputs: 'Telegram (X draft)',
-    auth: 'SANITY_WEBHOOK_SECRET',
-    external: ['Gemini 2.5 Flash', 'Telegram'],
-    status: 'active',
-  },
-  {
     name: 'Project PDF (Email)',
     route: '/api/project-pdf-email',
     trigger: 'Gmail Apps Script (PDF label)',
@@ -162,16 +108,6 @@ const AUTOMATIONS: Automation[] = [
     outputs: 'Sanity draft',
     auth: 'BLOG_GENERATOR_SECRET',
     external: ['Gemini 2.5 Flash', 'Sanity CMS'],
-    status: 'active',
-  },
-  {
-    name: 'Telegram Bot',
-    route: '/api/telegram-webhook',
-    trigger: 'Telegram (webhook)',
-    what: '/leads and /briefing commands return DB stats; any URL triggers blog generation in background',
-    outputs: 'Telegram replies',
-    auth: 'TELEGRAM_WEBHOOK_SECRET',
-    external: ['Telegram'],
     status: 'active',
   },
 ]
@@ -187,7 +123,6 @@ const TRIGGER_ICON: Record<string, LucideIcon> = {
   'Gmail Apps Script (label trigger)': Mail,
   'Gmail Apps Script (PDF label)': FileText,
   'Sanity webhook (on publish)': Globe,
-  'Telegram (webhook)': MessageSquare,
 }
 
 export default function AdminAutomationsPage() {
@@ -220,13 +155,6 @@ export default function AdminAutomationsPage() {
 
       {/* Quick links */}
       <div className="flex gap-2 flex-wrap">
-        <Link
-          href="/admin/automations/heartbeat"
-          className="inline-flex items-center gap-2 rounded-lg border border-border/50 bg-card/40 hover:bg-card/70 transition-colors px-4 py-2 text-sm"
-        >
-          <Heart className="h-4 w-4 text-accent" />
-          Configure Heartbeat
-        </Link>
         <Link
           href="/admin/automations/researcher"
           className="inline-flex items-center gap-2 rounded-lg border border-border/50 bg-card/40 hover:bg-card/70 transition-colors px-4 py-2 text-sm"
