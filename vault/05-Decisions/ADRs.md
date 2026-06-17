@@ -40,6 +40,27 @@
 **Flow**: City Registry builds audience + SEO authority → warm leads funnel to NorthCapital for conversion.
 **Status**: Decision made. Not yet implemented.
 
+## ADR-007 — DB Migration: Neon → Railway or DigitalOcean (2026-06-17)
+**Decision**: Under evaluation. Migrate away from Neon due to CU-hour billing model.
+**Why**: Neon charges $0.106/CU-hour. With 7+ daily crons + Telegram webhooks + terminal page renders, compute never fully sleeps. Bill accumulates even on low traffic. Caching (`unstable_cache`) reduced but didn't eliminate cost.
+**DB size**: ~1.3GB total (dld_transactions 788MB + dld_units 424MB dominate — static ingested data).
+**Candidates evaluated**:
+
+| Option | Cost | Pooling | Latency (vs Vercel iad1) | Ops burden |
+|---|---|---|---|---|
+| Railway Postgres | ~$5-15/mo usage | Built-in | Low (US East) | None |
+| DigitalOcean Managed | $15/mo flat | pgBouncer | Low (NYC1) | Minimal |
+| Hetzner + self-hosted | ~€5-8/mo | Manual PgBouncer | High (EU-only) | High |
+| Supabase Pro | $25/mo flat | pgBouncer | Low (US East) | None |
+
+**Railway vs DigitalOcean**:
+- Railway: usage-based billing (cheaper at low traffic, unpredictable at spikes), better DX, instant provisioning, no dashboard complexity
+- DigitalOcean: flat $15/mo regardless of query count, more mature managed DB product, manual pgBouncer pool setup needed for Vercel serverless scale
+
+**Recommendation**: Railway for now (cheapest, lowest friction). Switch to DO Managed if monthly bill exceeds $15 or connection issues appear under user load.
+**Migration**: `pg_dump` Neon → `pg_restore` target → swap `DATABASE_URL` in Vercel env → redeploy. No code changes except possibly `lib/db.ts` SSL flag.
+**Status**: Decision pending. Not yet migrated.
+
 ## ADR-005 — Single CRON_SECRET (2026-03-25)
 **Decision**: Consolidate CRON_SECRET2 (used for fetch-listings) into single CRON_SECRET.
 **Why**: fetch-listings route removed, replaced by fetch-rental-listings. No need for second secret.

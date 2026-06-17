@@ -3,8 +3,12 @@ import { NextRequest } from 'next/server'
 
 export const runtime = 'edge'
 
-// Fetch Playfair Display Bold (latin subset) from Google Fonts at request time.
+// Cache font in module scope — fetched once per edge worker instance, not per request.
+let _playfairCache: ArrayBuffer | null = null
+
 async function fetchPlayfairBold(): Promise<ArrayBuffer> {
+  if (_playfairCache) return _playfairCache
+
   const css = await fetch(
     'https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap',
     { headers: { 'User-Agent': 'Mozilla/5.0' } }
@@ -12,7 +16,8 @@ async function fetchPlayfairBold(): Promise<ArrayBuffer> {
 
   const url = css.match(/src:\s*url\(([^)]+)\)\s*format\('woff2'\)/)?.[1]
   if (!url) throw new Error('Could not parse Playfair Display font URL from Google Fonts CSS')
-  return fetch(url).then((r) => r.arrayBuffer())
+  _playfairCache = await fetch(url).then((r) => r.arrayBuffer())
+  return _playfairCache
 }
 
 // Deterministic hash from string — drives all per-title randomness.

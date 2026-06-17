@@ -8,182 +8,74 @@ import { unstable_cache } from 'next/cache'
 import { auth } from "@/auth"
 import { isTerminalUnlocked } from "@/lib/terminal-gate"
 
+// ── DB fetch (replaces live PF API calls) ─────────────────────────────────────
 
-async function fetchPropertyFinderDeals() {
-    const baseOptions = {
-        method: 'GET',
-        headers: {
-            'x-rapidapi-host': 'propertyfinder-uae-data.p.rapidapi.com',
-            'x-rapidapi-key': process.env.RAPIDAPI_KEY || ''
-        },
-        next: { revalidate: 28800 } // Cache 8 hours — 3 refreshes/day max (was 4h = 6/day)
-    }
-
-    function parseItems(data: any): any[] {
-        const rawData = Array.isArray(data?.data) ? data.data : []
-        return rawData.filter((item: any) => item && item.property_id)
-    }
-
-    function mapItem(item: any) {
-        const currentPrice = item.price?.value || 0
-        const numericId = parseInt(item.property_id, 10) || 0
-        const dropFactor = 0.05 + ((numericId % 20) / 100)
-        const originalPrice = currentPrice * (1 + dropFactor)
-        const createdDate = new Date(item.listed_date || Date.now())
-        const daysOnMarket = Math.max(1, Math.floor((Date.now() - createdDate.getTime()) / (1000 * 3600 * 24)))
-        let bedroomLabel = item.bedrooms?.toString() || 'Studio'
-        if (bedroomLabel.toLowerCase() === 'studio') bedroomLabel = 'Studio'
-        return {
-            id: item.property_id.toString(),
-            title: item.title,
-            location: item.address?.full_name || 'Dubai',
-            type: item.property_type?.toUpperCase() || 'PROPERTY',
-            bedrooms: bedroomLabel,
-            sizeSqft: Math.round(item.size?.value || 0),
-            daysOnMarket,
-            originalPrice: Math.round(originalPrice),
-            currentPrice: currentPrice,
-            createdAt: createdDate.getTime(),
-            externalUrl: item.property_url || '',
-            isOffplanDrop: false,
-        }
-    }
-
-    try {
-        const pages = [1, 2, 3]
-        const results = await Promise.all(
-            pages.map(page => {
-                const url = `https://propertyfinder-uae-data.p.rapidapi.com/search-buy?location_id=1&sort=newest&page=${page}&is_new_construction=false`
-                return fetch(url, baseOptions)
-                    .then(res => res.ok ? res.json() : null)
-                    .catch(() => null)
-            })
-        )
-
-        // Flatten all pages, preserving only items with a property_id
-        const allItems: any[] = []
-        for (const data of results) {
-            if (data) allItems.push(...parseItems(data))
-        }
-
-        // Deduplicate by property_id
-        const seen = new Set<string>()
-        const unique: any[] = []
-        for (const item of allItems) {
-            const key = item.property_id.toString()
-            if (!seen.has(key)) {
-                seen.add(key)
-                unique.push(item)
-            }
-        }
-
-        return unique.map(mapItem)
-    } catch (error) {
-        console.error("Property Finder Fetch Error:", error)
-        return []
-    }
-}
-
-// PF uses marketing brand names; DLD uses Arabic administrative names.
-const BRAND_TO_DLD: Record<string, string> = {
-    "dubai marina":              "marsa dubai",
-    "marsa dubai":               "marsa dubai",
-    "jumeirah village circle":   "al barsha south fourth",
-    "jvc":                       "al barsha south fourth",
-    "jumeirah lake towers":      "al thanyah fifth",
-    "jlt":                       "al thanyah fifth",
-    "downtown dubai":            "burj khalifa",
-    "dubai hills estate":        "hadaeq sheikh mohammed bin rashid",
-    "dubai hills":               "hadaeq sheikh mohammed bin rashid",
-    "difc":                      "trade center first",
-    "jumeirah beach residence":  "al safouh second",
-    "jbr":                       "al safouh second",
-    "al safouh":                 "al safouh second",
-    "arabian ranches":           "al hebiah third",
-    "motor city":                "al hebiah fourth",
-    "sports city":               "al hebiah first",
-    "dubai sports city":         "al hebiah first",
-    "discovery gardens":         "jabal ali first",
-    "al furjan":                 "jabal ali first",
-    "international city":        "warsan fourth",
-    "silicon oasis":             "nadd hessa",
-    "dubai silicon oasis":       "nadd hessa",
-    "dso":                       "nadd hessa",
-    "town square":               "al hebiah sixth",
-    "jumeirah village triangle": "al barsha south fifth",
-    "jvt":                       "al barsha south fifth",
-    "meydan":                    "nad al shiba first",
-    "nad al sheba":              "nad al shiba first",
-    "al jaddaf":                 "al jadaf",
-    "culture village":           "al jadaf",
-}
-
-function translateBrandToDld(token: string): string {
-    return BRAND_TO_DLD[token.toLowerCase()] ?? token.toLowerCase()
-}
-
-// Returns a map keyed by "area_lower|TYPE" e.g. "marsa dubai|APARTMENT"
-// meter_sale_price is AED/sqm — divide by 10.764 to get AED/sqft
-const fetchAreaBenchmarks = unstable_cache(
-  async (): Promise<[string, number][]> => {
-    try {
-        const rows = await sql<{ area_name_en: string; property_type: string; avg_psf: number }[]>`
-      WITH latest AS (
-        SELECT MAX(txn_month) AS max_month
-        FROM mv_txn_monthly_unified
-        WHERE trans_group_en = 'Sales' AND property_type_en = 'Unit'
-      )
+const fetchDistressListings = unstable_cache(
+  async () => {
+    const rows = await sql<{
+      listing_id: string
+      title: string | null
+      address_full: string | null
+      property_type: string | null
+      bedrooms: string | null
+      size_sqft: number | null
+      price: number
+      price_at_first_seen: number
+      price_per_sqft: number | null
+      first_seen_at: string
+      external_url: string | null
+      dld_area_avg_psf: number | null
+      price_drop_confirmed: boolean
+      confidence_tier: number
+    }[]>`
       SELECT
-        area_name_en,
-        CASE
-          WHEN property_sub_type_en IN ('Flat','Hotel Apartments','Penthouse') THEN 'APARTMENT'
-          WHEN property_sub_type_en = 'Villa'                                  THEN 'VILLA'
-          WHEN property_sub_type_en = 'Townhouse'                              THEN 'TOWNHOUSE'
-          ELSE 'OTHER'
-        END AS property_type,
-        ROUND(
-          (SUM(txn_count * avg_price_sqm) / NULLIF(SUM(txn_count), 0) / 10.764)::numeric,
-          0
-        )::integer AS avg_psf
-      FROM mv_txn_monthly_unified
-      CROSS JOIN latest
-      WHERE trans_group_en = 'Sales'
-        AND property_type_en = 'Unit'
-        AND txn_month >= latest.max_month - INTERVAL '11 months'
-        AND area_name_en IS NOT NULL
-      GROUP BY area_name_en, property_type
-      HAVING SUM(txn_count) >= 5
+        listing_id, title, address_full, property_type, bedrooms, size_sqft,
+        price, price_at_first_seen, price_per_sqft, first_seen_at, external_url,
+        dld_area_avg_psf, price_drop_confirmed, confidence_tier
+      FROM distress_listings
+      WHERE disappeared_at IS NULL
+      ORDER BY first_seen_at DESC
+      LIMIT 300
     `
-        return rows.map(r => [
-          `${r.area_name_en.toLowerCase()}|${r.property_type}`,
-          Number(r.avg_psf),
-        ] as [string, number])
-    } catch { return [] }
+
+    return rows.map(r => {
+      const currentPrice = Number(r.price)
+      const firstSeenPrice = Number(r.price_at_first_seen)
+      const numericId = parseInt(r.listing_id.replace('pf-', ''), 10) || 0
+
+      // Use real price drop if confirmed; synthetic estimate for display otherwise
+      const originalPrice = r.price_drop_confirmed
+        ? firstSeenPrice
+        : Math.round(currentPrice * (1 + 0.05 + ((numericId % 20) / 100)))
+
+      const daysOnMarket = Math.max(1, Math.floor(
+        (Date.now() - new Date(r.first_seen_at).getTime()) / (1000 * 3600 * 24)
+      ))
+
+      return {
+        id: r.listing_id,
+        title: r.title || 'Dubai Property',
+        location: r.address_full || 'Dubai',
+        type: r.property_type || 'PROPERTY',
+        bedrooms: r.bedrooms || 'Studio',
+        sizeSqft: r.size_sqft || 0,
+        daysOnMarket,
+        originalPrice,
+        currentPrice,
+        createdAt: new Date(r.first_seen_at).getTime(),
+        externalUrl: r.external_url || '',
+        isOffplanDrop: false,
+        psf: r.price_per_sqft ? Number(r.price_per_sqft) : 0,
+        areaBenchmarkPsf: r.dld_area_avg_psf ? Number(r.dld_area_avg_psf) : null,
+        priceDropConfirmed: r.price_drop_confirmed,
+      }
+    })
   },
-  ['distress-benchmarks'],
+  ['distress-listings-db'],
   { revalidate: 3600 }
 )
 
-function matchBenchmark(location: string, type: string, benchmarks: Map<string, number>): number | null {
-    // Translate each token from brand name to DLD name before matching
-    const parts = location.split(',').map(p => translateBrandToDld(p.trim())).filter(Boolean)
-    const normType = type.includes('VILLA') ? 'VILLA' : type.includes('TOWN') ? 'TOWNHOUSE' : 'APARTMENT'
-    for (const [key, psf] of benchmarks) {
-        const [areaKey, benchType] = key.split('|')
-        if (benchType !== normType) continue
-        for (const part of parts) {
-            if (areaKey.includes(part) || part.includes(areaKey)) return psf
-        }
-    }
-    // Fallback: any type match
-    for (const [key, psf] of benchmarks) {
-        const [areaKey] = key.split('|')
-        for (const part of parts) {
-            if (areaKey.includes(part) || part.includes(areaKey)) return psf
-        }
-    }
-    return null
-}
+// ── Scoring ───────────────────────────────────────────────────────────────────
 
 function getDomTier(days: number): 'fresh' | 'aging' | 'stale' | 'overdue' {
     if (days < 14) return 'fresh'
@@ -242,36 +134,33 @@ export default async function DistressDealsPage(props: {
     const sortFilter = typeof searchParams.sort === 'string' ? searchParams.sort : 'biggest-drop'
     const areaFilter = typeof searchParams.area === 'string' ? searchParams.area : ''
 
-    const [rawFetched, benchmarkEntries, session] = await Promise.all([
-        fetchPropertyFinderDeals(),
-        fetchAreaBenchmarks(),
+    const [rawFetched, session] = await Promise.all([
+        fetchDistressListings(),
         auth(),
     ])
-    const benchmarks = new Map<string, number>(benchmarkEntries)
     const isAuthenticated = await isTerminalUnlocked(session)
 
     let rawDeals = rawFetched.map((deal: any) => {
-        const psf = deal.sizeSqft > 0 ? Math.round(deal.currentPrice / deal.sizeSqft) : 0
-        const areaBenchmarkPsf = matchBenchmark(deal.location, deal.type, benchmarks)
         const { score: distressScore, tags: distressTags } = scoreDistress(
-            psf, areaBenchmarkPsf, deal.daysOnMarket, deal.isOffplanDrop, deal.originalPrice, deal.currentPrice
+            deal.psf, deal.areaBenchmarkPsf, deal.daysOnMarket,
+            deal.isOffplanDrop, deal.originalPrice, deal.currentPrice
         )
         const domTier = getDomTier(deal.daysOnMarket)
-        return { ...deal, psf, areaBenchmarkPsf, distressScore, distressTags, domTier }
+        return { ...deal, distressScore, distressTags, domTier }
     })
 
-    const communities = [...new Set(rawDeals.map((d: any) => d.location.split(',').pop()?.trim() || '').filter(Boolean))].sort() as string[]
+    const communities = [...new Set(
+      rawDeals.map((d: any) => d.location.split(',').pop()?.trim() || '').filter(Boolean)
+    )].sort() as string[]
 
     if (areaFilter) {
         rawDeals = rawDeals.filter((d: any) => d.location.toLowerCase().includes(areaFilter.toLowerCase()))
     }
 
-    // Filter by type
     if (typeFilter !== 'All') {
         rawDeals = rawDeals.filter((deal: any) => deal.type.includes(typeFilter.toUpperCase()))
     }
 
-    // Sort appropriately
     if (sortFilter === 'biggest-drop') {
         rawDeals.sort((a: any, b: any) => (b.originalPrice - b.currentPrice) - (a.originalPrice - a.currentPrice))
     } else if (sortFilter === 'biggest-percent') {
@@ -280,7 +169,6 @@ export default async function DistressDealsPage(props: {
         rawDeals.sort((a: any, b: any) => b.createdAt - a.createdAt)
     }
 
-    // Limit to top 100 & map rank
     const deals = rawDeals.slice(0, 100).map((deal: any, index: number) => ({
         ...deal,
         rank: index + 1
@@ -303,15 +191,13 @@ export default async function DistressDealsPage(props: {
         topScore: s.topScore
     })).sort((a: any, b: any) => b.count - a.count).slice(0, 6)
 
-
-
-    // Calculate Global Macros for the Header
     const totalDropped = deals.reduce((acc: number, deal: any) => acc + (deal.originalPrice - deal.currentPrice), 0)
-    const avgDiscount = deals.length > 0 ? (deals.reduce((acc: number, deal: any) => acc + ((deal.originalPrice - deal.currentPrice) / deal.originalPrice), 0) / deals.length) * 100 : 0
+    const avgDiscount = deals.length > 0
+        ? (deals.reduce((acc: number, deal: any) => acc + ((deal.originalPrice - deal.currentPrice) / deal.originalPrice), 0) / deals.length) * 100
+        : 0
 
-    // Formatting helper for macro
     const formatMillions = (num: number) => (num / 1000000).toFixed(1) + "M"
-    // Calc schema for AEO
+
     const itemListSchema = {
         "@context": "https://schema.org",
         "@type": "ItemList",

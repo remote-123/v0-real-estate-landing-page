@@ -9,7 +9,7 @@ const NORTHCAPITAL_ONLY_PATHS = ["/blog", "/projects", "/services", "/about", "/
 // Pages that belong to City Registry only — redirect away from northcapital
 const CITYREGISTRY_ONLY_PATHS = ["/terminal"]
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const host = req.headers.get("host") ?? ""
   const { pathname, searchParams } = req.nextUrl
 

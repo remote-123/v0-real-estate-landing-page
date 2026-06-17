@@ -7,6 +7,13 @@
 > 3. **Mandatory Signature:** Every entry must explicitly state the tool name at the start (e.g., *"Built by Antigravity"*, *"Built by Claude Code"*, or *"Built by Cursor"*).
 
 
+## 17 June 2026 — Fix distress-deals page: migrate from live PF API to DB
+
+*Built by Claude Code*
+- Diagnosed PF API BASIC plan monthly quota exhausted (429 on all requests). Root cause: page fetched 3 pages live on every render — `next: { revalidate }` fetch cache unreliable across Vercel edge nodes, burned through 700/month budget.
+- Rewrote `app/terminal/distress-deals/page.tsx` to read from `distress_listings` DB table (66 active rows populated by existing daily cron) via `unstable_cache` (1h TTL). Zero PF API calls on page load now.
+- Also noted: `telegram-distress-digest` uses `RAPIDAPI_KEY` against `uae-real-estate2.p.rapidapi.com` (different API, not tracked in data budget) — silently returns `[]` on failure.
+
 ## 06 May 2026 — Operational Autonomy System (LinkedIn, Blog Buttons, Ops Digest)
 *Built by Claude Code* — 3-part operational system requiring zero manual involvement: (1) **LinkedIn auto-post**: `lib/linkedin.ts` wired into `distress-linkedin` route — posts live to LinkedIn after Gemini generation, degrades gracefully if token absent. (2) **Blog approve/reject buttons**: `generate-blog-posts` cron now sends Telegram inline keyboard (✅ Publish / ❌ Skip) per draft; `telegram-webhook` adds `callback_query` handler that publishes Sanity draft (creates published doc, deletes draft) or skips, then edits the original Telegram message to confirm. (3) **Daily ops digest**: `/api/cron/ops-digest` (GET + Bearer CRON_SECRET) fires daily, sends Telegram summary of: leads (email + WA), data freshness (DLD staleness, Bayut status, PF rentals), distress listings count, blog pipeline queue. Add to cron-job.org: daily at 08:00 GST. Required env: `LINKEDIN_ACCESS_TOKEN`, `LINKEDIN_AUTHOR_URN` (60-day OAuth token).
 
