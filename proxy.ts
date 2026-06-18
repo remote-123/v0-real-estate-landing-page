@@ -4,7 +4,7 @@ import type { NextRequest } from "next/server"
 const CITY_REGISTRY_HOSTS = ["thecityregistry.com", "www.thecityregistry.com"]
 
 // Pages that belong to NorthCapital only — redirect away from cityregistry
-const NORTHCAPITAL_ONLY_PATHS = ["/blog", "/projects", "/services", "/about", "/contact", "/calculator", "/glossary", "/areas", "/sign-in"]
+const NORTHCAPITAL_ONLY_PATHS = ["/blog", "/projects", "/services", "/about", "/contact", "/calculator", "/glossary", "/areas"]
 
 // Pages that belong to City Registry only — redirect away from northcapital
 const CITYREGISTRY_ONLY_PATHS = ["/terminal"]
