@@ -8,6 +8,15 @@ import { cn } from "@/lib/utils"
 
 export const revalidate = 86400
 
+export async function generateStaticParams(): Promise<{ slug: string }[]> {
+  try {
+    const rows = await sql<{ building_slug: string }[]>`
+      SELECT building_slug FROM prop_building_details WHERE building_slug IS NOT NULL
+    `
+    return rows.map(r => ({ slug: r.building_slug }))
+  } catch { return [] }
+}
+
 type Building = {
   building_slug: string
   area_slug: string | null
