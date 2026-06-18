@@ -193,6 +193,28 @@ export default async function PropBuildingsPage({
         <Suspense>
           <AreaSelector areas={areas} selected={selectedArea} />
         </Suspense>
+
+        {/* Pagination top */}
+        {!selectedArea && totalPages > 1 && (
+          <div className="flex items-center justify-between">
+            <p className="font-mono text-xs text-muted-foreground">
+              Page {page} of {totalPages}
+            </p>
+            <div className="flex gap-2">
+              {page > 1 && (
+                <Link href={`/terminal/prop-buildings?page=${page - 1}`} className="rounded-lg border border-border/50 bg-card px-3 py-1.5 font-mono text-xs text-muted-foreground hover:text-foreground hover:border-accent/40 transition-colors">
+                  ← Prev
+                </Link>
+              )}
+              {page < totalPages && (
+                <Link href={`/terminal/prop-buildings?page=${page + 1}`} className="rounded-lg border border-border/50 bg-card px-3 py-1.5 font-mono text-xs text-muted-foreground hover:text-foreground hover:border-accent/40 transition-colors">
+                  Next →
+                </Link>
+              )}
+            </div>
+          </div>
+        )}
+
         <PropBuildingsTable data={buildings} />
 
         {/* Pagination — only shown when no area filter */}
