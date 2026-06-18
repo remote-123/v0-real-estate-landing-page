@@ -58,27 +58,32 @@ async function fetchData(): Promise<{ users: UserRow[]; stats: Stats | null }> {
   const [usersResult, statsResult] = await Promise.allSettled([
     sql<UserRow[]>`
       SELECT
-        id,
-        name,
-        email,
-        provider,
-        created_at::text AS created_at,
-        last_seen_at::text AS last_seen_at,
-        sign_in_count
-      FROM users_legacy
-      ORDER BY created_at DESC
+        u.id,
+        u.name,
+        u.email,
+        a."providerId" AS provider,
+        u."createdAt"::text AS created_at,
+        MAX(s."updatedAt")::text AS last_seen_at,
+        COUNT(s.id)::text AS sign_in_count
+      FROM "user" u
+      LEFT JOIN "account" a ON a."userId" = u.id
+      LEFT JOIN "session" s ON s."userId" = u.id
+      GROUP BY u.id, u.name, u.email, a."providerId", u."createdAt"
+      ORDER BY u."createdAt" DESC
       LIMIT 200
     `,
     sql<{ total: string; google: string; linkedin: string; apple: string; today: string; this_week: string; total_sign_ins: string }[]>`
       SELECT
-        COUNT(*)::integer AS total,
-        COUNT(*) FILTER (WHERE provider = 'google')::integer AS google,
-        COUNT(*) FILTER (WHERE provider = 'linkedin')::integer AS linkedin,
-        COUNT(*) FILTER (WHERE provider = 'apple')::integer AS apple,
-        COUNT(*) FILTER (WHERE created_at >= CURRENT_DATE)::integer AS today,
-        COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '7 days')::integer AS this_week,
-        COALESCE(SUM(sign_in_count), 0)::integer AS total_sign_ins
-      FROM users_legacy
+        COUNT(DISTINCT u.id)::integer AS total,
+        COUNT(DISTINCT u.id) FILTER (WHERE a."providerId" = 'google')::integer AS google,
+        COUNT(DISTINCT u.id) FILTER (WHERE a."providerId" = 'linkedin')::integer AS linkedin,
+        COUNT(DISTINCT u.id) FILTER (WHERE a."providerId" = 'apple')::integer AS apple,
+        COUNT(DISTINCT u.id) FILTER (WHERE u."createdAt" >= CURRENT_DATE)::integer AS today,
+        COUNT(DISTINCT u.id) FILTER (WHERE u."createdAt" >= NOW() - INTERVAL '7 days')::integer AS this_week,
+        COUNT(s.id)::integer AS total_sign_ins
+      FROM "user" u
+      LEFT JOIN "account" a ON a."userId" = u.id
+      LEFT JOIN "session" s ON s."userId" = u.id
     `,
   ])
 

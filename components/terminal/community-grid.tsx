@@ -137,18 +137,18 @@ export async function CommunityGrid() {
             <article
               key={community.slug}
               id={`community-${community.slug}`}
-              className="group rounded-xl border border-border/40 bg-card/40 overflow-hidden hover:border-[#00BFA5]/40 hover:bg-card/60 transition-all duration-200 flex flex-col"
+              className="group rounded-xl border border-border/40 bg-card/40 overflow-hidden hover:border-accent/40 hover:bg-card/60 transition-all duration-200 flex flex-col"
             >
               {/* Card header */}
               <div className="p-4 pb-3 flex flex-col gap-2 flex-1">
                 {/* Name + live badge */}
                 <div className="flex items-start justify-between gap-2">
-                  <h3 className="font-semibold text-foreground text-sm leading-tight group-hover:text-[#00BFA5] transition-colors">
+                  <h3 className="font-semibold text-foreground text-sm leading-tight group-hover:text-accent transition-colors">
                     {community.name}
                   </h3>
-                  <div className="shrink-0 flex items-center gap-1 rounded px-1.5 py-0.5 bg-[#00BFA5]/10">
-                    <div className="h-1.5 w-1.5 rounded-full bg-[#00BFA5] animate-pulse" />
-                    <span className="text-[8px] font-mono uppercase tracking-widest text-[#00BFA5]">Live</span>
+                  <div className="shrink-0 flex items-center gap-1 rounded px-1.5 py-0.5 bg-accent/10">
+                    <div className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
+                    <span className="text-[8px] font-mono uppercase tracking-widest text-accent">Live</span>
                   </div>
                 </div>
 
@@ -183,7 +183,7 @@ export async function CommunityGrid() {
                         key={h}
                         className="flex items-center gap-1 rounded-full border border-border/30 bg-background/40 px-2 py-0.5 text-[9px] text-muted-foreground"
                       >
-                        <Star className="h-2 w-2 text-[#00BFA5]" />
+                        <Star className="h-2 w-2 text-accent" />
                         {h}
                       </span>
                     ))}
@@ -196,7 +196,7 @@ export async function CommunityGrid() {
                 <div className="px-4 pb-3 flex flex-col gap-1.5 border-t border-border/20 pt-3">
                   {amenities.malls.length > 0 && (
                     <div className="flex items-start gap-1.5">
-                      <ShoppingBag className="h-3 w-3 text-[#00BFA5] mt-0.5 shrink-0" />
+                      <ShoppingBag className="h-3 w-3 text-accent mt-0.5 shrink-0" />
                       <p className="text-[10px] text-muted-foreground leading-tight">
                         {amenities.malls.slice(0, 2).join(" · ")}
                       </p>
@@ -204,7 +204,7 @@ export async function CommunityGrid() {
                   )}
                   {amenities.hospitals.length > 0 && (
                     <div className="flex items-start gap-1.5">
-                      <Building2 className="h-3 w-3 text-[#00BFA5] mt-0.5 shrink-0" />
+                      <Building2 className="h-3 w-3 text-accent mt-0.5 shrink-0" />
                       <p className="text-[10px] text-muted-foreground leading-tight">
                         {amenities.hospitals.slice(0, 2).join(" · ")}
                       </p>
@@ -212,7 +212,7 @@ export async function CommunityGrid() {
                   )}
                   {amenities.schools.length > 0 && (
                     <div className="flex items-start gap-1.5">
-                      <GraduationCap className="h-3 w-3 text-[#00BFA5] mt-0.5 shrink-0" />
+                      <GraduationCap className="h-3 w-3 text-accent mt-0.5 shrink-0" />
                       <p className="text-[10px] text-muted-foreground leading-tight">
                         {amenities.schools.slice(0, 2).join(" · ")}
                       </p>
@@ -220,7 +220,7 @@ export async function CommunityGrid() {
                   )}
                   {amenities.landmarks.length > 0 && (
                     <div className="flex items-start gap-1.5">
-                      <MapPin className="h-3 w-3 text-[#00BFA5] mt-0.5 shrink-0" />
+                      <MapPin className="h-3 w-3 text-accent mt-0.5 shrink-0" />
                       <p className="text-[10px] text-muted-foreground leading-tight">
                         {amenities.landmarks.slice(0, 2).join(" · ")}
                       </p>
@@ -233,7 +233,7 @@ export async function CommunityGrid() {
               <div className="px-4 pb-4 pt-2">
                 <Link
                   href={`/terminal/communities/${community.dldSlug}`}
-                  className="flex items-center justify-center gap-1.5 w-full rounded-lg border border-[#00BFA5]/30 bg-[#00BFA5]/8 py-2 text-[10px] font-mono uppercase tracking-wider text-[#00BFA5] hover:bg-[#00BFA5]/15 hover:border-[#00BFA5]/50 transition-colors"
+                  className="flex items-center justify-center gap-1.5 w-full rounded-lg border border-accent/30 bg-accent/8 py-2 text-[10px] font-mono uppercase tracking-wider text-accent hover:bg-accent/15 hover:border-accent/50 transition-colors"
                 >
                   View Market Data →
                 </Link>

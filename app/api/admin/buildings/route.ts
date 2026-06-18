@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { sql } from '@/lib/db'
+import { auth } from '@/auth'
+
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? '').split(',').map(e => e.trim().toLowerCase())
 
 async function isAuthorized(): Promise<boolean> {
+  const session = await auth()
+  if (session?.user?.email && ADMIN_EMAILS.includes(session.user.email.toLowerCase())) return true
   const cookieStore = await cookies()
-  const cookie = cookieStore.get('admin_auth')?.value
-  return cookie === process.env.ADMIN_PASSCODE
+  return cookieStore.get('admin_auth')?.value === process.env.ADMIN_PASSCODE
 }
 
 // GET /api/admin/buildings?q=&filter=&page=&limit=

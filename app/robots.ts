@@ -1,30 +1,23 @@
 import { MetadataRoute } from 'next'
-import { headers } from 'next/headers'
 
-const CITY_REGISTRY_HOSTS = ['thecityregistry.com', 'www.thecityregistry.com']
+const BASE_URL = 'https://www.northcapitaldxb.com'
 
-export default async function robots(): Promise<MetadataRoute.Robots> {
-  const headersList = await headers()
-  const host = headersList.get('host') ?? ''
-  const isCityRegistry = CITY_REGISTRY_HOSTS.some((h) => host.includes(h))
-
-  const baseUrl = isCityRegistry
-    ? 'https://thecityregistry.com'
-    : 'https://www.northcapitaldxb.com'
-
-  const disallow = isCityRegistry
-    ? ['/api/', '/admin/', '/_next/', '/sign-in', '/studio', '/about', '/contact', '/services', '/blog', '/areas', '/projects', '/calculator', '/tools', '/glossary']
-    : ['/api/', '/admin/', '/_next/', '/sign-in', '/studio']
-
+export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
       {
         userAgent: '*',
-        allow: '/',
-        disallow,
+        allow: '/terminal/',
+        disallow: [
+          '/api/',
+          '/admin/',
+          '/_next/',
+          '/sign-in',
+          '/studio',
+        ],
       },
     ],
-    sitemap: `${baseUrl}/sitemap.xml`,
-    host: baseUrl,
+    sitemap: `${BASE_URL}/sitemap.xml`,
+    host: BASE_URL,
   }
 }

@@ -2,13 +2,11 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useEffect, useState } from "react"
 import {
   BarChart3,
   Building2,
   Calculator,
   Globe,
-  LayoutDashboard,
   Map,
   Percent,
   Search,
@@ -24,7 +22,6 @@ export const sidebarLinks = [
     title: "Overview",
     links: [
       { label: "Explore Markets", href: "/terminal/home", icon: Globe },
-      { label: "Dashboard", href: "/terminal", icon: LayoutDashboard },
       { label: "Transaction Pulse", href: "/terminal/transaction-pulse", icon: Activity },
     ]
   },
@@ -32,7 +29,6 @@ export const sidebarLinks = [
     title: "Market Analysis",
     links: [
       { label: "Community Screener", href: "/terminal/communities", icon: Map },
-      { label: "Yield Map", href: "/terminal/yield-map", icon: TrendingUp },
       { label: "Area Momentum", href: "/terminal/area-momentum", icon: TrendingUp },
       { label: "Distress Deals", href: "/terminal/distress-deals", icon: BarChart3 },
       { label: "Off-Plan Pipeline", href: "/terminal/off-plan-pipeline", icon: Building2 },
@@ -61,17 +57,13 @@ export const sidebarLinks = [
 
 export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname()
-  const [isCityRegistry, setIsCityRegistry] = useState(false)
-  useEffect(() => {
-    setIsCityRegistry(window.location.hostname.includes("cityregistry"))
-  }, [])
 
   return (
     <div className="flex flex-col h-full">
       <div className="flex h-16 items-center px-6 border-b border-border/50">
         <Link href="/terminal" className="flex items-center gap-2" onClick={onNavigate}>
           <span className="font-serif text-lg font-bold tracking-tight text-foreground">
-            THE CITY REGISTRY
+            North Capital DXB
           </span>
         </Link>
       </div>
@@ -111,18 +103,6 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         ))}
       </div>
 
-      <div className="p-4 border-t border-border/50 mt-auto space-y-4">
-        <div className="rounded-lg p-4" style={{ background: 'rgba(0,191,165,0.06)', border: '1px solid rgba(0,191,165,0.15)' }}>
-          <div className="flex items-center justify-between mb-1">
-            <p className="text-xs font-mono font-semibold text-foreground uppercase tracking-widest">Data Status</p>
-          </div>
-          <div className="mt-2 flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full animate-pulse" style={{ background: '#00BFA5' }} />
-            <p className="text-[10px] text-muted-foreground font-mono uppercase tracking-tight">DLD · Bayut · Live</p>
-          </div>
-        </div>
-
-      </div>
     </div>
   )
 }

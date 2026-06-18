@@ -4,8 +4,6 @@ import React, { useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import {
-    FileUp,
-    Globe,
     LogOut,
     Menu,
     X,
@@ -18,7 +16,6 @@ import {
     Landmark,
     FlaskConical,
     Zap,
-    Palette,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -37,14 +34,6 @@ const navItems = [
             { label: "Buildings", href: "/admin/buildings", icon: Building2, description: "Review & clean building records" },
             { label: "Area Mapping", href: "/admin/areas", icon: Map, description: "Bayut → DLD area name bridge" },
             { label: "Projects", href: "/admin/projects", icon: Landmark, description: "Developer names & completion dates" },
-        ],
-    },
-    {
-        group: "Content",
-        items: [
-            { label: "Import PDF", href: "/admin/import", icon: FileUp, description: "Upload developer PDFs → Sanity draft" },
-            { label: "URL to Blog", href: "/admin/blog-from-url", icon: Globe, description: "Article URL → AI blog post" },
-            { label: "Design Preview", href: "/admin/design-preview", icon: Palette, description: "Brand concept mockups" },
         ],
     },
     {

@@ -6,6 +6,12 @@
 ## DB: DigitalOcean Managed Postgres
 → `memory/project_db_migration.md` — DO cluster `main-postgres`, nyc1, PG17, $15/mo. DB = `defaultdb`. DATABASE_URL updated in Vercel + .env.local. Neon fully removed.
 
+## Workflow: wait for local verify before push
+→ `memory/feedback_commit_workflow.md` — never commit+push until user confirms locally.
+
+## Auth System (NextAuth v5 — fully working 2026-06-18)
+→ `memory/project_auth.md` — Google OAuth, pg adapter on DO. Critical: /sign-in must NOT be in proxy.ts NORTHCAPITAL_ONLY_PATHS (OAuth callback domain mismatch). SSL fix in auth.ts + lib/db.ts.
+
 ## Architecture
 → see CLAUDE.md and vault/01-Architecture/
 

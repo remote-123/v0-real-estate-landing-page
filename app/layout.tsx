@@ -21,7 +21,7 @@ const playfair = Playfair_Display({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://thecityregistry.com'),
+  metadataBase: new URL('https://www.northcapitaldxb.com'),
   title: 'Dubai Real Estate Intelligence | The City Registry',
   description:
     'Institutional-grade Dubai property data. Transaction analytics, yield maps, community screener, and distress deal scanner — powered by DLD and Bayut data.',
@@ -79,7 +79,7 @@ export default async function RootLayout({
         <SessionProvider session={session}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
+          defaultTheme="dark"
           enableSystem
           disableTransitionOnChange
         >

@@ -7,6 +7,13 @@
 > 3. **Mandatory Signature:** Every entry must explicitly state the tool name at the start (e.g., *"Built by Antigravity"*, *"Built by Claude Code"*, or *"Built by Cursor"*).
 
 
+## 18 June 2026 — Fix Google OAuth sign-in + auth UI session display
+
+*Built by Claude Code*
+
+- Fixed 3 layered auth bugs: (1) `pg-connection-string` v2 treating `sslmode=require` as `verify-full` → broke pg.Pool in `auth.ts` and postgres.js in `lib/db.ts` — fixed by stripping `sslmode` param and using `ssl: { rejectUnauthorized: false }` explicitly on both. (2) `SessionProvider` had no `session` prop so client fetched `/api/auth/session` on every load — fixed by calling `auth()` in root layout and passing result. (3) Root cause of Sign In button not updating: `proxy.ts` middleware was redirecting `/sign-in` from `thecityregistry.com` to `northcapitaldxb.com` — OAuth callback returned to thecityregistry.com, session cookie set on wrong domain. Fixed by removing `/sign-in` from `NORTHCAPITAL_ONLY_PATHS`.
+- Auth flow now fully working: Google OAuth → session stored in DO DB → avatar/Sign Out visible immediately after login.
+
 ## 17 June 2026 — DB migration Neon → DigitalOcean + repo cleanup
 
 *Built by Claude Code*
