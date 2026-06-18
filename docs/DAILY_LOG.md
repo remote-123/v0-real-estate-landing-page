@@ -7,6 +7,17 @@
 > 3. **Mandatory Signature:** Every entry must explicitly state the tool name at the start (e.g., *"Built by Antigravity"*, *"Built by Claude Code"*, or *"Built by Cursor"*).
 
 
+## 18 June 2026 — UI cleanup, SEO buildout, build fix
+
+*Built by Claude Code*
+
+- UI: removed Live badge, Data Status card, Dashboard sidebar link, dead `isCityRegistry` state. Restored OG light theme (oklch palette from pre-cityregistry commit). Header now shows "Dubai Data Intelligence / page title" via `HeaderBreadcrumb` client component.
+- Admin: fixed users page to query NextAuth tables (`user`/`account`/`session`). Updated all 4 admin API routes to check NextAuth session first, cookie fallback. Updated automations page to reflect propsearch.ae scrapers instead of removed pipelines.
+- Env cleanup: removed stale Vercel env vars (BETTER_AUTH_SECRET, NEXT_PUBLIC_SANITY_*, NEON_*, SUPABASE_*, GOOGLE_SHEETS_*, CRON_SECRET2). Cleaned `.env.local` to match.
+- SEO: added `generateStaticParams` to `/terminal/prop-buildings/[slug]` (5,799 pages). Rewrote `sitemap.ts` — single domain, dynamic area + building URLs, removed Sanity/cityregistry branching.
+- Build fix: parked `/terminal/[category]/page.tsx` (Sanity-dependent, `NEXT_PUBLIC_SANITY_DATASET` deleted) → build now passes.
+- Domain issue (northcapitaldxb.com → thecityregistry.com redirect) is Vercel dashboard config, not code.
+
 ## 18 June 2026 — Fix Google OAuth sign-in + auth UI session display
 
 *Built by Claude Code*
