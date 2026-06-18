@@ -8,12 +8,11 @@ import {
   Calculator,
   Globe,
   Map,
-  Percent,
-  Search,
   TrendingUp,
   Users,
   Activity,
   Layers,
+  BookOpen,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -40,17 +39,19 @@ export const sidebarLinks = [
       { label: "Prop Buildings", href: "/terminal/prop-buildings", icon: Building2 },
       { label: "Building Comparator", href: "/terminal/building-comparator", icon: Building2 },
       { label: "Floor Plan Pricer", href: "/terminal/floor-plan-pricer", icon: Layers },
-      { label: "Building Listings", href: "/terminal/building-listings", icon: Search },
-      { label: "Comparable Sales", href: "/terminal/transaction-search", icon: Search },
       { label: "Developer Track Record", href: "/terminal/developer-track", icon: Users },
     ]
   },
   {
     title: "Tools",
     links: [
-      { label: "ROI Engine", href: "/terminal/roi-engine", icon: Calculator },
-      { label: "Mortgage Calculator", href: "/terminal/mortgage-calculator", icon: Calculator },
-      { label: "Rental Yield", href: "/terminal/rental-yield", icon: Percent },
+      { label: "Calculators", href: "/terminal/calculators", icon: Calculator },
+    ]
+  },
+  {
+    title: "Research",
+    links: [
+      { label: "Insights", href: "/terminal/research", icon: BookOpen },
     ]
   },
 ]
