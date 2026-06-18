@@ -16,6 +16,7 @@ import {
     Landmark,
     FlaskConical,
     Zap,
+    FileDown,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -31,6 +32,7 @@ const navItems = [
     {
         group: "Data",
         items: [
+            { label: "DLD Import", href: "/admin/data", icon: FileDown, description: "Import transactions CSV, check freshness" },
             { label: "Buildings", href: "/admin/buildings", icon: Building2, description: "Review & clean building records" },
             { label: "Area Mapping", href: "/admin/areas", icon: Map, description: "Bayut → DLD area name bridge" },
             { label: "Projects", href: "/admin/projects", icon: Landmark, description: "Developer names & completion dates" },

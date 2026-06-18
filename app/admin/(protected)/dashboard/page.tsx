@@ -321,20 +321,35 @@ export default async function AdminDashboardPage() {
           </Panel>
 
           {/* DLD Transactions */}
-          <Panel
-            title="DLD Transactions"
-            icon={Database}
-            status={data.dld ? (data.dld.total_rows > 1_000_000 ? "ok" : "warn") : "error"}
-          >
-            {data.dld ? (
-              <>
-                <StatRow label="Total rows" value={formatNum(data.dld.total_rows)} />
-                <StatRow label="Latest instance_date" value={formatDate(data.dld.latest_date)} />
-              </>
-            ) : (
-              <p className="text-xs text-red-400 font-mono">Table unavailable</p>
-            )}
-          </Panel>
+          {(() => {
+            const staleDays = data.dld?.latest_date
+              ? Math.floor((Date.now() - new Date(data.dld.latest_date).getTime()) / 86_400_000)
+              : null
+            const dldStatus = !data.dld ? "error" : staleDays === null ? "unknown" : staleDays <= 7 ? "ok" : staleDays <= 30 ? "warn" : "error"
+            return (
+              <Panel title="DLD Transactions" icon={Database} status={dldStatus as "ok" | "warn" | "error"}>
+                {data.dld ? (
+                  <>
+                    <StatRow label="Total rows" value={formatNum(data.dld.total_rows)} />
+                    <StatRow label="Latest date" value={data.dld.latest_date ?? "—"} />
+                    {staleDays !== null && (
+                      <StatRow
+                        label="Staleness"
+                        value={staleDays === 0 ? "Up to date ✓" : `${staleDays} days stale`}
+                      />
+                    )}
+                    <div className="pt-1">
+                      <a href="/admin/data" className="font-mono text-[10px] text-accent hover:underline">
+                        → Import new CSV
+                      </a>
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-xs text-red-400 font-mono">Table unavailable</p>
+                )}
+              </Panel>
+            )
+          })()}
 
           {/* Registered Users */}
           <Panel
