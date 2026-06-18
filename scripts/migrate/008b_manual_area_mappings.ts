@@ -10,7 +10,7 @@
  */
 
 import "dotenv/config"
-import { sql } from "../ingest/neon-client"
+import { sql } from "../ingest/db-client"
 
 const mappings: [string, string][] = [
   // Clear fuzzy hits (name variants)

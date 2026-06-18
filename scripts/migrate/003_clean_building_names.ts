@@ -7,7 +7,7 @@
  *
  * Run: npx tsx --env-file=.env.local scripts/migrate/003_clean_building_names.ts
  */
-import { sql } from "../ingest/neon-client"
+import { sql } from "../ingest/db-client"
 
 function slugToName(slug: string): string {
   return slug

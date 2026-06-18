@@ -19,7 +19,7 @@
  *   npx tsx --env-file=.env.local scripts/prop-buildings-heartbeat.ts --stage=3 --rescrape
  */
 
-import { sql } from "./ingest/neon-client"
+import { sql } from "./ingest/db-client"
 
 // ── CLI args ──────────────────────────────────────────────────────────────────
 

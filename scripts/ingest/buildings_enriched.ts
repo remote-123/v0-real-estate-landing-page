@@ -13,7 +13,7 @@
 
 import fs from "fs"
 import path from "path"
-import { sql } from "./neon-client"
+import { sql } from "./db-client"
 
 const BATCH_SIZE = 200
 const MIN_TXN_COUNT = 3 // skip noise / single-entry buildings

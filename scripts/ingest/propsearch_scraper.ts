@@ -19,7 +19,7 @@
  *   - Cancelled buildings are identified by "(Cancelled)" in the visible span text
  */
 
-import { sql } from "./neon-client"
+import { sql } from "./db-client"
 
 const DELAY_MS = 1500
 const BASE_URL = "https://propsearch.ae"

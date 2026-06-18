@@ -24,7 +24,7 @@ Before starting any task, check `.agent/skills/` and `.claude/agents/skills/` fo
 - **Auto-memory** (`memory/MEMORY.md` + `memory/*.md`) — Claude Code's cross-session context. Separate from vault.
   - At session start, read `memory/MEMORY.md` to restore context before starting work
   - After ANY significant change — new feature, infra change, cost/billing optimization, new DB pattern, schema change, new API route, cron setup, discovered bug pattern — save a memory entry
-  - Triggers that ALWAYS require a memory write: adding caching (unstable_cache, Redis), changing DB connection config, adding/modifying cron jobs, changing auth, adding new terminal pages, any Neon billing/cost optimization
+  - Triggers that ALWAYS require a memory write: adding caching (unstable_cache, Redis), changing DB connection config, adding/modifying cron jobs, changing auth, adding new terminal pages, any DB cost/billing optimization
   - Memory vs vault vs DAILY_LOG: DAILY_LOG = what happened today (ephemeral). Vault = long-term project knowledge (architecture, decisions). Memory = session context for Claude (patterns, gotchas, current state of tables/routes).
 
 ## File Organization
@@ -68,13 +68,13 @@ Before starting any task, check `.agent/skills/` and `.claude/agents/skills/` fo
 2. Update `memory/MEMORY.md` + relevant `memory/*.md` if anything significant changed
 3. Update relevant `vault/` note if architecture, schema, ops, or strategy changed
 
-## Neon Patterns (Project-Specific)
+## DB Patterns (Project-Specific)
 
 - DB client: `lib/db.ts` — `postgres(DATABASE_URL, { ssl: 'require', max: 1 })`. `max:1` is intentional — Vercel serverless, not a pool server.
-- `DATABASE_URL` = Neon pooled connection string (from Vercel env)
+- `DATABASE_URL` = DigitalOcean Managed Postgres connection string (in Vercel env + `.env.local`)
 - postgres.js returns `NUMERIC` columns as strings — always coerce: `Number(row.field)` before arithmetic or `.toFixed()`
-- **Caching**: Use `unstable_cache` from `next/cache` on all terminal server components that run expensive queries. Neon bills compute-unit-hours; static/infrequently-changing data must be cached. Revalidate: 3600s (1h) minimum.
-- Neon MCP cannot see this project (Vercel-integrated). Query DB via scripts loading `.env.local` directly.
+- **Caching**: Use `unstable_cache` from `next/cache` on all terminal server components that run expensive queries. Revalidate: 3600s (1h) minimum.
+- Ingest scripts use `scripts/ingest/db-client.ts`. Run with `npx tsx --env-file=.env.local scripts/ingest/...`
 
 ## Build & Test
 

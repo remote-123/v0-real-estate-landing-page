@@ -2,7 +2,7 @@ import postgres from "postgres"
 
 const connectionString = process.env.DATABASE_URL!
 
-// Pooled connection for all app queries (Neon pgBouncer)
+// Connection for all app queries (DigitalOcean Managed Postgres)
 export const sql = postgres(connectionString, {
   ssl: "require",
   max: 1, // safe for serverless — one connection per function invocation

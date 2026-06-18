@@ -14,7 +14,7 @@
  */
 
 import "dotenv/config"
-import { sql } from "../ingest/neon-client"
+import { sql } from "../ingest/db-client"
 
 async function run() {
   console.log("007 — Enrich re_buildings from dld_buildings_registry")

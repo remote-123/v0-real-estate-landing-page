@@ -3,8 +3,13 @@ import Google from "next-auth/providers/google"
 import PostgresAdapter from "@auth/pg-adapter"
 import { Pool } from "pg"
 
+// Strip sslmode from connection string — pg-connection-string v2 treats sslmode=require
+// as verify-full (requires trusted CA cert), which overrides ssl.rejectUnauthorized=false.
+// DO Managed Postgres uses an internal CA, so we handle SSL ourselves.
+const dbUrl = (process.env.DATABASE_URL || "").replace(/([?&])sslmode=[^&]*/g, "$1").replace(/[?&]$/, "")
+
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: dbUrl,
   ssl: { rejectUnauthorized: false },
   max: 1,
 })

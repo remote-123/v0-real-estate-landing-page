@@ -4,14 +4,14 @@
 | Layer | Tech | Notes |
 |---|---|---|
 | Framework | Next.js (App Router) | Server components, ISR, middleware |
-| Database | Neon PostgreSQL | Pooled via postgres.js, ssl:require, max:1 |
+| Database | DigitalOcean Managed Postgres | PG17, nyc1, db-s-1vcpu-1gb, $15/mo flat. Migrated from Neon 2026-06-17 |
 | Hosting | Vercel | Auto-deploy on push to main |
 | CMS | Sanity | Blog posts, project listings |
 | Auth | Better Auth v1 | Google OAuth, postgres adapter |
 | Styling | Tailwind CSS + shadcn/ui | Dark terminal aesthetic |
 | Charts | Recharts | ResponsiveContainer, dark theme |
 | Email | Resend | Transactional + digest emails |
-| Video | Shotstack | Distress deal video shorts |
+| Video | Shotstack | Paused — video shorts pipeline removed 2026-06-17 |
 
 ## DB Connection
 ```ts
@@ -19,9 +19,11 @@
 import postgres from 'postgres'
 const sql = postgres(DATABASE_URL, { ssl: 'require', max: 1 })
 ```
-`DATABASE_URL` = Neon pooled URL (from `.env.local` or Vercel env).
+`DATABASE_URL` = DO Managed Postgres connection string (Vercel env).
+Host: `main-postgres-do-user-38763524-0.f.db.ondigitalocean.com:25060`
+DB: `defaultdb`, User: `doadmin`
 
-> Neon project is Vercel-integrated — lives under Vercel's Neon org, NOT personal Neon account. Neon MCP can't see it. Use `.env.local` directly for scripts.
+> pg_dump/psql work directly against DO — no special integration needed. Use connection string from DO MCP or DO dashboard.
 
 ## Multi-Domain Split
 - `northcapitaldxb.com` — agency/advisory brand
@@ -31,12 +33,12 @@ const sql = postgres(DATABASE_URL, { ssl: 'require', max: 1 })
 ## Key Env Vars
 | Var | Purpose |
 |---|---|
-| `DATABASE_URL` | Neon pooled connection string |
+| `DATABASE_URL` | DO Managed Postgres connection string |
 | `CRON_SECRET` | All cron route auth (Bearer token) |
 | `RAPIDAPI_KEY` | PropertyFinder API (700/mo) |
 | `BAYUT_RAPIDAPI_KEY` | Bayut14 API (900/mo) |
 | `GEMINI_BLOG_API_KEY` | Blog + X post generation |
-| `GEMINI_DISTRESS_API_KEY` | Distress digest + LinkedIn |
+| `GEMINI_DISTRESS_API_KEY` | Distress digest |
 | `GEMINI_PDF_API_KEY` | PDF project summaries |
 | `BETTER_AUTH_SECRET` | Auth session signing |
 | `BETTER_AUTH_URL` | Auth origin (prod: northcapitaldxb.com) |

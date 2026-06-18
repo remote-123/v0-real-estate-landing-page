@@ -7,6 +7,14 @@
 > 3. **Mandatory Signature:** Every entry must explicitly state the tool name at the start (e.g., *"Built by Antigravity"*, *"Built by Claude Code"*, or *"Built by Cursor"*).
 
 
+## 17 June 2026 — DB migration Neon → DigitalOcean + repo cleanup
+
+*Built by Claude Code*
+
+- Removed 14 files of noise: cofounder heartbeat, Telegram content pipelines, X/LinkedIn/video shorts automation (-2,407 lines). Kept error alerting, core crons, propsearch scraper (resume later).
+- Migrated DB from Neon (free tier, CU-hour billing) to DO Managed Postgres `main-postgres` (nyc1, PG17, db-s-1vcpu-1gb, $15/mo flat). pg_dump → pg_restore clean. All 1.72M rows confirmed. Vercel DATABASE_URL updated, deployed, live confirmed on transaction-pulse.
+- Added Vercel MCP to ~/.claude/settings.json (active next session restart).
+
 ## 17 June 2026 — Fix distress-deals page: migrate from live PF API to DB
 
 *Built by Claude Code*

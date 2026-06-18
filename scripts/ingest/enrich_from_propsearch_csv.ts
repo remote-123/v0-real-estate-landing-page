@@ -12,7 +12,7 @@
  *
  * Run: npx tsx --env-file=.env.local scripts/ingest/enrich_from_propsearch_csv.ts
  */
-import { sql } from "./neon-client"
+import { sql } from "./db-client"
 import fs from "fs"
 import path from "path"
 import readline from "readline"

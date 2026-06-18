@@ -6,7 +6,7 @@
 import fs from "fs"
 import path from "path"
 import { parse } from "csv-parse"
-import { sql } from "./neon-client"
+import { sql } from "./db-client"
 
 // ── Config ──────────────────────────────────────────────────────────────────
 

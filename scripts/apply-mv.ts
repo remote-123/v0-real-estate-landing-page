@@ -1,4 +1,4 @@
-import { sql } from "./ingest/neon-client"
+import { sql } from "./ingest/db-client"
 import { readFileSync } from "fs"
 import path from "path"
 

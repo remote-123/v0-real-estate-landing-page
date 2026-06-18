@@ -3,11 +3,8 @@
 ## PropSearch Scraper (resume after DB migration)
 → `memory/project_propsearch_scraper.md` — 3-stage propsearch.ae scraper built but never completed. Keep all code. Resume after DO migration.
 
-## Neon Billing & Caching
-→ see CLAUDE.md and vault/05-Decisions/ADRs.md (ADR-007)
-
-## DB Migration: Neon → DigitalOcean (IN PROGRESS)
-→ `memory/project_db_migration.md` — Migrating to DO Managed Postgres $15/mo (db-s-1vcpu-1gb, nyc1). DO MCP authenticated. Cluster not yet created. Next: create cluster → pg_dump Neon direct URL → pg_restore → swap DATABASE_URL in Vercel.
+## DB: DigitalOcean Managed Postgres
+→ `memory/project_db_migration.md` — DO cluster `main-postgres`, nyc1, PG17, $15/mo. DB = `defaultdb`. DATABASE_URL updated in Vercel + .env.local. Neon fully removed.
 
 ## Architecture
 → see CLAUDE.md and vault/01-Architecture/

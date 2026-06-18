@@ -19,7 +19,7 @@
  */
 
 import "dotenv/config"
-import { sql } from "../ingest/neon-client"
+import { sql } from "../ingest/db-client"
 
 async function run() {
   console.log("006 — Global buildings schema: re_cities, re_areas, re_buildings")

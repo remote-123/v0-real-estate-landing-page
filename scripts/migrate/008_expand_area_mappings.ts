@@ -13,7 +13,7 @@
  */
 
 import "dotenv/config"
-import { sql } from "../ingest/neon-client"
+import { sql } from "../ingest/db-client"
 
 async function run() {
   console.log("008 — Expand area_name_mapping via fuzzy match\n")

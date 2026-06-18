@@ -1,4 +1,4 @@
-import { sql } from "../ingest/neon-client"
+import { sql } from "../ingest/db-client"
 
 async function run() {
   await sql`ALTER TABLE buildings_enriched ADD COLUMN IF NOT EXISTS total_floors   INTEGER`

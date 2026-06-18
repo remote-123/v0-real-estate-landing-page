@@ -13,7 +13,7 @@
  * Rate limit: 1.5s delay between requests (Overpass fair use).
  */
 
-import { sql } from "./neon-client"
+import { sql } from "./db-client"
 
 const DELAY_MS      = 1500
 const OVERPASS_URL  = "https://overpass-api.de/api/interpreter"

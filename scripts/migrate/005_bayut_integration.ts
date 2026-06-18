@@ -1,4 +1,4 @@
-import { sql } from "../ingest/neon-client"
+import { sql } from "../ingest/db-client"
 
 async function run() {
   console.log("005 — Bayut integration tables + unified materialized view")

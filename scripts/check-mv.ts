@@ -1,4 +1,4 @@
-import { sql } from "./ingest/neon-client"
+import { sql } from "./ingest/db-client"
 
 async function run() {
   const [months, sample] = await Promise.all([

@@ -1,4 +1,4 @@
-import { sql } from "../ingest/neon-client"
+import { sql } from "../ingest/db-client"
 
 async function run() {
   console.log("009 — Create missing tables: email_leads + distress_listings")
