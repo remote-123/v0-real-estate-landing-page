@@ -1,6 +1,7 @@
 import { MetadataRoute } from 'next'
 import { sql } from '@/lib/db'
 import { unstable_cache } from 'next/cache'
+import { client } from '@/sanity/lib/client'
 
 const BASE = 'https://www.northcapitaldxb.com'
 
@@ -49,17 +50,13 @@ const TERMINAL_ROUTES = [
   '/terminal/floor-plan-pricer',
   '/terminal/building-comparator',
   '/terminal/prop-buildings',
-  '/terminal/buildings',
-  '/terminal/building-listings',
-  '/terminal/transaction-search',
   '/terminal/developer-track',
-  '/terminal/roi-engine',
-  '/terminal/mortgage-calculator',
-  '/terminal/rental-yield',
+  '/terminal/calculators',
   '/terminal/price-index',
   '/terminal/supply-pipeline',
   '/terminal/service-charges',
   '/terminal/market-briefing',
+  '/terminal/research',
 ]
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -93,5 +90,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.70,
   }))
 
-  return [...staticRoutes, ...communityUrls, ...areaDeepDiveUrls, ...buildingUrls]
+  // Blog posts from Sanity
+  let researchUrls: MetadataRoute.Sitemap = []
+  try {
+    const posts = await client.fetch<{ slug: string; publishedAt: string | null }[]>(
+      `*[_type == "post" && defined(slug.current)]{ "slug": slug.current, publishedAt }`
+    )
+    researchUrls = posts.map((p) => ({
+      url: `${BASE}/terminal/research/${p.slug}`,
+      lastModified: p.publishedAt ? new Date(p.publishedAt) : new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.80,
+    }))
+  } catch { /* Sanity unavailable — skip */ }
+
+  return [...staticRoutes, ...communityUrls, ...areaDeepDiveUrls, ...buildingUrls, ...researchUrls]
 }
