@@ -7,6 +7,7 @@ import Script from "next/script"
 import { GoogleAnalytics } from '@next/third-parties/google'
 import { ThemeProvider } from "@/components/theme-provider"
 import { SessionProvider } from "@/components/auth/session-provider"
+import { auth } from "@/auth"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 
 const dmSans = DM_Sans({
@@ -62,11 +63,12 @@ export const viewport: Viewport = {
   userScalable: true,
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const session = await auth()
   return (
     <html lang="en" suppressHydrationWarning>
       <body
@@ -74,7 +76,7 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <SpeedInsights />
-        <SessionProvider>
+        <SessionProvider session={session}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
