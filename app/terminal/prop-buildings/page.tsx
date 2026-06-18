@@ -4,6 +4,7 @@ import { unstable_cache } from "next/cache"
 import { PropBuildingsTable, type PropBuildingRow } from "@/components/terminal/prop-buildings-table"
 import { AreaSelector } from "@/components/terminal/area-selector"
 import { Suspense } from "react"
+import Link from "next/link"
 
 export const dynamic = "force-dynamic"
 
@@ -28,11 +29,14 @@ const fetchAreas = unstable_cache(
   { revalidate: 3600 }
 )
 
+const PAGE_SIZE = 100
+
 const fetchBuildings = unstable_cache(
-  async (areaSlug: string | null): Promise<PropBuildingRow[]> => {
+  async (areaSlug: string | null, page: number): Promise<{ rows: PropBuildingRow[]; total: number }> => {
     try {
+      const offset = (page - 1) * PAGE_SIZE
       if (areaSlug) {
-        return await sql<PropBuildingRow[]>`
+        const rows = await sql<PropBuildingRow[]>`
           SELECT
             pbd.building_slug,
             pbd.name,
@@ -51,27 +55,32 @@ const fetchBuildings = unstable_cache(
           WHERE pbd.area_slug = ${areaSlug}
           ORDER BY COALESCE(pbd.name, pbd.building_slug)
         `
+        return { rows, total: rows.length }
       }
-      return await sql<PropBuildingRow[]>`
-        SELECT
-          pbd.building_slug,
-          pbd.name,
-          pbd.area_slug,
-          COALESCE(pa.name, pbd.area_slug) AS area_name,
-          pbd.status,
-          pbd.completion_year,
-          pbd.total_floors,
-          pbd.total_units,
-          pbd.building_type,
-          pbd.developer,
-          pbd.is_freehold,
-          pbd.property_types
-        FROM prop_building_details pbd
-        LEFT JOIN prop_areas pa ON pbd.area_slug = pa.slug
-        ORDER BY COALESCE(pbd.name, pbd.building_slug)
-        LIMIT 400
-      `
-    } catch { return [] }
+      const [rows, countRows] = await Promise.all([
+        sql<PropBuildingRow[]>`
+          SELECT
+            pbd.building_slug,
+            pbd.name,
+            pbd.area_slug,
+            COALESCE(pa.name, pbd.area_slug) AS area_name,
+            pbd.status,
+            pbd.completion_year,
+            pbd.total_floors,
+            pbd.total_units,
+            pbd.building_type,
+            pbd.developer,
+            pbd.is_freehold,
+            pbd.property_types
+          FROM prop_building_details pbd
+          LEFT JOIN prop_areas pa ON pbd.area_slug = pa.slug
+          ORDER BY COALESCE(pbd.name, pbd.building_slug)
+          LIMIT ${PAGE_SIZE} OFFSET ${offset}
+        `,
+        sql<{ count: string }[]>`SELECT COUNT(*)::text AS count FROM prop_building_details`,
+      ])
+      return { rows, total: parseInt(countRows[0]?.count ?? '0', 10) }
+    } catch { return { rows: [], total: 0 } }
   },
   ['prop-buildings-list'],
   { revalidate: 3600 }
@@ -107,17 +116,19 @@ const fetchStats = unstable_cache(
 export default async function PropBuildingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ area?: string }>
+  searchParams: Promise<{ area?: string; page?: string }>
 }) {
-  const { area } = await searchParams
+  const { area, page: pageParam } = await searchParams
   const selectedArea = area ?? null
+  const page = Math.max(1, parseInt(pageParam ?? '1', 10))
 
-  const [buildings, areas, stats] = await Promise.all([
-    fetchBuildings(selectedArea),
+  const [{ rows: buildings, total: totalBuildings }, areas, stats] = await Promise.all([
+    fetchBuildings(selectedArea, page),
     fetchAreas(),
     fetchStats(),
   ])
 
+  const totalPages = selectedArea ? 1 : Math.ceil(totalBuildings / PAGE_SIZE)
   const complete = buildings.filter(b => b.status === 'complete').length
   const offPlan  = buildings.filter(b => b.status === 'under_construction' || b.status === 'planned').length
 
@@ -174,7 +185,7 @@ export default async function PropBuildingsPage({
 
       <p className="text-[11px] font-mono text-muted-foreground/50 px-1">
         Source: propsearch.ae · Scraped {new Date().toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}
-        {!selectedArea && ` · Showing first 400 — select an area to see all`}
+        {!selectedArea && ` · Showing ${((page - 1) * PAGE_SIZE) + 1}–${Math.min(page * PAGE_SIZE, totalBuildings)} of ${totalBuildings.toLocaleString()}`}
       </p>
 
       {/* Area selector + table */}
@@ -183,6 +194,33 @@ export default async function PropBuildingsPage({
           <AreaSelector areas={areas} selected={selectedArea} />
         </Suspense>
         <PropBuildingsTable data={buildings} />
+
+        {/* Pagination — only shown when no area filter */}
+        {!selectedArea && totalPages > 1 && (
+          <div className="flex items-center justify-between pt-2">
+            <p className="font-mono text-xs text-muted-foreground">
+              Page {page} of {totalPages}
+            </p>
+            <div className="flex gap-2">
+              {page > 1 && (
+                <Link
+                  href={`/terminal/prop-buildings?page=${page - 1}`}
+                  className="rounded-lg border border-border/50 bg-card px-3 py-1.5 font-mono text-xs text-muted-foreground hover:text-foreground hover:border-accent/40 transition-colors"
+                >
+                  ← Prev
+                </Link>
+              )}
+              {page < totalPages && (
+                <Link
+                  href={`/terminal/prop-buildings?page=${page + 1}`}
+                  className="rounded-lg border border-border/50 bg-card px-3 py-1.5 font-mono text-xs text-muted-foreground hover:text-foreground hover:border-accent/40 transition-colors"
+                >
+                  Next →
+                </Link>
+              )}
+            </div>
+          </div>
+        )}
       </section>
 
     </div>
