@@ -218,7 +218,6 @@ export async function POST(req: NextRequest) {
   // Refresh materialized views
   let refreshError: string | null = null
   try {
-    await sql`REFRESH MATERIALIZED VIEW CONCURRENTLY mv_txn_monthly`
     await sql`REFRESH MATERIALIZED VIEW CONCURRENTLY mv_txn_monthly_unified`
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e)
