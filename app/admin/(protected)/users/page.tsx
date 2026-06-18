@@ -65,7 +65,7 @@ async function fetchData(): Promise<{ users: UserRow[]; stats: Stats | null }> {
         created_at::text AS created_at,
         last_seen_at::text AS last_seen_at,
         sign_in_count
-      FROM users
+      FROM users_legacy
       ORDER BY created_at DESC
       LIMIT 200
     `,
@@ -78,7 +78,7 @@ async function fetchData(): Promise<{ users: UserRow[]; stats: Stats | null }> {
         COUNT(*) FILTER (WHERE created_at >= CURRENT_DATE)::integer AS today,
         COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '7 days')::integer AS this_week,
         COALESCE(SUM(sign_in_count), 0)::integer AS total_sign_ins
-      FROM users
+      FROM users_legacy
     `,
   ])
 
