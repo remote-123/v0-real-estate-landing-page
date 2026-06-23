@@ -12,46 +12,54 @@ import {
   type ColumnDef,
   type SortingState,
 } from '@tanstack/react-table'
-import { ArrowUpDown, ArrowUp, ArrowDown, Search, MapPin, ExternalLink } from 'lucide-react'
+import { ArrowUpDown, ArrowUp, ArrowDown, Search, ExternalLink, Info } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import type { BuildingRow } from '@/app/terminal/buildings/page'
 
-type BuildingRow = {
-  building_key: string
-  slug?: string | null
-  global_slug?: string | null
-  building_name_en: string
-  area_name_en: string | null
-  primary_sub_type: string | null
-  developer_name: string | null
-  completion_year: number | null
-  propsearch_status: string | null
-  osm_lat: string | null
-  osm_lng: string | null
-  total_floors: number | null
-  total_units: number | null
-  property_types: string | null
-  amenities: string | null
+const GRADE_STYLES: Record<string, string> = {
+  luxury:     'bg-purple-500/15 text-purple-300 border-purple-500/20',
+  premium:    'bg-blue-500/15 text-blue-300 border-blue-500/20',
+  mid:        'bg-zinc-500/15 text-zinc-300 border-zinc-500/20',
+  affordable: 'bg-green-500/15 text-green-400 border-green-500/20',
 }
 
-type StatusConfig = {
-  label: string
-  className: string
+const STATUS_STYLES: Record<string, string> = {
+  complete:           'bg-accent/15 text-accent border-accent/20',
+  under_construction: 'bg-yellow-500/15 text-yellow-400 border-yellow-500/20',
+  under_development:  'bg-yellow-500/15 text-yellow-400 border-yellow-500/20',
+  planned:            'bg-blue-500/15 text-blue-400 border-blue-500/20',
+  cancelled:          'bg-red-500/15 text-red-400 border-red-500/20',
+  demolished:         'bg-red-500/15 text-red-400 border-red-500/20',
+  under_renovation:   'bg-orange-500/15 text-orange-400 border-orange-500/20',
 }
 
-const STATUS_MAP: Record<string, StatusConfig> = {
-  complete: { label: 'Complete', className: 'bg-accent/15 text-accent border-accent/20' },
-  under_construction: { label: 'Under Constr.', className: 'bg-yellow-500/15 text-yellow-400 border-yellow-500/20' },
-  planned: { label: 'Planned', className: 'bg-blue-500/15 text-blue-400 border-blue-500/20' },
-  cancelled: { label: 'Cancelled', className: 'bg-red-500/15 text-red-400 border-red-500/20' },
-  unknown: { label: 'Unknown', className: 'bg-muted/50 text-muted-foreground border-border/40' },
+const STATUS_LABELS: Record<string, string> = {
+  complete:           'Complete',
+  under_construction: 'Under Constr.',
+  under_development:  'Under Dev.',
+  planned:            'Planned',
+  cancelled:          'Cancelled',
+  demolished:         'Demolished',
+  under_renovation:   'Renovation',
+}
+
+function GradeBadge({ grade }: { grade: string | null }) {
+  if (!grade) return <span className="font-mono text-xs text-muted-foreground/30">—</span>
+  const cls = GRADE_STYLES[grade] ?? 'bg-muted/50 text-muted-foreground border-border/40'
+  return (
+    <span className={cn('inline-flex items-center rounded border px-1.5 py-0.5 font-mono text-[10px] font-semibold whitespace-nowrap capitalize', cls)}>
+      {grade}
+    </span>
+  )
 }
 
 function StatusBadge({ status }: { status: string | null }) {
   if (!status) return <span className="font-mono text-xs text-muted-foreground/30">—</span>
-  const cfg = STATUS_MAP[status] ?? STATUS_MAP.unknown
+  const key = status.replace(/ /g, '_')
+  const cls = STATUS_STYLES[key] ?? 'bg-muted/50 text-muted-foreground border-border/40'
   return (
-    <span className={cn('inline-flex items-center rounded border px-1.5 py-0.5 font-mono text-[10px] font-semibold whitespace-nowrap', cfg.className)}>
-      {cfg.label}
+    <span className={cn('inline-flex items-center rounded border px-1.5 py-0.5 font-mono text-[10px] font-semibold whitespace-nowrap', cls)}>
+      {STATUS_LABELS[key] ?? status}
     </span>
   )
 }
@@ -83,36 +91,31 @@ export function BuildingsTable({ data }: Props) {
       size: 40,
     },
     {
-      accessorKey: 'building_name_en',
+      accessorKey: 'name',
       header: ({ column }) => (
         <button className="flex items-center text-left" onClick={() => column.toggleSorting()}>
           Building <SortIcon sorted={column.getIsSorted()} />
         </button>
       ),
       cell: ({ row }) => {
-        const name = row.original.building_name_en
+        const name = row.original.name
         const href = row.original.global_slug
           ? `/terminal/buildings/${row.original.global_slug}`
-          : row.original.slug
-          ? `/terminal/buildings/${row.original.slug}`
-          : null
-        if (href) {
-          return (
-            <Link
-              href={href}
-              className="group flex items-center gap-1.5 font-medium text-foreground hover:text-accent text-sm leading-tight transition-colors"
-            >
-              {name}
-              <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-60 transition-opacity shrink-0" />
-            </Link>
-          )
-        }
-        return <p className="font-medium text-foreground text-sm leading-tight">{name}</p>
+          : `/terminal/buildings/${row.original.nc_slug}`
+        return (
+          <Link
+            href={href}
+            className="group flex items-center gap-1.5 font-medium text-foreground hover:text-accent text-sm leading-tight transition-colors"
+          >
+            {name}
+            <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-60 transition-opacity shrink-0" />
+          </Link>
+        )
       },
       size: 240,
     },
     {
-      accessorKey: 'area_name_en',
+      accessorKey: 'area_display',
       header: ({ column }) => (
         <button className="flex items-center text-left" onClick={() => column.toggleSorting()}>
           Area <SortIcon sorted={column.getIsSorted()} />
@@ -126,25 +129,21 @@ export function BuildingsTable({ data }: Props) {
       size: 160,
     },
     {
-      accessorKey: 'primary_sub_type',
-      header: 'Type',
-      cell: ({ getValue }) => {
-        const val = getValue<string | null>()
-        if (!val) return <span className="font-mono text-xs text-muted-foreground/30">—</span>
-        return <span className="font-mono text-xs text-muted-foreground">{val}</span>
-      },
-      enableSorting: false,
+      accessorKey: 'building_grade',
+      header: 'Grade',
+      cell: ({ getValue }) => <GradeBadge grade={getValue<string | null>()} />,
+      enableSorting: true,
       size: 100,
     },
     {
-      accessorKey: 'propsearch_status',
+      accessorKey: 'status',
       header: 'Status',
       cell: ({ getValue }) => <StatusBadge status={getValue<string | null>()} />,
       enableSorting: false,
       size: 120,
     },
     {
-      accessorKey: 'developer_name',
+      accessorKey: 'developer',
       header: 'Developer',
       cell: ({ getValue }) => {
         const val = getValue<string | null>()
@@ -172,7 +171,7 @@ export function BuildingsTable({ data }: Props) {
       accessorKey: 'total_floors',
       header: ({ column }) => (
         <button className="flex items-center justify-end w-full" onClick={() => column.toggleSorting()}>
-          Floors <SortIcon sorted={column.getIsSorted()} />
+          Flrs <SortIcon sorted={column.getIsSorted()} />
         </button>
       ),
       cell: ({ getValue }) => {
@@ -180,51 +179,93 @@ export function BuildingsTable({ data }: Props) {
         if (!val) return <span className="font-mono text-xs text-muted-foreground/30 tabular-nums">—</span>
         return <span className="font-mono text-sm text-foreground tabular-nums">{val}</span>
       },
-      size: 70,
+      size: 60,
     },
     {
-      accessorKey: 'total_units',
+      accessorKey: 'units_1br',
       header: ({ column }) => (
         <button className="flex items-center justify-end w-full" onClick={() => column.toggleSorting()}>
-          Units <SortIcon sorted={column.getIsSorted()} />
+          1BR <SortIcon sorted={column.getIsSorted()} />
         </button>
       ),
       cell: ({ getValue }) => {
         const val = getValue<number | null>()
-        if (!val) return <span className="font-mono text-xs text-muted-foreground/30 tabular-nums">—</span>
-        return <span className="font-mono text-sm text-foreground tabular-nums">{val.toLocaleString()}</span>
+        if (val == null) return <span className="font-mono text-xs text-muted-foreground/30 tabular-nums">—</span>
+        return <span className="font-mono text-xs text-muted-foreground tabular-nums">{val}</span>
       },
-      size: 75,
+      size: 55,
     },
     {
-      accessorKey: 'property_types',
-      header: 'Beds',
+      accessorKey: 'units_2br',
+      header: ({ column }) => (
+        <button className="flex items-center justify-end w-full" onClick={() => column.toggleSorting()}>
+          2BR <SortIcon sorted={column.getIsSorted()} />
+        </button>
+      ),
+      cell: ({ getValue }) => {
+        const val = getValue<number | null>()
+        if (val == null) return <span className="font-mono text-xs text-muted-foreground/30 tabular-nums">—</span>
+        return <span className="font-mono text-xs text-muted-foreground tabular-nums">{val}</span>
+      },
+      size: 55,
+    },
+    {
+      accessorKey: 'units_3br_plus',
+      header: ({ column }) => (
+        <button className="flex items-center justify-end w-full" onClick={() => column.toggleSorting()}>
+          3BR+ <SortIcon sorted={column.getIsSorted()} />
+        </button>
+      ),
+      cell: ({ getValue }) => {
+        const val = getValue<number | null>()
+        if (val == null) return <span className="font-mono text-xs text-muted-foreground/30 tabular-nums">—</span>
+        return <span className="font-mono text-xs text-muted-foreground tabular-nums">{val}</span>
+      },
+      size: 55,
+    },
+    {
+      accessorKey: 'nearest_highway',
+      header: 'Highway',
       cell: ({ getValue }) => {
         const val = getValue<string | null>()
         if (!val) return <span className="font-mono text-xs text-muted-foreground/30">—</span>
-        return <span className="font-mono text-xs text-muted-foreground">{val}</span>
+        return <span className="font-mono text-xs text-foreground">{val}</span>
       },
       enableSorting: false,
-      size: 140,
+      size: 80,
     },
     {
-      id: 'coords',
+      accessorKey: 'nearest_metro',
+      header: 'Station',
+      cell: ({ getValue }) => {
+        const val = getValue<string | null>()
+        if (!val) return <span className="font-mono text-xs text-muted-foreground/30">—</span>
+        return <span className="font-mono text-xs text-foreground">{val}</span>
+      },
+      enableSorting: false,
+      size: 100,
+    },
+    {
+      accessorKey: 'has_school_nearby',
       header: () => (
-        <span className="flex items-center justify-center gap-1">
-          <MapPin className="h-3 w-3" />
-        </span>
+        <div className="flex items-center justify-end gap-1">
+          School
+          <span title="School within the community">
+            <Info className="h-3 w-3 text-muted-foreground/50" />
+          </span>
+        </div>
       ),
-      accessorFn: (row) => (row.osm_lat != null && row.osm_lng != null ? 1 : 0),
-      cell: ({ row }) => {
-        const hasCoords = row.original.osm_lat != null && row.original.osm_lng != null
+      cell: ({ getValue }) => {
+        const val = getValue<boolean | null>()
+        if (val == null) return <span className="font-mono text-xs text-muted-foreground/30">—</span>
         return (
-          <span title={hasCoords ? `${row.original.osm_lat}, ${row.original.osm_lng}` : 'No coordinates'}>
-            <MapPin className={cn('h-3.5 w-3.5 mx-auto', hasCoords ? 'text-accent' : 'text-muted-foreground/20')} />
+          <span className={cn('font-mono text-xs font-semibold', val ? 'text-emerald-400' : 'text-muted-foreground/40')}>
+            {val ? 'Y' : 'N'}
           </span>
         )
       },
       enableSorting: false,
-      size: 50,
+      size: 65,
     },
   ], [])
 
@@ -232,16 +273,17 @@ export function BuildingsTable({ data }: Props) {
     data,
     columns,
     state: { sorting, globalFilter },
-    onSortingChange: setSorting,
+    onSortingChange: (updater) => setSorting(typeof updater === 'function' ? updater(sorting) : updater),
     onGlobalFilterChange: setGlobalFilter,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     globalFilterFn: (row, _columnId, filterValue) => {
       const search = filterValue.toLowerCase()
-      const name = (row.original.building_name_en ?? '').toLowerCase()
-      const area = (row.original.area_name_en ?? '').toLowerCase()
-      return name.includes(search) || area.includes(search)
+      const name = (row.original.name ?? '').toLowerCase()
+      const area = (row.original.area_display ?? '').toLowerCase()
+      const dev = (row.original.developer ?? '').toLowerCase()
+      return name.includes(search) || area.includes(search) || dev.includes(search)
     },
   })
 
@@ -254,7 +296,7 @@ export function BuildingsTable({ data }: Props) {
           <input
             value={globalFilter}
             onChange={e => setGlobalFilter(e.target.value)}
-            placeholder="Search buildings or areas..."
+            placeholder="Search buildings, areas, developers…"
             className="w-full pl-9 pr-4 py-2 text-base sm:text-sm bg-card border border-border/50 rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20"
           />
         </div>
@@ -304,7 +346,6 @@ export function BuildingsTable({ data }: Props) {
             </tbody>
           </table>
         </div>
-
       </div>
     </div>
   )

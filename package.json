@@ -32,7 +32,13 @@
     "scrape:propsearch:buildings": "npx tsx --env-file=.env.local scripts/ingest/propsearch_full_scraper.ts --phase=2",
     "scrape:propsearch:details": "npx tsx --env-file=.env.local scripts/ingest/propsearch_full_scraper.ts --phase=3",
     "migrate:prop-buildings": "npx tsx --env-file=.env.local scripts/migrate/prop-buildings.ts",
-    "heartbeat:prop-buildings": "npx tsx --env-file=.env.local scripts/prop-buildings-heartbeat.ts"
+    "heartbeat:prop-buildings": "npx tsx --env-file=.env.local scripts/prop-buildings-heartbeat.ts",
+    "migrate:nc-buildings": "npx tsx --env-file=.env.local scripts/migrate/012_nc_buildings.ts",
+    "seed:nc-buildings": "npx tsx --env-file=.env.local scripts/ingest/seed-nc-buildings.ts",
+    "migrate:nc-buildings-enrich": "npx tsx --env-file=.env.local scripts/migrate/013_nc_buildings_enrich.ts",
+    "enrich:buildings": "npx tsx --env-file=.env.local scripts/enrich/enrich-buildings-ai.ts",
+    "enrich:areas": "npx tsx --env-file=.env.local scripts/enrich/enrich-areas-ai.ts",
+    "enrich:status": "npx tsx --env-file=.env.local scripts/enrich/status.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.78.0",

@@ -7,6 +7,93 @@
 > 3. **Mandatory Signature:** Every entry must explicitly state the tool name at the start (e.g., *"Built by Antigravity"*, *"Built by Claude Code"*, or *"Built by Cursor"*).
 
 
+## 23 June 2026 — nc_buildings enrichment: area assignment + sweep round 2
+
+*Built by Claude Code*
+
+- `scripts/enrich/assign-areas.ts` (batch mode, 20 buildings/Claude call): classifies no-area buildings into nc_area_slug using name+developer+highway. 121 buildings assigned in first run.
+- Re-ran `enrich-areas-ai.ts --write` after area assignment; newly tagged buildings picked up metro+highway via area sweep.
+- Post-sweep status: Metro 73.8% (4,282/5,799) | Highway 77.1% (4,469/5,799) | Developer 67.5% | Year 53.3%.
+- **Remaining TODO**: ~1,280 buildings still no nc_area_slug — run `scripts/enrich/assign-areas.ts --limit=1000 --write` then re-run area sweep. 1,072 "complete" buildings missing year — run `enrich:buildings --missing year --write`.
+
+## 19 June 2026 — nc_buildings AI enrichment pipeline + area-level metro/highway sweep
+
+*Built by Claude Code*
+
+- Added `Station` (nearest_metro) + `School` (has_school_nearby Y/N with tooltip) columns to `/terminal/buildings` table + admin nc-buildings table. Filter panel now closes on outside click + has X button.
+- `scripts/enrich/enrich-buildings-ai.ts`: Exa→Tavily→Claude CLI pipeline; fills developer/year/units/bedrooms/metro/highway per building via web search + Claude extraction. `--slug`, `--limit`, `--missing`, `--write` flags.
+- `scripts/enrich/enrich-areas-ai.ts`: area-level sweep (65 areas → COALESCE UPDATE all buildings in area). 4,227 buildings updated in single run.
+- `scripts/enrich/status.ts`: enrichment progress report. Post-sweep: Metro 73.2%, Highway 75.9%, Developer 67.5%, Year 53.1%. 1,073 "complete" buildings still missing a year.
+- Added `enrich:buildings` + `enrich:areas` + `enrich:status` to `package.json` scripts.
+
+## 19 June 2026 — nc_buildings → single source of truth + terminal Buildings page overhaul
+
+*Built by Claude Code*
+
+- Migration 013 (`scripts/migrate/013_nc_buildings_enrich.ts`): added `status`, `osm_lat`, `osm_lng`, `global_slug` to `nc_buildings`; backfilled status from `prop_building_details` (5,415 rows), coords+global_slug from `re_buildings` (3,683 rows), master_developer (609 rows). Indexes on status + global_slug.
+- `/terminal/buildings` rewritten: pulls exclusively from `nc_buildings + nc_areas` (no runtime JOINs). Server-side pagination (100/page), URL-driven filters (status/grade/type/freehold/year_from/year_to). Pagination at top + bottom. New filter panel (`components/terminal/buildings-filters.tsx`). KPIs: Total / Complete / Off-Plan.
+- `/terminal/prop-buildings` deprecated → both page + detail route now redirect to `/terminal/buildings`. Sidebar updated.
+- `components/terminal/buildings-table.tsx` rewritten with tanstack table: GradeBadge, StatusBadge, developer, year, floors, 1BR/2BR/3BR+, highway columns. Global search across name/area/developer.
+- `components/terminal/area-selector.tsx` updated to `{value, label}[]` prop shape.
+- Admin nc-buildings UI: added `total_floors` column + edit modal field.
+
+## 19 June 2026 — NC Buildings admin UI built
+
+*Built by Claude Code*
+
+- Built full admin curation UI for `nc_buildings` at `/admin/nc-buildings`: GET+PATCH API route (`app/api/admin/nc-buildings/route.ts`), server page fetching nc_areas, client component with filters (search/area/missing/quality), paginated table, edit modal with bedroom counts/grade/highway/view/amenities/notes, quality badge system, progress bar.
+- Modal saves via PATCH; `mark_verified=true` sets `data_quality=3`, otherwise upgrades to `GREATEST(data_quality, 2)`. In-place row update after save. Added "NC Buildings" entry to admin sidebar nav.
+
+## 19 June 2026 — nc_buildings table created and seeded
+
+*Built by Claude Code*
+
+- Created `nc_buildings` table (`scripts/migrate/012_nc_buildings.ts`): slug, name, nc_area_slug, propsearch_slug, developer, floors, units, studio/1br/2br/3br+ counts, building_type, grade, freehold, service_charge, highway, metro, view_type[], has_pool/gym/school, dld_building_nk, data_quality.
+- Seeded from `prop_building_details` + `dld_units` bedroom match (`scripts/ingest/seed-nc-buildings.ts`): 5,799 rows total — 1,165 with bedroom counts (quality=2), 4,634 without (quality=1). Admin UI next to fill gaps.
+
+## 18 June 2026 — Bear/Bull/Calculators/Liquidity/Supply/Off-plan pipeline wired to nc_areas canonical names
+
+*Built by Claude Code*
+
+- Propagated `nc_display_name`/`nc_slug` through 6 terminal pages: `bear-cases`, `bull-cases`, `calculators`, `liquidity`, `supply-pipeline`, `off-plan-pipeline`.
+- `mv_txn_monthly_unified` pages (bear/bull/calculators/liquidity): added LEFT JOIN subquery on `nc_display_name IS NOT NULL`; display uses `nc_display_name ?? formatAreaName(area_name_en)`.
+- `dld_projects` pages (supply-pipeline, off-plan-pipeline): JOIN `nc_areas na ON na.dld_area_names @> ARRAY[area_name_en]`; off-plan stats card also resolves largest area canonical name.
+- Build clean, no TypeScript errors.
+
+## 18 June 2026 — Communities + Area Momentum UI wired to nc_areas canonical names
+
+*Built by Claude Code*
+
+- Updated `app/terminal/communities/page.tsx`: SQL now selects `nc_display_name`/`nc_slug` from `mv_txn_monthly_unified`; `mapToCommunity` uses canonical names with fallback to `formatAreaName`.
+- Updated `app/terminal/communities/[slug]/page.tsx`: discovery query uses `nc_slug` for route matching (so `/terminal/communities/dubai-marina` resolves correctly); `displayName` uses `nc_display_name`; `generateStaticParams` emits canonical slugs.
+- Updated `app/terminal/area-momentum/page.tsx`: SQL LEFT JOINs nc name subquery; table rows and stat card description use `nc_display_name`.
+- Build clean, no TypeScript errors.
+
+## 18 June 2026 — nc_areas canonical area table + mv_txn_monthly_unified rebuild
+
+*Built by Claude Code*
+
+- Created `nc_areas` table (65 areas) mapping DLD cryptic names → retail display names (e.g. "Marsa Dubai" → "Dubai Marina", "Burj Khalifa" → "Downtown Dubai", "Al Barsha South Fourth" → "JVC"). Covers ~95% of transaction volume. Migration: `scripts/migrate/011_nc_areas.ts`.
+- Rebuilt `mv_txn_monthly_unified`: dropped dead Bayut UNION (bayut_transactions = 0 rows), added `nc_display_name` + `nc_slug` + `nc_parent_slug` columns via LEFT JOIN to `nc_areas`. All 16 terminal pages now have canonical area names available without code changes.
+- Removed Bayut API dependency: deleted `lib/bayut14.ts`, `app/api/cron/fetch-bayut-transactions/`, 2 test files. Cleaned schema.org + admin page references.
+- Full propsearch rescrape: 7,165 buildings re-scraped with new section-aware extractor (`propsearch-extract.ts`). 11 new JSONB columns populated (transport, schools, POIs, hotels, neighbourhoods, milestones, payment_plan).
+
+## 18 June 2026 — Prop-buildings data investigation
+
+*Built by Claude Code*
+
+- Investigated apparent "1,373 missing buildings" gap: was a counting artifact — `prop_buildings` stores area+building pairs (duplicates), `prop_building_details` stores unique slugs (5,799). Actual coverage: 5,799/5,804 unique buildings = 99.9%.
+- 6 building slugs return 404 on propsearch (no detail pages available) — unfixable, acceptable.
+- Scraper pagination confirmed fine: propsearch loads all buildings per area on a single page.
+
+## 18 June 2026 — Terminal sidebar refactor: Calculators hub, park dead pages
+
+*Built by Claude Code*
+
+- Parked `building-listings`, `compare`, `transaction-search`, `roi-engine`, `mortgage-calculator`, `rental-yield` pages to `_parked/app/terminal/` (preserving all files).
+- Created `/terminal/calculators` — server page fetching DLD data, with client-side tab switcher (`CalculatorsTabs`) rendering ROI Engine, Mortgage, and Rental Yield tabs inline.
+- Sidebar: removed 5 individual links (Building Listings, Comparable Sales, ROI Engine, Mortgage Calculator, Rental Yield), added single "Calculators" link. Build passes clean.
+
 ## 18 June 2026 — UI cleanup, SEO buildout, build fix
 
 *Built by Claude Code*

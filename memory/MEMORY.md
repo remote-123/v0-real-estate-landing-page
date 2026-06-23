@@ -1,5 +1,11 @@
 # Project Memory
 
+## nc_buildings — Single Source of Truth (LIVE, migration 013 done)
+→ `memory/project_nc_buildings.md` — 5,799 rows. Migration 013 added status/global_slug/osm_lat/osm_lng (backfilled). Terminal /terminal/buildings queries nc_buildings+nc_areas only — no runtime JOINs. /terminal/prop-buildings redirects here.
+
+## nc_areas — Canonical Area Table (LIVE)
+→ `memory/project_nc_areas.md` — 65 Dubai communities, DLD name → retail name mapping. mv_txn_monthly_unified rebuilt to join through it. Bayut removed.
+
 ## PropSearch Scraper (resume after DB migration)
 → `memory/project_propsearch_scraper.md` — 3-stage propsearch.ae scraper built but never completed. Keep all code. Resume after DO migration.
 
