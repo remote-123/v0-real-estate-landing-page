@@ -31,6 +31,8 @@ function formatNum(n: number): string {
 
 type AreaRow = {
   area_name_en: string
+  nc_display_name: string | null
+  nc_slug: string | null
   txn_count: number
   avg_psf: number
   avg_value: number
@@ -67,17 +69,21 @@ async function fetchAreaData(
   topProjects: { project_name_en: string; no_of_units: number; project_status: string }[]
   yoyPsf: number | null
   txnCount12m: number
+  ncDisplayName: string | null
 } | null> {
   try {
     // Type-agnostic discovery — don't 404 just because the type has no data
-    const areas = await sql<{ area_name_en: string }[]>`
-      SELECT DISTINCT area_name_en FROM mv_txn_monthly_unified
+    const areas = await sql<{ area_name_en: string; nc_slug: string | null; nc_display_name: string | null }[]>`
+      SELECT DISTINCT area_name_en, MAX(nc_slug) AS nc_slug, MAX(nc_display_name) AS nc_display_name
+      FROM mv_txn_monthly_unified
       WHERE area_name_en IS NOT NULL AND trans_group_en = 'Sales'
+      GROUP BY area_name_en
     `
-    const match = areas.find(a => toSlug(a.area_name_en) === slug)
+    const match = areas.find(a => (a.nc_slug ?? toSlug(a.area_name_en)) === slug)
     if (!match) return null
 
     const areaName = match.area_name_en
+    const ncDisplayName = match.nc_display_name
     const firstWord = areaName.split(' ')[0]
 
     const typeCond = type === 'flat'
@@ -263,7 +269,7 @@ async function fetchAreaData(
     const txnCount12m = Number(metricsRows[0]?.txn_count_12m ?? 0)
     const yoyPsf = metricsRows[0]?.yoy_psf ? Number(metricsRows[0].yoy_psf) : null
 
-    return { area, history, noData: !stats[0], serviceChargeAvg, distressCount, topProjects, yoyPsf, txnCount12m }
+    return { area, history, noData: !stats[0], serviceChargeAvg, distressCount, topProjects, yoyPsf, txnCount12m, ncDisplayName }
   } catch {
     return null
   }
@@ -271,14 +277,15 @@ async function fetchAreaData(
 
 export async function generateStaticParams() {
   try {
-    const rows = await sql<{ area_name_en: string }[]>`
-      SELECT DISTINCT area_name_en
+    const rows = await sql<{ area_name_en: string; nc_slug: string | null }[]>`
+      SELECT DISTINCT area_name_en, MAX(nc_slug) AS nc_slug
       FROM mv_txn_monthly_unified
       WHERE area_name_en IS NOT NULL AND trans_group_en = 'Sales'
+      GROUP BY area_name_en
       ORDER BY area_name_en
       LIMIT 300
     `
-    return rows.map((r) => ({ slug: toSlug(r.area_name_en) }))
+    return rows.map((r) => ({ slug: r.nc_slug ?? toSlug(r.area_name_en) }))
   } catch {
     return []
   }
@@ -291,7 +298,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     getTerminalSiteInfo(),
   ])
   if (!result) return {}
-  const name = formatAreaName(result.area.area_name_en)
+  const name = result.ncDisplayName ?? formatAreaName(result.area.area_name_en)
   return {
     title: `${name} — Community Intelligence | ${siteName}`,
     description: `Price per sqft, transaction volume, and supply pipeline for ${name}, Dubai. Powered by DLD and Bayut data.`,
@@ -322,7 +329,7 @@ export default async function CommunityPage({
   const result = await fetchAreaData(slug, type)
   if (!result) notFound()
 
-  const { area, history, noData, serviceChargeAvg, distressCount, topProjects, yoyPsf, txnCount12m } = result
+  const { area, history, noData, serviceChargeAvg, distressCount, topProjects, yoyPsf, txnCount12m, ncDisplayName } = result
   const momChange = Number(area.mom_change ?? 0)
   const momColor = momChange >= 0 ? 'text-accent' : 'text-red-400'
   const yoyChange = yoyPsf && area.avg_psf
@@ -337,7 +344,7 @@ export default async function CommunityPage({
   }
 
   const { siteName, base } = await getTerminalSiteInfo()
-  const displayName = formatAreaName(area.area_name_en)
+  const displayName = ncDisplayName ?? formatAreaName(area.area_name_en)
   const wikiData = getCommunityBySlug(slug)
   const location = getCommunityLocation(slug)
   const transportMeta = getCommunityTransportMeta(slug)
@@ -442,7 +449,7 @@ export default async function CommunityPage({
               ))}
             </div>
             {location && (
-              <div className="w-full lg:w-72 h-44 lg:h-auto shrink-0 rounded-xl overflow-hidden">
+              <div className="w-full lg:w-72 h-44 shrink-0 rounded-xl overflow-hidden">
                 <CommunityMiniMap lat={location[0]} lng={location[1]} name={displayName} />
               </div>
             )}

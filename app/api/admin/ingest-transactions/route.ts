@@ -15,9 +15,24 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
+import { revalidatePath } from 'next/cache'
 import { parse } from 'csv-parse/sync'
 import { sql } from '@/lib/db'
 import { auth } from '@/auth'
+
+/** Terminal paths to revalidate after transaction ingestion */
+const TXN_DEPENDENT_PATHS = [
+  '/terminal/transaction-pulse',
+  '/terminal/communities',
+  '/terminal/area-momentum',
+  '/terminal/market-pulse',
+  '/terminal/floor-plan-pricer',
+  '/terminal/liquidity',
+  '/terminal/bear-cases',
+  '/terminal/bull-cases',
+  '/terminal/developer-track',
+  '/terminal/calculators',
+]
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? '').split(',').map(e => e.trim().toLowerCase())
 const BATCH_SIZE = 300
@@ -225,6 +240,11 @@ export async function POST(req: NextRequest) {
     console.error('[ingest-transactions] refresh error:', refreshError)
   }
 
+  // Bust all terminal page caches that depend on transaction data
+  for (const p of TXN_DEPENDENT_PATHS) {
+    revalidatePath(p)
+  }
+
   // New last date
   const [latest] = await sql<{ latest_date: string | null }[]>`
     SELECT MAX(instance_date)::text AS latest_date FROM dld_transactions
@@ -237,5 +257,6 @@ export async function POST(req: NextRequest) {
     skipped,
     new_latest_date: latest?.latest_date ?? null,
     refresh_error: refreshError,
+    paths_revalidated: TXN_DEPENDENT_PATHS.length,
   })
 }
