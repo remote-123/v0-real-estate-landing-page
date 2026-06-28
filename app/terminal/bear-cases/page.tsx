@@ -21,6 +21,8 @@ export async function generateMetadata() {
 
 interface BearCaseRow {
   area_name_en: string
+  nc_display_name: string | null
+  nc_slug: string | null
   txn_12m: number
   avg_psf: number
   yoy_pct: number | null
@@ -34,6 +36,8 @@ const fetchBearCases = unstable_cache(
   try {
     const rows = await sql<{
       area_name_en: string
+      nc_display_name: string | null
+      nc_slug: string | null
       txn_12m: string
       avg_psf: string
       yoy_pct: string | null
@@ -88,6 +92,8 @@ const fetchBearCases = unstable_cache(
         )
       SELECT
         c.area_name_en,
+        nc.nc_display_name,
+        nc.nc_slug,
         c.txn_12m,
         ROUND((c.psm / 10.764)::numeric, 0)                                        AS avg_psf,
         CASE
@@ -115,12 +121,18 @@ const fetchBearCases = unstable_cache(
       LEFT JOIN prev p             ON p.area_name_en = c.area_name_en
       LEFT JOIN pipeline pip       ON pip.area_name_en = c.area_name_en
       LEFT JOIN distress_agg d     ON d.area_key = LOWER(c.area_name_en)
+      LEFT JOIN (
+        SELECT area_name_en, MAX(nc_display_name) AS nc_display_name, MAX(nc_slug) AS nc_slug
+        FROM mv_txn_monthly_unified WHERE nc_display_name IS NOT NULL GROUP BY area_name_en
+      ) nc ON nc.area_name_en = c.area_name_en
       ORDER BY bear_score DESC, c.txn_12m DESC
       LIMIT 25
     `
 
     return rows.map((r) => ({
       area_name_en: r.area_name_en,
+      nc_display_name: r.nc_display_name ?? null,
+      nc_slug: r.nc_slug ?? null,
       txn_12m: Number(r.txn_12m),
       avg_psf: Number(r.avg_psf),
       yoy_pct: r.yoy_pct !== null ? Number(r.yoy_pct) : null,
@@ -214,8 +226,8 @@ export default async function BearCasesPage() {
       ) : (
         <div className="relative space-y-2">
           {display.map((row, i) => {
-            const name = formatAreaName(row.area_name_en)
-            const slug = toSlug(row.area_name_en)
+            const name = row.nc_display_name ?? formatAreaName(row.area_name_en)
+            const slug = row.nc_slug ?? toSlug(row.area_name_en)
             const { label, color, bg } = bearLabel(row.bear_score)
             const pipelineMo = pipelineMonths(row.pipeline_units, row.txn_12m)
             const declining = row.yoy_pct !== null && row.yoy_pct < -2

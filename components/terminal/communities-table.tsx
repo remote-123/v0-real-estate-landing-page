@@ -13,7 +13,7 @@ import {
   type ColumnDef,
   type SortingState,
 } from '@tanstack/react-table'
-import { ArrowUpDown, ArrowUp, ArrowDown, Search, TrendingUp, TrendingDown, Info } from 'lucide-react'
+import { ArrowUpDown, ArrowUp, ArrowDown, Search, TrendingUp, TrendingDown, Info, Zap } from 'lucide-react'
 import { Community } from '@/lib/types/community'
 import { cn } from '@/lib/utils'
 
@@ -254,6 +254,74 @@ export function CommunitiesTable({ data, isAuthenticated = true, totalRows }: Pr
           <MomBadge value={getValue<number>()} />
         </div>
       ),
+      size: 90,
+    },
+    {
+      accessorKey: 'volMomPct',
+      header: ({ column }) => (
+        <button className="flex items-center justify-end w-full" onClick={() => column.toggleSorting()}>
+          Vol MoM
+          <InfoTip text="Volume Month-over-Month: how much transaction count changed vs previous month." />
+          <SortIcon sorted={column.getIsSorted()} />
+        </button>
+      ),
+      cell: ({ getValue }) => {
+        const n = Number(getValue<number>())
+        return (
+          <span className={cn('font-mono text-xs font-semibold', n >= 0 ? 'text-accent' : 'text-red-400')}>
+            {n > 0 ? '+' : ''}{n.toFixed(1)}%
+          </span>
+        )
+      },
+      size: 85,
+    },
+    {
+      accessorKey: 'momentumScore',
+      header: ({ column }) => (
+        <button className="flex items-center justify-end w-full" onClick={() => column.toggleSorting()}>
+          Momentum
+          <InfoTip text="Combined price + volume acceleration. Score = (price MoM% + vol MoM%) × 50." />
+          <SortIcon sorted={column.getIsSorted()} />
+        </button>
+      ),
+      cell: ({ row }) => {
+        const score = Number(row.original.momentumScore)
+        const maxScore = 100
+        const barWidth = Math.min(Math.abs(score) / maxScore * 100, 100)
+        return (
+          <div className="flex items-center gap-2 justify-end">
+            <div className="relative w-16 h-5 flex items-center">
+              <div className="absolute inset-0 rounded-sm bg-muted/20" />
+              <div
+                className={cn('absolute left-0 top-0 h-full rounded-sm', score >= 0 ? 'bg-accent/20' : 'bg-red-400/20')}
+                style={{ width: `${barWidth}%` }}
+              />
+              <span className="relative w-full text-right pr-1 font-mono text-xs text-foreground">
+                {score.toFixed(1)}
+              </span>
+            </div>
+          </div>
+        )
+      },
+      size: 120,
+    },
+    {
+      id: 'signal',
+      accessorFn: (row) => (row.priceMomPct > 2 && row.volMomPct > 5) ? 1 : 0,
+      header: ({ column }) => (
+        <button className="flex items-center justify-start w-full" onClick={() => column.toggleSorting()}>
+          Signal <SortIcon sorted={column.getIsSorted()} />
+        </button>
+      ),
+      cell: ({ row }) => {
+        const isBreakout = row.original.priceMomPct > 2 && row.original.volMomPct > 5
+        if (!isBreakout) return null
+        return (
+          <span className="inline-flex items-center gap-1 rounded-sm bg-accent/10 border border-accent/30 px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-accent">
+            <Zap className="h-3 w-3" /> Breakout
+          </span>
+        )
+      },
       size: 90,
     },
     {

@@ -27,6 +27,7 @@ interface DeveloperRow {
   active_projects: number
   finished_projects: number
   top_area: string
+  top_area_display: string | null
   avg_completion_pct: number
 }
 
@@ -40,23 +41,29 @@ const fetchDeveloperData = unstable_cache(
     try {
       const rows = await sql<DeveloperRow[]>`
         SELECT
-          developer_name,
-          COUNT(*)::integer                                                                                           AS total_projects,
-          COALESCE(SUM(no_of_units), 0)::integer                                                                     AS total_units,
-          COALESCE(SUM(CASE WHEN project_status IN ('ACTIVE','NOT_STARTED','PENDING') THEN no_of_units ELSE 0 END), 0)::integer
-                                                                                                                     AS pipeline_units,
-          COUNT(CASE WHEN project_status IN ('ACTIVE','NOT_STARTED','PENDING') THEN 1 END)::integer                 AS active_projects,
-          COUNT(CASE WHEN project_status = 'FINISHED' THEN 1 END)::integer                                          AS finished_projects,
-          MODE() WITHIN GROUP (ORDER BY area_name_en)                                                                AS top_area,
-          ROUND(AVG(COALESCE(percent_completed, 0))::numeric, 1)                                                    AS avg_completion_pct
-        FROM dld_projects
-        WHERE developer_name IS NOT NULL
-          AND developer_name != ''
-          AND no_of_units > 0
-        GROUP BY developer_name
-        HAVING COUNT(*) >= 2
-        ORDER BY total_units DESC
-        LIMIT 60
+          t.*,
+          na.display_name AS top_area_display
+        FROM (
+          SELECT
+            developer_name,
+            COUNT(*)::integer                                                                                           AS total_projects,
+            COALESCE(SUM(no_of_units), 0)::integer                                                                     AS total_units,
+            COALESCE(SUM(CASE WHEN project_status IN ('ACTIVE','NOT_STARTED','PENDING') THEN no_of_units ELSE 0 END), 0)::integer
+                                                                                                                       AS pipeline_units,
+            COUNT(CASE WHEN project_status IN ('ACTIVE','NOT_STARTED','PENDING') THEN 1 END)::integer                 AS active_projects,
+            COUNT(CASE WHEN project_status = 'FINISHED' THEN 1 END)::integer                                          AS finished_projects,
+            MODE() WITHIN GROUP (ORDER BY area_name_en)                                                                AS top_area,
+            ROUND(AVG(COALESCE(percent_completed, 0))::numeric, 1)                                                    AS avg_completion_pct
+          FROM dld_projects
+          WHERE developer_name IS NOT NULL
+            AND developer_name != ''
+            AND no_of_units > 0
+          GROUP BY developer_name
+          HAVING COUNT(*) >= 2
+          ORDER BY total_units DESC
+          LIMIT 60
+        ) t
+        LEFT JOIN nc_areas na ON na.dld_area_names @> ARRAY[t.top_area]
       `
 
       const totalDevelopers = rows.length
@@ -266,7 +273,7 @@ export default async function DeveloperTrackPage() {
                         </span>
                       </td>
                       <td className="px-4 py-3 font-mono text-xs text-muted-foreground hidden lg:table-cell">
-                        {dev.top_area ? formatAreaName(dev.top_area) : "—"}
+                        {dev.top_area ? (dev.top_area_display ?? formatAreaName(dev.top_area)) : "—"}
                       </td>
                     </tr>
                   )

@@ -4,8 +4,13 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useCallback } from 'react'
 import { MapPin } from 'lucide-react'
 
+interface AreaOption {
+  value: string
+  label: string
+}
+
 interface Props {
-  areas: string[]
+  areas: AreaOption[]
   selected: string | null
 }
 
@@ -34,7 +39,7 @@ export function AreaSelector({ areas, selected }: Props) {
       >
         <option value="">All areas</option>
         {areas.map(a => (
-          <option key={a} value={a}>{a}</option>
+          <option key={a.value} value={a.value}>{a.label}</option>
         ))}
       </select>
     </div>

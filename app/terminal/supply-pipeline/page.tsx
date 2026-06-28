@@ -22,6 +22,7 @@ export interface Project {
   project_id: string
   project_name_en: string | null
   area_name_en: string | null
+  nc_display_name: string | null
   master_project_en: string | null
   developer_name: string | null
   project_status: string | null
@@ -36,12 +37,14 @@ const fetchProjects = unstable_cache(
     try {
       const [active, completedRows] = await Promise.all([
         sql<Project[]>`
-          SELECT project_id, project_name_en, area_name_en, master_project_en,
-                 developer_name, project_status, completion_date, percent_completed,
-                 no_of_units, no_of_buildings
-          FROM dld_projects
-          WHERE project_status IN ('ACTIVE', 'NOT_STARTED', 'PENDING', 'CONDITIONAL_ACTIVATING')
-          ORDER BY completion_date ASC NULLS LAST
+          SELECT p.project_id, p.project_name_en, p.area_name_en,
+                 na.display_name AS nc_display_name,
+                 p.master_project_en, p.developer_name, p.project_status,
+                 p.completion_date, p.percent_completed, p.no_of_units, p.no_of_buildings
+          FROM dld_projects p
+          LEFT JOIN nc_areas na ON na.dld_area_names @> ARRAY[p.area_name_en]
+          WHERE p.project_status IN ('ACTIVE', 'NOT_STARTED', 'PENDING', 'CONDITIONAL_ACTIVATING')
+          ORDER BY p.completion_date ASC NULLS LAST
         `,
         sql<[{ count: string }]>`
           SELECT count(*) FROM dld_projects WHERE project_status = 'FINISHED'

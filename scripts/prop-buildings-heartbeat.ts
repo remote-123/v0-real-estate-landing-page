@@ -20,6 +20,7 @@
  */
 
 import { sql } from "./ingest/db-client"
+import { extractDetail, type BuildingDetail } from "./ingest/propsearch-extract"
 
 // ── CLI args ──────────────────────────────────────────────────────────────────
 
@@ -227,144 +228,6 @@ async function stage2(areas?: Area[]) {
 
 // ── Stage 3: building detail pages ───────────────────────────────────────────
 
-interface BuildingDetail {
-  building_slug: string; area_slug: string; name: string | null
-  developer: string | null; master_developer: string | null
-  building_type: string | null; status: string | null
-  completion_year: number | null; total_floors: number | null
-  total_units: number | null; property_types: string | null
-  amenities: string | null; is_freehold: boolean | null
-  service_charge_psf: number | null; project_value_aed: bigint | null
-  description: string | null
-}
-
-function extractDetail(html: string, slug: string, areaSlug: string): BuildingDetail {
-  const text = html
-    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
-    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ')
-    .replace(/&lt;/g, '<').replace(/&gt;/g, '>')
-    .replace(/&#39;/g, "'").replace(/&quot;/g, '"')
-    .replace(/\s{2,}/g, ' ').trim()
-
-  const nameMatch = html.match(/<h1[^>]*>\s*([^<]{3,120})\s*<\/h1>/i)
-  const name = nameMatch ? nameMatch[1].trim() : null
-
-  const typeMatch = text.match(/(?:Residential|Commercial|Mixed[- ]use|Hotel|Serviced)\s+(?:building|tower|complex|development|apartment)[^.]{0,60}/i)
-  const building_type = typeMatch ? typeMatch[0].trim().slice(0, 120) : null
-
-  let developer: string | null = null
-  for (const re of [
-    /Developer[:\s]+([A-Z][A-Za-z0-9\s&.,'-]{2,60})/,
-    /Developed\s+by[:\s]+([A-Z][A-Za-z0-9\s&.,'-]{2,60})/i,
-  ]) {
-    const m = text.match(re)
-    if (m) { developer = m[1].trim().replace(/\s+/g, ' '); break }
-  }
-
-  const masterMatch = text.match(/Master\s+[Dd]eveloper[:\s]+([A-Z][A-Za-z0-9\s&.,'-]{2,60})/)
-  const master_developer = masterMatch ? masterMatch[1].trim() : null
-
-  const statusMatch = text.match(/\b(Complete|Under\s+(?:Construction|Development)|Planned|Cancelled)\b/i)
-  const status = statusMatch ? statusMatch[1].toLowerCase().replace(/\s+/g, '_') : null
-
-  let completion_year: number | null = null
-  for (const re of [
-    /(?:Completion|Handover|Completed|Expected|Ready)\s*(?:Date|Year)?[:\s]+(?:[A-Za-z]+\s+)?(20[12][0-9])/i,
-    /\d{4}\s*[-–]\s*(?:[A-Za-z]+\s+)?(20[12][0-9])/,
-  ]) {
-    const m = text.match(re)
-    if (m) { completion_year = parseInt(m[1], 10); break }
-  }
-
-  let total_floors: number | null = null
-  for (const re of [
-    /Storeys?[:\s]*(\d+)/i,
-    /(\d+)\s*(?:floors?|storey|storeys|levels?)/i,
-    /G\+(\d+)/i,
-  ]) {
-    const m = text.match(re)
-    if (m) { total_floors = parseInt(m[1], 10); break }
-  }
-
-  let total_units: number | null = null
-  for (const re of [
-    /Units?\s*:?\s*(\d[\d,]+)\s*total/i,
-    /(\d[\d,]+)\s*(?:total\s+)?(?:units?|apartments?|residences?)/i,
-    /(?:Units?|Apartments?)[:\s]+(\d[\d,]+)/i,
-  ]) {
-    const m = text.match(re)
-    if (m) { total_units = parseInt(m[1].replace(/,/g, ''), 10); break }
-  }
-
-  const typeKeywords: [RegExp, string][] = [
-    [/\bstudio\b/i, 'Studio'], [/\b1\s*(?:br|bed)\b/i, '1BR'],
-    [/\b2\s*(?:br|bed)\b/i, '2BR'], [/\b3\s*(?:br|bed)\b/i, '3BR'],
-    [/\b4\s*(?:br|bed)\b/i, '4BR'], [/\b5\+?\s*(?:br|bed)\b/i, '5BR+'],
-    [/\bpenthouse\b/i, 'Penthouse'], [/\btownhouse\b/i, 'Townhouse'],
-    [/\bvilla\b/i, 'Villa'], [/\bduplex\b/i, 'Duplex'],
-    [/\boffice\b/i, 'Office'], [/\bshop\b|\bretail\b/i, 'Retail'],
-  ]
-  const foundTypes = typeKeywords.filter(([re]) => re.test(text)).map(([, l]) => l)
-  const property_types = foundTypes.length ? foundTypes.join(', ') : null
-
-  const amenityKw: [RegExp, string][] = [
-    [/\bswimming\s*pool\b|\bpool\b/i, 'Pool'],
-    [/\bgym\b|\bfitness\s*cen(?:ter|tre)\b/i, 'Gym'],
-    [/\bparking\b/i, 'Parking'], [/\bconcierge\b/i, 'Concierge'],
-    [/\bspa\b/i, 'Spa'], [/\bjacuzzi\b|\bwhirlpool\b/i, 'Jacuzzi'],
-    [/\bkids?\s*(?:play|club)\b/i, 'Kids Play'],
-    [/\bbbq\b|\bbarbecue\b/i, 'BBQ'], [/\btennis\s*court\b/i, 'Tennis'],
-    [/\bsauna\b/i, 'Sauna'], [/\bsecurity\b/i, 'Security'],
-    [/\bjogging\s*track\b/i, 'Jogging Track'],
-    [/\bbeach\s*access\b|\bprivate\s*beach\b/i, 'Beach Access'],
-    [/\brooftop\b/i, 'Rooftop'],
-    [/\bbusiness\s*cen(?:ter|tre)\b/i, 'Business Center'],
-    [/\bcommunity\s*(?:hall|room)\b/i, 'Community Room'],
-    [/\bhealth\s*club\b/i, 'Health Club'],
-    [/\bco-?working\b/i, 'Co-Working'],
-    [/\bpet[- ]friendly\b/i, 'Pet Friendly'],
-    [/\bcycle\s*track\b|\bbicycle\b/i, 'Cycling'],
-  ]
-  const foundAmenities = amenityKw.filter(([re]) => re.test(text)).map(([, l]) => l)
-  const amenities = foundAmenities.length ? foundAmenities.join(', ') : null
-
-  const is_freehold = /\bfreehold\b/i.test(text) ? true : /\bleasehold\b/i.test(text) ? false : null
-
-  let service_charge_psf: number | null = null
-  const scMatch = text.match(/service\s*charge[s]?\s*[:\s]+(?:AED\s*)?([\d.,]+)\s*(?:\/\s*sqft|per\s*sqft|psf)/i)
-  if (scMatch) {
-    const v = parseFloat(scMatch[1].replace(/,/g, ''))
-    if (v > 0 && v < 100) service_charge_psf = v
-  }
-
-  let project_value_aed: bigint | null = null
-  const pvMatch = text.match(/(?:Project\s*[Vv]alue|[Vv]alued?\s*at)[:\s]+AED\s*([\d,]+(?:\.\d+)?)\s*(million|billion|M|B)?/i)
-    || text.match(/AED\s*([\d,]+(?:\.\d+)?)\s*(million|billion|M\b|B\b)/i)
-  if (pvMatch) {
-    const num = parseFloat(pvMatch[1].replace(/,/g, ''))
-    const mult = /billion|B\b/i.test(pvMatch[2] ?? '') ? 1_000_000_000n : /million|M\b/i.test(pvMatch[2] ?? '') ? 1_000_000n : 1n
-    try { project_value_aed = BigInt(Math.round(num)) * mult } catch { /* ignore */ }
-  }
-
-  let description: string | null = null
-  const paraRe = /<p[^>]*>\s*([^<]{80,600})\s*<\/p>/g
-  let pm: RegExpExecArray | null
-  while ((pm = paraRe.exec(html)) !== null) {
-    const c = pm[1].replace(/<[^>]+>/g, ' ').replace(/\s{2,}/g, ' ').trim()
-    if (/cookie|privacy|copyright|subscribe|newsletter|terms/i.test(c)) continue
-    if (c.length >= 80) { description = c.slice(0, 400); break }
-  }
-
-  return {
-    building_slug: slug, area_slug: areaSlug, name, developer, master_developer,
-    building_type, status, completion_year, total_floors, total_units,
-    property_types, amenities, is_freehold, service_charge_psf,
-    project_value_aed, description,
-  }
-}
-
 async function stage3() {
   console.log('\n═══ Stage 3: building details ═══')
 
@@ -410,34 +273,53 @@ async function stage3() {
 
     try {
       const d = extractDetail(html, row.building_slug, row.area_slug)
-      const fieldCount = [d.name, d.developer, d.completion_year, d.total_floors, d.total_units, d.property_types, d.amenities, d.description].filter(Boolean).length
+      const fieldCount = [d.name, d.developer, d.completion_year, d.total_floors, d.total_units, d.property_types, d.amenities, d.description, d.transport, d.nearby_pois, d.nearby_schools].filter(Boolean).length
 
       await sql`
         INSERT INTO prop_building_details (
           building_slug, area_slug, name, developer, master_developer,
-          building_type, status, completion_year, total_floors, total_units,
+          architect, contractor, building_type, status, completion_year,
+          construction_start, total_floors, total_units,
           property_types, amenities, is_freehold, service_charge_psf,
-          project_value_aed, description, scraped_at, updated_at
+          project_value_aed, launch_price_aed, description,
+          transport, milestones, nearby_pois, nearby_schools,
+          nearby_hotels, nearby_neighbourhoods, payment_plan,
+          scraped_at, updated_at
         ) VALUES (
           ${d.building_slug}, ${d.area_slug}, ${d.name}, ${d.developer}, ${d.master_developer},
-          ${d.building_type}, ${d.status}, ${d.completion_year}, ${d.total_floors}, ${d.total_units},
+          ${d.architect}, ${d.contractor}, ${d.building_type}, ${d.status}, ${d.completion_year},
+          ${d.construction_start}, ${d.total_floors}, ${d.total_units},
           ${d.property_types}, ${d.amenities}, ${d.is_freehold}, ${d.service_charge_psf},
           ${d.project_value_aed !== null ? String(d.project_value_aed) : null},
-          ${d.description}, NOW(), NOW()
+          ${d.launch_price_aed !== null ? String(d.launch_price_aed) : null},
+          ${d.description},
+          ${d.transport !== null ? sql`${JSON.stringify(d.transport)}::jsonb` : null},
+          ${d.milestones !== null ? sql`${JSON.stringify(d.milestones)}::jsonb` : null},
+          ${d.nearby_pois !== null ? sql`${JSON.stringify(d.nearby_pois)}::jsonb` : null},
+          ${d.nearby_schools !== null ? sql`${JSON.stringify(d.nearby_schools)}::jsonb` : null},
+          ${d.nearby_hotels !== null ? sql`${JSON.stringify(d.nearby_hotels)}::jsonb` : null},
+          ${d.nearby_neighbourhoods !== null ? sql`${JSON.stringify(d.nearby_neighbourhoods)}::jsonb` : null},
+          ${d.payment_plan !== null ? sql`${JSON.stringify(d.payment_plan)}::jsonb` : null},
+          NOW(), NOW()
         )
         ON CONFLICT (building_slug) DO UPDATE SET
           area_slug = EXCLUDED.area_slug, name = EXCLUDED.name,
           developer = EXCLUDED.developer, master_developer = EXCLUDED.master_developer,
+          architect = EXCLUDED.architect, contractor = EXCLUDED.contractor,
           building_type = EXCLUDED.building_type, status = EXCLUDED.status,
-          completion_year = EXCLUDED.completion_year, total_floors = EXCLUDED.total_floors,
-          total_units = EXCLUDED.total_units, property_types = EXCLUDED.property_types,
-          amenities = EXCLUDED.amenities, is_freehold = EXCLUDED.is_freehold,
-          service_charge_psf = EXCLUDED.service_charge_psf,
-          project_value_aed = EXCLUDED.project_value_aed,
-          description = EXCLUDED.description, updated_at = NOW()
+          completion_year = EXCLUDED.completion_year, construction_start = EXCLUDED.construction_start,
+          total_floors = EXCLUDED.total_floors, total_units = EXCLUDED.total_units,
+          property_types = EXCLUDED.property_types, amenities = EXCLUDED.amenities,
+          is_freehold = EXCLUDED.is_freehold, service_charge_psf = EXCLUDED.service_charge_psf,
+          project_value_aed = EXCLUDED.project_value_aed, launch_price_aed = EXCLUDED.launch_price_aed,
+          description = EXCLUDED.description,
+          transport = EXCLUDED.transport, milestones = EXCLUDED.milestones,
+          nearby_pois = EXCLUDED.nearby_pois, nearby_schools = EXCLUDED.nearby_schools,
+          nearby_hotels = EXCLUDED.nearby_hotels, nearby_neighbourhoods = EXCLUDED.nearby_neighbourhoods,
+          payment_plan = EXCLUDED.payment_plan, updated_at = NOW()
       `
       done++
-      process.stdout.write(`  [${String(i + 1).padStart(5)}/${total}] ${row.building_slug.padEnd(50)} ${fieldCount}/8 fields        \n`)
+      process.stdout.write(`  [${String(i + 1).padStart(5)}/${total}] ${row.building_slug.padEnd(50)} ${fieldCount}/11 fields       \n`)
     } catch (err: any) {
       failed++
       console.warn(`\n  [warn] ${row.building_slug}: ${err.message?.slice(0, 80)}`)

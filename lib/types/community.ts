@@ -15,4 +15,7 @@ export type Community = {
   momChange: number // %
   avgDaysOnMarket: number
   priceHistory?: number[]
+  priceMomPct: number
+  volMomPct: number
+  momentumScore: number
 }

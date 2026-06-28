@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { getTerminalSiteInfo } from "@/lib/terminal-metadata"
-import { ArrowLeft, BarChart3, Layers, Train, Bus, TramFront, MapPin, TrendingUp } from 'lucide-react'
+import { ArrowLeft, BarChart3, Building2, Layers, Train, Bus, TramFront, MapPin, TrendingUp, Users } from 'lucide-react'
 import Link from 'next/link'
 import { getAreaDescription } from '@/lib/area-descriptions'
 import { sql } from '@/lib/db'
@@ -66,7 +66,10 @@ async function fetchAreaData(
   noData: boolean
   serviceChargeAvg: number | null
   distressCount: number
-  topProjects: { project_name_en: string; no_of_units: number; project_status: string }[]
+  topProjects: { display_name: string; master_project: string | null; no_of_units: number; project_status: string; percent_completed: number; completion_year: string | null; developer_display: string | null }[]
+  supplyBreakdown: { finished: number; active: number; not_started: number; total: number }
+  deliveryBuckets: { year: string; units: number }[]
+  topDevelopers: { developer_display: string; units: number; projects: number }[]
   yoyPsf: number | null
   txnCount12m: number
   ncDisplayName: string | null
@@ -79,18 +82,25 @@ async function fetchAreaData(
       WHERE area_name_en IS NOT NULL AND trans_group_en = 'Sales'
       GROUP BY area_name_en
     `
-    const match = areas.find(a => (a.nc_slug ?? toSlug(a.area_name_en)) === slug)
+    // Prefer nc_slug match (canonical) over toSlug fallback to avoid duplicates
+    const match = areas.find(a => a.nc_slug === slug) ?? areas.find(a => !a.nc_slug && toSlug(a.area_name_en) === slug)
     if (!match) return null
 
     const areaName = match.area_name_en
     const ncDisplayName = match.nc_display_name
     const firstWord = areaName.split(' ')[0]
 
+    // Get all DLD area names mapped to this slug (for supply queries)
+    const ncRow = match.nc_slug ? await sql<{ dld_area_names: string[] }[]>`
+      SELECT dld_area_names FROM nc_areas WHERE slug = ${match.nc_slug}
+    `.catch(() => []) : []
+    const allAreaNames = ncRow[0]?.dld_area_names?.length ? ncRow[0].dld_area_names : [areaName]
+
     const typeCond = type === 'flat'
       ? sql`AND m.property_type_en = 'Unit' AND m.property_sub_type_en = 'Flat'`
       : sql`AND m.property_type_en = 'Villa'`
 
-    const [stats, roomHistory, scRows, distressRows, topProjectRows, metricsRows] = await Promise.all([
+    const [stats, roomHistory, scRows, distressRows, topProjectRows, breakdownRows, deliveryRows, developerRows, metricsRows] = await Promise.all([
       // KPI stats (aggregate over all rooms)
       sql<AreaRow[]>`
         WITH latest_month AS (
@@ -124,12 +134,11 @@ async function fetchAreaData(
         ),
         supply AS (
           SELECT
-            area_name_en,
+            'match' AS key,
             SUM(COALESCE(no_of_units, 0))                                                                               AS total_units,
             SUM(CASE WHEN project_status IN ('ACTIVE','NOT_STARTED','PENDING') THEN COALESCE(no_of_units,0) ELSE 0 END) AS pipeline_units
           FROM dld_projects
-          WHERE area_name_en = ${areaName}
-          GROUP BY area_name_en
+          WHERE area_name_en = ANY(${allAreaNames})
         )
         SELECT
           c.area_name_en,
@@ -141,7 +150,7 @@ async function fetchAreaData(
           COALESCE(s.pipeline_units, 0)::integer                                      AS pipeline_units
         FROM curr c
         LEFT JOIN prev p ON c.area_name_en = p.area_name_en
-        LEFT JOIN supply s ON c.area_name_en = s.area_name_en
+        LEFT JOIN supply s ON true
       `,
 
       // Multi-room price history in one query
@@ -197,13 +206,63 @@ async function fetchAreaData(
           AND disappeared_at IS NULL
       `.catch(() => [{ cnt: '0' }]),
 
-      // Top pipeline projects
-      sql<{ project_name_en: string; no_of_units: string; project_status: string }[]>`
-        SELECT project_name_en, COALESCE(no_of_units, 0) AS no_of_units, project_status
+      // Pipeline projects with progress + developer + completion
+      sql<{ project_name_en: string; master_project_en: string | null; no_of_units: string; project_status: string; percent_completed: string | null; completion_year: string | null; developer_name: string | null; master_developer_name: string | null }[]>`
+        SELECT
+          project_name_en,
+          master_project_en,
+          COALESCE(no_of_units, 0) AS no_of_units,
+          project_status,
+          percent_completed::text,
+          EXTRACT(YEAR FROM COALESCE(completion_date, project_end_date))::text AS completion_year,
+          developer_name,
+          master_developer_name
         FROM dld_projects
-        WHERE area_name_en = ${areaName}
+        WHERE area_name_en = ANY(${allAreaNames})
           AND project_status IN ('ACTIVE','NOT_STARTED','PENDING')
+          AND no_of_units > 0
         ORDER BY no_of_units DESC
+        LIMIT 10
+      `,
+
+      // Supply status breakdown
+      sql<{ finished: string; active: string; not_started: string; total: string }[]>`
+        SELECT
+          COALESCE(SUM(CASE WHEN project_status = 'FINISHED' THEN no_of_units ELSE 0 END), 0)::integer AS finished,
+          COALESCE(SUM(CASE WHEN project_status = 'ACTIVE' THEN no_of_units ELSE 0 END), 0)::integer AS active,
+          COALESCE(SUM(CASE WHEN project_status IN ('NOT_STARTED','PENDING') THEN no_of_units ELSE 0 END), 0)::integer AS not_started,
+          COALESCE(SUM(no_of_units), 0)::integer AS total
+        FROM dld_projects
+        WHERE area_name_en = ANY(${allAreaNames}) AND no_of_units > 0
+      `,
+
+      // Delivery year buckets (from active/not-started projects)
+      sql<{ year: string; units: string }[]>`
+        SELECT
+          EXTRACT(YEAR FROM COALESCE(completion_date, project_end_date))::text AS year,
+          SUM(no_of_units)::integer AS units
+        FROM dld_projects
+        WHERE area_name_en = ANY(${allAreaNames})
+          AND project_status IN ('ACTIVE','NOT_STARTED','PENDING')
+          AND no_of_units > 0
+          AND COALESCE(completion_date, project_end_date) IS NOT NULL
+        GROUP BY year
+        ORDER BY year
+      `,
+
+      // Top developers in area (group by Arabic name, show master_developer as English fallback)
+      sql<{ developer_display: string; units: string; projects: string }[]>`
+        SELECT
+          COALESCE(MAX(master_developer_name), developer_name) AS developer_display,
+          SUM(no_of_units)::integer AS units,
+          COUNT(*)::integer AS projects
+        FROM dld_projects
+        WHERE area_name_en = ANY(${allAreaNames})
+          AND project_status IN ('ACTIVE','NOT_STARTED','PENDING')
+          AND no_of_units > 0
+          AND developer_name IS NOT NULL
+        GROUP BY developer_name
+        ORDER BY units DESC
         LIMIT 5
       `,
 
@@ -262,14 +321,31 @@ async function fetchAreaData(
     const serviceChargeAvg = scRows[0]?.avg_cost ? Number(scRows[0].avg_cost) : null
     const distressCount = Number(distressRows[0]?.cnt ?? 0)
     const topProjects = topProjectRows.map(r => ({
-      project_name_en: r.project_name_en,
+      display_name: r.project_name_en,
+      master_project: r.master_project_en,
       no_of_units: Number(r.no_of_units),
       project_status: r.project_status,
+      percent_completed: Number(r.percent_completed ?? 0),
+      completion_year: r.completion_year,
+      developer_display: r.master_developer_name ?? r.developer_name,
+    }))
+    const bd = breakdownRows[0]
+    const supplyBreakdown = {
+      finished: Number(bd?.finished ?? 0),
+      active: Number(bd?.active ?? 0),
+      not_started: Number(bd?.not_started ?? 0),
+      total: Number(bd?.total ?? 0),
+    }
+    const deliveryBuckets = deliveryRows.map(r => ({ year: r.year, units: Number(r.units) }))
+    const topDevelopers = developerRows.map(r => ({
+      developer_display: r.developer_display,
+      units: Number(r.units),
+      projects: Number(r.projects),
     }))
     const txnCount12m = Number(metricsRows[0]?.txn_count_12m ?? 0)
     const yoyPsf = metricsRows[0]?.yoy_psf ? Number(metricsRows[0].yoy_psf) : null
 
-    return { area, history, noData: !stats[0], serviceChargeAvg, distressCount, topProjects, yoyPsf, txnCount12m, ncDisplayName }
+    return { area, history, noData: !stats[0], serviceChargeAvg, distressCount, topProjects, supplyBreakdown, deliveryBuckets, topDevelopers, yoyPsf, txnCount12m, ncDisplayName }
   } catch {
     return null
   }
@@ -329,7 +405,7 @@ export default async function CommunityPage({
   const result = await fetchAreaData(slug, type)
   if (!result) notFound()
 
-  const { area, history, noData, serviceChargeAvg, distressCount, topProjects, yoyPsf, txnCount12m, ncDisplayName } = result
+  const { area, history, noData, serviceChargeAvg, distressCount, topProjects, supplyBreakdown, deliveryBuckets, topDevelopers, yoyPsf, txnCount12m, ncDisplayName } = result
   const momChange = Number(area.mom_change ?? 0)
   const momColor = momChange >= 0 ? 'text-accent' : 'text-red-400'
   const yoyChange = yoyPsf && area.avg_psf
@@ -574,53 +650,159 @@ export default async function CommunityPage({
 
       {history.length >= 2 && <CommunityCharts priceHistory={history} type={type} />}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Supply Pipeline — with top projects list */}
-        <section className="border border-border/50 rounded-xl p-5 bg-card space-y-4">
-          <div className="flex items-center gap-2">
-            <Layers className="h-4 w-4 text-muted-foreground" />
-            <h3 className="font-mono text-xs uppercase tracking-widest text-muted-foreground font-semibold">Supply Pipeline</h3>
-          </div>
-          {area.pipeline_units > 0 ? (
-            <div className="space-y-3">
-              <div>
-                <p className="font-mono text-2xl font-bold text-yellow-400">
-                  +{formatNum(area.pipeline_units)}
-                </p>
-                <p className="text-sm text-muted-foreground">units in active / upcoming projects</p>
-                {area.total_units > 0 && (
-                  <p className="text-xs text-muted-foreground/60 font-mono mt-1">
-                    Supply ratio: {((area.pipeline_units / area.total_units) * 100).toFixed(1)}% of existing stock
-                  </p>
-                )}
-                {area.total_units > 0 && area.pipeline_units / area.total_units > 0.15 && (
-                  <div className="flex items-start gap-2 rounded-lg bg-yellow-400/5 border border-yellow-400/20 p-3 mt-2">
-                    <span className="text-yellow-400 text-xs font-mono">⚠</span>
-                    <p className="text-xs text-yellow-400/80">High supply incoming — monitor for yield compression risk.</p>
-                  </div>
-                )}
-              </div>
-              {topProjects.length > 0 && (
-                <ul className="space-y-1.5 border-t border-border/30 pt-3">
-                  {topProjects.map(p => (
-                    <li key={p.project_name_en} className="flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground truncate max-w-[200px]">{p.project_name_en}</span>
-                      <span className="font-mono text-foreground ml-2 shrink-0">{formatNum(p.no_of_units)} units</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          ) : (
-            <div className="flex flex-col gap-1">
-              <p className="font-mono text-2xl font-bold text-accent">0</p>
-              <p className="text-sm text-muted-foreground">No units in the pipeline</p>
-              <p className="text-xs text-muted-foreground/60 font-mono mt-1">Constrained supply supports price stability.</p>
-            </div>
-          )}
-        </section>
+      {/* Supply & Development Intelligence */}
+      <section className="border border-border/50 rounded-xl p-5 bg-card space-y-5">
+        <div className="flex items-center gap-2">
+          <Layers className="h-4 w-4 text-muted-foreground" />
+          <h3 className="font-mono text-xs uppercase tracking-widest text-muted-foreground font-semibold">Supply & Development Pipeline</h3>
+        </div>
 
-        {/* Holding Costs */}
+        {supplyBreakdown.total > 0 ? (
+          <>
+            {/* KPI row */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="rounded-lg bg-background border border-border/50 p-3">
+                <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Pipeline Units</p>
+                <p className="font-mono text-xl font-bold text-yellow-400">+{formatNum(area.pipeline_units)}</p>
+              </div>
+              <div className="rounded-lg bg-background border border-border/50 p-3">
+                <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Delivered</p>
+                <p className="font-mono text-xl font-bold text-accent">{formatNum(supplyBreakdown.finished)}</p>
+              </div>
+              <div className="rounded-lg bg-background border border-border/50 p-3">
+                <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Total Registered</p>
+                <p className="font-mono text-xl font-bold text-foreground">{formatNum(supplyBreakdown.total)}</p>
+              </div>
+              <div className="rounded-lg bg-background border border-border/50 p-3">
+                <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Supply Ratio</p>
+                <p className="font-mono text-xl font-bold text-foreground">
+                  {supplyBreakdown.total > 0 ? `${((area.pipeline_units / supplyBreakdown.total) * 100).toFixed(0)}%` : '—'}
+                </p>
+              </div>
+            </div>
+
+            {/* Status breakdown bar */}
+            {(() => {
+              const total = supplyBreakdown.total
+              const fPct = (supplyBreakdown.finished / total) * 100
+              const aPct = (supplyBreakdown.active / total) * 100
+              const nPct = (supplyBreakdown.not_started / total) * 100
+              return (
+                <div className="space-y-2">
+                  <div className="flex h-3 w-full rounded-full overflow-hidden bg-muted/30">
+                    {fPct > 0 && <div className="bg-accent" style={{ width: `${fPct}%` }} title={`Finished: ${formatNum(supplyBreakdown.finished)}`} />}
+                    {aPct > 0 && <div className="bg-blue-500" style={{ width: `${aPct}%` }} title={`Active: ${formatNum(supplyBreakdown.active)}`} />}
+                    {nPct > 0 && <div className="bg-muted-foreground/30" style={{ width: `${nPct}%` }} title={`Not Started: ${formatNum(supplyBreakdown.not_started)}`} />}
+                  </div>
+                  <div className="flex flex-wrap gap-4 text-[10px] font-mono text-muted-foreground">
+                    <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-accent" /> Finished {fPct.toFixed(0)}%</span>
+                    <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-blue-500" /> Active {aPct.toFixed(0)}%</span>
+                    <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-muted-foreground/30" /> Not Started {nPct.toFixed(0)}%</span>
+                  </div>
+                </div>
+              )
+            })()}
+
+            {/* Delivery year buckets */}
+            {deliveryBuckets.length > 0 && (
+              <div className="space-y-2">
+                <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest">Expected Delivery</p>
+                <div className="flex flex-wrap gap-2">
+                  {deliveryBuckets.map(b => (
+                    <span key={b.year} className="inline-flex items-center gap-1.5 rounded-lg bg-background border border-border/50 px-3 py-1.5">
+                      <span className="font-mono text-xs font-semibold text-foreground">{b.year}</span>
+                      <span className="font-mono text-[10px] text-muted-foreground">{formatNum(b.units)} units</span>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* High supply warning */}
+            {area.total_units > 0 && area.pipeline_units / area.total_units > 0.15 && (
+              <div className="flex items-start gap-2 rounded-lg bg-yellow-400/5 border border-yellow-400/20 p-3">
+                <span className="text-yellow-400 text-xs font-mono">⚠</span>
+                <p className="text-xs text-yellow-400/80">High supply incoming — monitor for yield compression risk.</p>
+              </div>
+            )}
+
+            {/* Project list with progress */}
+            {topProjects.length > 0 && (
+              <div className="space-y-2 border-t border-border/30 pt-4">
+                <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest">Active & Upcoming Projects</p>
+                <div className="space-y-2">
+                  {topProjects.map(p => {
+                    const pct = Math.min(p.percent_completed, 100)
+                    const statusColor = p.project_status === 'ACTIVE' ? 'text-blue-400' : 'text-muted-foreground/60'
+                    const statusLabel = p.project_status === 'ACTIVE' ? 'Active' : p.project_status === 'NOT_STARTED' ? 'Not Started' : 'Pending'
+                    return (
+                      <div key={p.display_name + p.no_of_units} className="rounded-lg bg-background border border-border/40 p-3 space-y-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="text-xs font-medium text-foreground truncate" dir="auto">{p.display_name}</p>
+                            {(p.master_project || p.developer_display) && (
+                              <p className="text-[10px] text-muted-foreground/70 truncate">
+                                {[p.master_project, p.developer_display].filter(Boolean).join(' · ')}
+                              </p>
+                            )}
+                          </div>
+                          <div className="text-right shrink-0">
+                            <p className="font-mono text-xs font-semibold text-foreground">{formatNum(p.no_of_units)}</p>
+                            <p className="text-[9px] text-muted-foreground">units</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="flex-1 h-1.5 rounded-full bg-muted/30 overflow-hidden">
+                            <div
+                              className={cn('h-full rounded-full', pct >= 80 ? 'bg-accent' : pct >= 40 ? 'bg-blue-500' : 'bg-muted-foreground/40')}
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                          <span className="font-mono text-[10px] text-muted-foreground w-8 text-right">{pct}%</span>
+                          <span className={cn('font-mono text-[9px] uppercase tracking-wide', statusColor)}>{statusLabel}</span>
+                          {p.completion_year && (
+                            <span className="font-mono text-[9px] text-muted-foreground/60">ETA {p.completion_year}</span>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Top developers */}
+            {topDevelopers.length > 0 && (
+              <div className="space-y-2 border-t border-border/30 pt-4">
+                <div className="flex items-center gap-2">
+                  <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                  <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest">Active Developers</p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {topDevelopers.map(d => (
+                    <div key={d.developer_display} className="flex items-center justify-between rounded-lg bg-background border border-border/40 px-3 py-2">
+                      <span className="text-xs text-foreground truncate mr-2">{d.developer_display}</span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="font-mono text-[10px] text-muted-foreground">{d.projects} proj</span>
+                        <span className="font-mono text-xs font-semibold text-foreground">{formatNum(d.units)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="flex flex-col gap-1">
+            <p className="font-mono text-2xl font-bold text-accent">0</p>
+            <p className="text-sm text-muted-foreground">No units registered in DLD project registry for this area</p>
+            <p className="text-xs text-muted-foreground/60 font-mono mt-1">Constrained supply supports price stability.</p>
+          </div>
+        )}
+      </section>
+
+      {/* Holding Costs */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <section className="border border-border/50 rounded-xl p-5 bg-card space-y-4">
           <div className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4 text-muted-foreground" />

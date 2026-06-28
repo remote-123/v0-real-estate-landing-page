@@ -29,6 +29,7 @@ type MonthRow = {
 
 type AreaRow = {
   area_name_en: string
+  nc_display_name: string | null
   mortgage_deals: string
   sales_deals: string
   mortgage_value_bn: string
@@ -56,6 +57,7 @@ const fetchData = unstable_cache(
           WITH latest AS (SELECT MAX(txn_month) AS m FROM mv_txn_monthly_unified)
           SELECT
             area_name_en,
+            MAX(nc_display_name) AS nc_display_name,
             SUM(CASE WHEN trans_group_en = 'Mortgages' THEN txn_count ELSE 0 END)::integer AS mortgage_deals,
             SUM(CASE WHEN trans_group_en = 'Sales'     THEN txn_count ELSE 0 END)::integer AS sales_deals,
             ROUND((SUM(CASE WHEN trans_group_en = 'Mortgages' THEN total_value ELSE 0 END) / 1e9)::numeric, 3) AS mortgage_value_bn
@@ -232,7 +234,7 @@ export default async function LiquidityPage() {
                     className="border-b border-border/20 hover:bg-muted/30 transition-colors"
                   >
                     <td className="px-4 py-2.5 font-medium">
-                      {formatAreaName(row.area_name_en)}
+                      {row.nc_display_name ?? formatAreaName(row.area_name_en)}
                     </td>
                     <td className="px-4 py-2.5 text-right font-mono text-amber-400 font-semibold">
                       {mort.toLocaleString()}

@@ -40,6 +40,8 @@ interface MarketSummary {
 
 interface BullSignal {
   area_name_en: string
+  nc_display_name: string | null
+  nc_slug: string | null
   avg_psf: number
   yoy_pct: number | null
   bull_score: number
@@ -47,6 +49,8 @@ interface BullSignal {
 
 interface BearSignal {
   area_name_en: string
+  nc_display_name: string | null
+  nc_slug: string | null
   avg_psf: number
   yoy_pct: number | null
   bear_score: number
@@ -56,6 +60,8 @@ interface BearSignal {
 
 interface VolumeLeader {
   area_name_en: string
+  nc_display_name: string | null
+  nc_slug: string | null
   txn_12m: number
   avg_psf: number
   mom_pct: number | null
@@ -63,6 +69,8 @@ interface VolumeLeader {
 
 interface PipelineRisk {
   area_name_en: string
+  nc_display_name: string | null
+  nc_slug: string | null
   pipeline_units: number
   txn_12m: number
   supply_months: number
@@ -117,6 +125,8 @@ const fetchPulseData = unstable_cache(
       // Top 5 bull signals (simplified bear-cases formula)
       sql<{
         area_name_en: string
+        nc_display_name: string | null
+        nc_slug: string | null
         avg_psf: string
         yoy_pct: string | null
         bull_score: string
@@ -149,6 +159,8 @@ const fetchPulseData = unstable_cache(
         )
         SELECT
           c.area_name_en,
+          nc.nc_display_name,
+          nc.nc_slug,
           ROUND((c.psm / 10.764)::numeric, 0) AS avg_psf,
           CASE WHEN p.psm > 0
             THEN ROUND(((c.psm - p.psm) / p.psm * 100)::numeric, 1) ELSE NULL
@@ -161,6 +173,10 @@ const fetchPulseData = unstable_cache(
         FROM curr c
         LEFT JOIN prev p ON p.area_name_en = c.area_name_en
         LEFT JOIN pipeline pip ON pip.area_name_en = c.area_name_en
+        LEFT JOIN (
+          SELECT area_name_en, MAX(nc_display_name) AS nc_display_name, MAX(nc_slug) AS nc_slug
+          FROM mv_txn_monthly_unified WHERE nc_display_name IS NOT NULL GROUP BY area_name_en
+        ) nc ON nc.area_name_en = c.area_name_en
         ORDER BY bull_score DESC, c.txn_12m DESC
         LIMIT 5
       `,
@@ -168,6 +184,8 @@ const fetchPulseData = unstable_cache(
       // Top 5 bear signals
       sql<{
         area_name_en: string
+        nc_display_name: string | null
+        nc_slug: string | null
         avg_psf: string
         yoy_pct: string | null
         pipeline_units: string
@@ -207,6 +225,8 @@ const fetchPulseData = unstable_cache(
         )
         SELECT
           c.area_name_en,
+          nc.nc_display_name,
+          nc.nc_slug,
           ROUND((c.psm / 10.764)::numeric, 0) AS avg_psf,
           CASE WHEN p.psm IS NOT NULL AND p.psm > 0
             THEN ROUND(((c.psm - p.psm) / p.psm * 100)::numeric, 1) ELSE NULL
@@ -222,6 +242,10 @@ const fetchPulseData = unstable_cache(
         LEFT JOIN prev p ON p.area_name_en = c.area_name_en
         LEFT JOIN pipeline pip ON pip.area_name_en = c.area_name_en
         LEFT JOIN distress_agg d ON d.area_key = LOWER(c.area_name_en)
+        LEFT JOIN (
+          SELECT area_name_en, MAX(nc_display_name) AS nc_display_name, MAX(nc_slug) AS nc_slug
+          FROM mv_txn_monthly_unified WHERE nc_display_name IS NOT NULL GROUP BY area_name_en
+        ) nc ON nc.area_name_en = c.area_name_en
         ORDER BY bear_score DESC, c.txn_12m DESC
         LIMIT 5
       `,
@@ -229,6 +253,8 @@ const fetchPulseData = unstable_cache(
       // Top 5 by 12m transaction volume
       sql<{
         area_name_en: string
+        nc_display_name: string | null
+        nc_slug: string | null
         txn_12m: string
         avg_psf: string
         mom_pct: string | null
@@ -258,12 +284,18 @@ const fetchPulseData = unstable_cache(
         )
         SELECT
           t.area_name_en,
+          nc.nc_display_name,
+          nc.nc_slug,
           t.vol AS txn_12m,
           ROUND((t.psm / 10.764)::numeric, 0) AS avg_psf,
           CASE WHEN pm.psm > 0 THEN ROUND(((cm.psm - pm.psm) / pm.psm * 100)::numeric, 1) ELSE NULL END AS mom_pct
         FROM twelve t
         LEFT JOIN curr_m cm ON cm.area_name_en = t.area_name_en
         LEFT JOIN prev_m pm ON pm.area_name_en = t.area_name_en
+        LEFT JOIN (
+          SELECT area_name_en, MAX(nc_display_name) AS nc_display_name, MAX(nc_slug) AS nc_slug
+          FROM mv_txn_monthly_unified WHERE nc_display_name IS NOT NULL GROUP BY area_name_en
+        ) nc ON nc.area_name_en = t.area_name_en
         ORDER BY t.vol DESC
         LIMIT 5
       `,
@@ -271,6 +303,8 @@ const fetchPulseData = unstable_cache(
       // Top 5 pipeline risk (highest supply months)
       sql<{
         area_name_en: string
+        nc_display_name: string | null
+        nc_slug: string | null
         pipeline_units: string
         txn_12m: string
         supply_months: string
@@ -292,11 +326,17 @@ const fetchPulseData = unstable_cache(
         )
         SELECT
           s.area_name_en,
+          nc.nc_display_name,
+          nc.nc_slug,
           COALESCE(p.units, 0) AS pipeline_units,
           s.txn_12m,
           ROUND(COALESCE(p.units, 0)::numeric / GREATEST(s.txn_12m / 12.0, 1), 1) AS supply_months
         FROM sales s
         JOIN pipeline p ON p.area_name_en = s.area_name_en
+        LEFT JOIN (
+          SELECT area_name_en, MAX(nc_display_name) AS nc_display_name, MAX(nc_slug) AS nc_slug
+          FROM mv_txn_monthly_unified WHERE nc_display_name IS NOT NULL GROUP BY area_name_en
+        ) nc ON nc.area_name_en = s.area_name_en
         ORDER BY supply_months DESC
         LIMIT 5
       `,
@@ -325,12 +365,16 @@ const fetchPulseData = unstable_cache(
       },
       bullSignals: bullRows.map((r) => ({
         area_name_en: r.area_name_en,
+        nc_display_name: r.nc_display_name ?? null,
+        nc_slug: r.nc_slug ?? null,
         avg_psf: Number(r.avg_psf),
         yoy_pct: r.yoy_pct !== null ? Number(r.yoy_pct) : null,
         bull_score: Number(r.bull_score),
       })),
       bearSignals: bearRows.map((r) => ({
         area_name_en: r.area_name_en,
+        nc_display_name: r.nc_display_name ?? null,
+        nc_slug: r.nc_slug ?? null,
         avg_psf: Number(r.avg_psf),
         yoy_pct: r.yoy_pct !== null ? Number(r.yoy_pct) : null,
         bear_score: Number(r.bear_score),
@@ -339,12 +383,16 @@ const fetchPulseData = unstable_cache(
       })),
       volumeLeaders: volRows.map((r) => ({
         area_name_en: r.area_name_en,
+        nc_display_name: r.nc_display_name ?? null,
+        nc_slug: r.nc_slug ?? null,
         txn_12m: Number(r.txn_12m),
         avg_psf: Number(r.avg_psf),
         mom_pct: r.mom_pct !== null ? Number(r.mom_pct) : null,
       })),
       pipelineRisks: pipeRows.map((r) => ({
         area_name_en: r.area_name_en,
+        nc_display_name: r.nc_display_name ?? null,
+        nc_slug: r.nc_slug ?? null,
         pipeline_units: Number(r.pipeline_units),
         txn_12m: Number(r.txn_12m),
         supply_months: Number(r.supply_months),
@@ -484,8 +532,8 @@ export default async function MarketPulsePage() {
           </div>
           <div className="space-y-2">
             {bullSignals.map((row, i) => {
-              const name = formatAreaName(row.area_name_en)
-              const slug = toSlug(row.area_name_en)
+              const name = row.nc_display_name ?? formatAreaName(row.area_name_en)
+              const slug = row.nc_slug ?? toSlug(row.area_name_en)
               return (
                 <div key={row.area_name_en} className="rounded-xl border border-border/40 bg-card/40 p-3">
                   <div className="flex items-center justify-between gap-3">
@@ -536,8 +584,8 @@ export default async function MarketPulsePage() {
           </div>
           <div className="space-y-2">
             {bearSignals.map((row, i) => {
-              const name = formatAreaName(row.area_name_en)
-              const slug = toSlug(row.area_name_en)
+              const name = row.nc_display_name ?? formatAreaName(row.area_name_en)
+              const slug = row.nc_slug ?? toSlug(row.area_name_en)
               return (
                 <div key={row.area_name_en} className="rounded-xl border border-border/40 bg-card/40 p-3">
                   <div className="flex items-center justify-between gap-3">
@@ -594,8 +642,8 @@ export default async function MarketPulsePage() {
             </div>
             <div className="space-y-2">
               {volumeLeaders.map((row, i) => {
-                const name = formatAreaName(row.area_name_en)
-                const slug = toSlug(row.area_name_en)
+                const name = row.nc_display_name ?? formatAreaName(row.area_name_en)
+                const slug = row.nc_slug ?? toSlug(row.area_name_en)
                 return (
                   <div key={row.area_name_en} className="rounded-xl border border-border/40 bg-card/40 p-3">
                     <div className="flex items-center justify-between gap-3">
@@ -643,8 +691,8 @@ export default async function MarketPulsePage() {
             </div>
             <div className="space-y-2">
               {pipelineRisks.map((row, i) => {
-                const name = formatAreaName(row.area_name_en)
-                const slug = toSlug(row.area_name_en)
+                const name = row.nc_display_name ?? formatAreaName(row.area_name_en)
+                const slug = row.nc_slug ?? toSlug(row.area_name_en)
                 return (
                   <div key={row.area_name_en} className="rounded-xl border border-border/40 bg-card/40 p-3">
                     <div className="flex items-center justify-between gap-3">

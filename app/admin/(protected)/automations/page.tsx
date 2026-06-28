@@ -47,17 +47,6 @@ const AUTOMATIONS: Automation[] = [
     status: 'active',
   },
   {
-    name: 'Fetch Bayut Transactions',
-    route: '/api/cron/fetch-bayut-transactions',
-    trigger: 'cron-job.org',
-    schedule: 'Daily 06:45 UTC',
-    what: 'Ingests Bayut transaction data (for-sale + for-rent), 25 pages/run, 800/mo budget guard, refreshes mv_txn_monthly_unified',
-    outputs: 'bayut_transactions, mv_txn_monthly_unified',
-    auth: 'Bearer CRON_SECRET',
-    external: ['RapidAPI / Bayut14'],
-    status: 'missing',
-  },
-  {
     name: 'Generate Market Briefing',
     route: '/api/cron/generate-market-briefing',
     trigger: 'cron-job.org',

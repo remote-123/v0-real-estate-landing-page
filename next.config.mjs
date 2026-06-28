@@ -18,6 +18,11 @@ const nextConfig = {
         destination: '/terminal/:path*',
         permanent: true,
       },
+      {
+        source: '/terminal/area-momentum',
+        destination: '/terminal/communities',
+        permanent: true,
+      },
     ]
   },
 }

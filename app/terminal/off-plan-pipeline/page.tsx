@@ -19,6 +19,7 @@ export async function generateMetadata() {
 
 interface AreaPipeline {
   area_name_en: string
+  nc_display_name: string | null
   total_projects: number
   total_units: number
   active_units: number
@@ -32,6 +33,7 @@ interface PipelineStats {
   active_projects: number
   areas_with_pipeline: number
   largest_area: string
+  largest_area_nc_display_name: string | null
   largest_area_units: number
 }
 
@@ -39,6 +41,7 @@ async function fetchPipelineByArea(): Promise<AreaPipeline[]> {
   try {
     const rows = await sql<{
       area_name_en: string
+      nc_display_name: string | null
       total_projects: string
       total_units: string
       active_units: string
@@ -47,25 +50,28 @@ async function fetchPipelineByArea(): Promise<AreaPipeline[]> {
       latest_completion: string | null
     }[]>`
       SELECT
-        area_name_en,
+        p.area_name_en,
+        MAX(na.display_name) AS nc_display_name,
         COUNT(*)::integer                                                                                           AS total_projects,
-        COALESCE(SUM(no_of_units), 0)::integer                                                                     AS total_units,
-        COALESCE(SUM(CASE WHEN project_status IN ('ACTIVE','NOT_STARTED','PENDING') THEN no_of_units ELSE 0 END), 0)::integer
+        COALESCE(SUM(p.no_of_units), 0)::integer                                                                   AS total_units,
+        COALESCE(SUM(CASE WHEN p.project_status IN ('ACTIVE','NOT_STARTED','PENDING') THEN p.no_of_units ELSE 0 END), 0)::integer
                                                                                                                    AS active_units,
-        COALESCE(SUM(CASE WHEN project_status = 'FINISHED' THEN no_of_units ELSE 0 END), 0)::integer              AS completed_units,
-        MIN(CASE WHEN project_status IN ('ACTIVE','NOT_STARTED','PENDING') THEN completion_date END)::text         AS earliest_completion,
-        MAX(CASE WHEN project_status IN ('ACTIVE','NOT_STARTED','PENDING') THEN completion_date END)::text         AS latest_completion
-      FROM dld_projects
-      WHERE area_name_en IS NOT NULL
-        AND area_name_en != ''
-        AND no_of_units > 0
-      GROUP BY area_name_en
-      HAVING COALESCE(SUM(CASE WHEN project_status IN ('ACTIVE','NOT_STARTED','PENDING') THEN no_of_units ELSE 0 END), 0) > 0
+        COALESCE(SUM(CASE WHEN p.project_status = 'FINISHED' THEN p.no_of_units ELSE 0 END), 0)::integer          AS completed_units,
+        MIN(CASE WHEN p.project_status IN ('ACTIVE','NOT_STARTED','PENDING') THEN p.completion_date END)::text     AS earliest_completion,
+        MAX(CASE WHEN p.project_status IN ('ACTIVE','NOT_STARTED','PENDING') THEN p.completion_date END)::text     AS latest_completion
+      FROM dld_projects p
+      LEFT JOIN nc_areas na ON na.dld_area_names @> ARRAY[p.area_name_en]
+      WHERE p.area_name_en IS NOT NULL
+        AND p.area_name_en != ''
+        AND p.no_of_units > 0
+      GROUP BY p.area_name_en
+      HAVING COALESCE(SUM(CASE WHEN p.project_status IN ('ACTIVE','NOT_STARTED','PENDING') THEN p.no_of_units ELSE 0 END), 0) > 0
       ORDER BY active_units DESC
       LIMIT 40
     `
     return rows.map(r => ({
       area_name_en: r.area_name_en,
+      nc_display_name: r.nc_display_name ?? null,
       total_projects: Number(r.total_projects),
       total_units: Number(r.total_units),
       active_units: Number(r.active_units),
@@ -85,22 +91,25 @@ async function fetchPipelineStats(): Promise<PipelineStats | null> {
       active_projects: string
       areas_with_pipeline: string
       largest_area: string
+      largest_area_nc_display_name: string | null
       largest_area_units: string
     }[]>`
+      WITH top_area AS (
+        SELECT p.area_name_en, MAX(na.display_name) AS nc_display_name, SUM(COALESCE(p.no_of_units,0))::integer AS units
+        FROM dld_projects p
+        LEFT JOIN nc_areas na ON na.dld_area_names @> ARRAY[p.area_name_en]
+        WHERE p.area_name_en IS NOT NULL AND p.project_status IN ('ACTIVE','NOT_STARTED','PENDING')
+        GROUP BY p.area_name_en
+        ORDER BY units DESC
+        LIMIT 1
+      )
       SELECT
         COALESCE(SUM(CASE WHEN project_status IN ('ACTIVE','NOT_STARTED','PENDING') THEN no_of_units ELSE 0 END), 0)::integer AS total_off_plan_units,
         COUNT(CASE WHEN project_status IN ('ACTIVE','NOT_STARTED','PENDING') THEN 1 END)::integer AS active_projects,
         COUNT(DISTINCT CASE WHEN project_status IN ('ACTIVE','NOT_STARTED','PENDING') THEN area_name_en END)::integer AS areas_with_pipeline,
-        (
-          SELECT area_name_en FROM dld_projects
-          WHERE area_name_en IS NOT NULL AND project_status IN ('ACTIVE','NOT_STARTED','PENDING')
-          GROUP BY area_name_en ORDER BY SUM(COALESCE(no_of_units,0)) DESC LIMIT 1
-        ) AS largest_area,
-        (
-          SELECT COALESCE(SUM(no_of_units),0)::integer FROM dld_projects
-          WHERE area_name_en IS NOT NULL AND project_status IN ('ACTIVE','NOT_STARTED','PENDING')
-          GROUP BY area_name_en ORDER BY SUM(COALESCE(no_of_units,0)) DESC LIMIT 1
-        ) AS largest_area_units
+        (SELECT area_name_en FROM top_area) AS largest_area,
+        (SELECT nc_display_name FROM top_area) AS largest_area_nc_display_name,
+        (SELECT units FROM top_area) AS largest_area_units
       FROM dld_projects
       WHERE no_of_units > 0
     `
@@ -111,6 +120,7 @@ async function fetchPipelineStats(): Promise<PipelineStats | null> {
       active_projects: Number(r.active_projects),
       areas_with_pipeline: Number(r.areas_with_pipeline),
       largest_area: r.largest_area ?? '',
+      largest_area_nc_display_name: r.largest_area_nc_display_name ?? null,
       largest_area_units: Number(r.largest_area_units),
     }
   } catch {
@@ -141,7 +151,7 @@ export default async function OffPlanPipelinePage() {
   const totalUnits = stats?.total_off_plan_units ?? 0
   const activeProjects = stats?.active_projects ?? 0
   const areasCount = stats?.areas_with_pipeline ?? 0
-  const largestArea = stats ? formatAreaName(stats.largest_area) : '—'
+  const largestArea = stats ? (stats.largest_area_nc_display_name ?? formatAreaName(stats.largest_area)) : '—'
   const largestUnits = stats?.largest_area_units ?? 0
 
   return (
@@ -219,7 +229,7 @@ export default async function OffPlanPipelinePage() {
                     return (
                       <tr key={area.area_name_en} className="hover:bg-secondary/30 transition-colors">
                         <td className="py-2.5 pr-4 font-medium text-foreground">
-                          {formatAreaName(area.area_name_en)}
+                          {area.nc_display_name ?? formatAreaName(area.area_name_en)}
                         </td>
                         <td className="py-2.5 px-2 text-right tabular-nums text-accent font-medium">
                           {area.active_units.toLocaleString()}

@@ -34,6 +34,7 @@ const navItems = [
         items: [
             { label: "DLD Import", href: "/admin/data", icon: FileDown, description: "Import transactions CSV, check freshness" },
             { label: "Buildings", href: "/admin/buildings", icon: Building2, description: "Review & clean building records" },
+            { label: "NC Buildings", href: "/admin/nc-buildings", icon: Building2, description: "Curate building data — bedrooms, highway, grade, view" },
             { label: "Area Mapping", href: "/admin/areas", icon: Map, description: "Bayut → DLD area name bridge" },
             { label: "Projects", href: "/admin/projects", icon: Landmark, description: "Developer names & completion dates" },
         ],
@@ -164,8 +165,8 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                     </span>
                 </header>
 
-                <div className="flex-1 p-6 lg:p-10">
-                    <div className="mx-auto max-w-3xl">
+                <div className="flex-1 p-6 lg:p-8">
+                    <div className="mx-auto max-w-7xl">
                         {children}
                     </div>
                 </div>

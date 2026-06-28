@@ -9,7 +9,7 @@ import { HeaderBreadcrumb } from "@/components/terminal/header-breadcrumb"
 
 export const metadata: Metadata = {
     title: 'Dubai Real Estate Intelligence | North Capital',
-    description: 'Institutional-grade Dubai property data. Transaction analytics, price indices, yield maps, community screener, and distress deal scanner — powered by DLD and Bayut data.',
+    description: 'Institutional-grade Dubai property data. Transaction analytics, price indices, yield maps, community screener, and distress deal scanner — powered by DLD data.',
     metadataBase: new URL('https://www.northcapitaldxb.com'),
     alternates: { canonical: 'https://www.northcapitaldxb.com/terminal' },
     openGraph: {
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     twitter: {
         card: 'summary_large_image',
         title: 'Dubai Real Estate Intelligence | North Capital',
-        description: 'Institutional-grade Dubai property data. Powered by DLD and Bayut.',
+        description: 'Institutional-grade Dubai property data. Powered by DLD.',
         images: ['/images/terminal-social.png'],
     },
 }
@@ -32,7 +32,7 @@ const terminalSchema = {
     "@type": "DataCatalog",
     "@id": "https://www.northcapitaldxb.com/terminal#catalog",
     "name": "North Capital — Dubai Real Estate Data Platform",
-    "description": "Institutional-grade Dubai property market intelligence. Aggregated from Dubai Land Department (DLD) official transaction registry and Bayut property listings API. Covers 1.66 million+ registered transactions across 2,000+ communities, with daily updates.",
+    "description": "Institutional-grade Dubai property market intelligence. Aggregated from Dubai Land Department (DLD) official transaction registry. Covers 1.66 million+ registered transactions across 2,000+ communities, with weekly updates.",
     "url": "https://www.northcapitaldxb.com/terminal",
     "creator": { "@type": "Organization", "name": "North Capital", "url": "https://www.northcapitaldxb.com" },
     "isBasedOn": [
@@ -46,11 +46,6 @@ const terminalSchema = {
                 "url": "https://dubailand.gov.ae",
                 "sameAs": ["https://dubailand.gov.ae", "https://www.wikidata.org/wiki/Q5310591"],
             },
-        },
-        {
-            "@type": "Dataset",
-            "name": "Bayut Property Listings & Transaction Feed",
-            "publisher": { "@type": "Organization", "name": "Bayut", "url": "https://www.bayut.com" },
         },
     ],
     "spatialCoverage": {

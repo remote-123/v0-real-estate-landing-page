@@ -21,6 +21,8 @@ export async function generateMetadata() {
 
 interface BullCaseRow {
   area_name_en: string
+  nc_display_name: string | null
+  nc_slug: string | null
   txn_12m: number
   avg_psf: number
   yoy_pct: number | null
@@ -35,6 +37,8 @@ const fetchBullCases = unstable_cache(
   try {
     const rows = await sql<{
       area_name_en: string
+      nc_display_name: string | null
+      nc_slug: string | null
       txn_12m: string
       avg_psf: string
       yoy_pct: string | null
@@ -105,6 +109,8 @@ const fetchBullCases = unstable_cache(
         )
       SELECT
         c.area_name_en,
+        nc.nc_display_name,
+        nc.nc_slug,
         c.txn_12m,
         ROUND((c.psm / 10.764)::numeric, 0)                                                  AS avg_psf,
         -- YoY price change
@@ -144,12 +150,18 @@ const fetchBullCases = unstable_cache(
       LEFT JOIN curr_month cm   ON cm.area_name_en = c.area_name_en
       LEFT JOIN prev_month pm   ON pm.area_name_en = c.area_name_en
       LEFT JOIN pipeline pip    ON pip.area_name_en = c.area_name_en
+      LEFT JOIN (
+        SELECT area_name_en, MAX(nc_display_name) AS nc_display_name, MAX(nc_slug) AS nc_slug
+        FROM mv_txn_monthly_unified WHERE nc_display_name IS NOT NULL GROUP BY area_name_en
+      ) nc ON nc.area_name_en = c.area_name_en
       ORDER BY bull_score DESC, c.txn_12m DESC
       LIMIT 25
     `
 
     return rows.map((r) => ({
       area_name_en: r.area_name_en,
+      nc_display_name: r.nc_display_name ?? null,
+      nc_slug: r.nc_slug ?? null,
       txn_12m: Number(r.txn_12m),
       avg_psf: Number(r.avg_psf),
       yoy_pct: r.yoy_pct !== null ? Number(r.yoy_pct) : null,
@@ -239,8 +251,8 @@ export default async function BullCasesPage() {
       ) : (
         <div className="relative space-y-2">
           {display.map((row, i) => {
-            const name = formatAreaName(row.area_name_en)
-            const slug = toSlug(row.area_name_en)
+            const name = row.nc_display_name ?? formatAreaName(row.area_name_en)
+            const slug = row.nc_slug ?? toSlug(row.area_name_en)
             const { label, color, bg } = bullLabel(row.bull_score)
             const appreciating = row.yoy_pct !== null && row.yoy_pct > 5
             const scarceSup = row.supply_months < 6

@@ -8,7 +8,6 @@ import {
   Calculator,
   Globe,
   Map,
-  TrendingUp,
   Users,
   Activity,
   Layers,
@@ -28,7 +27,6 @@ export const sidebarLinks = [
     title: "Market Analysis",
     links: [
       { label: "Community Screener", href: "/terminal/communities", icon: Map },
-      { label: "Area Momentum", href: "/terminal/area-momentum", icon: TrendingUp },
       { label: "Distress Deals", href: "/terminal/distress-deals", icon: BarChart3 },
       { label: "Off-Plan Pipeline", href: "/terminal/off-plan-pipeline", icon: Building2 },
     ]
@@ -36,7 +34,7 @@ export const sidebarLinks = [
   {
     title: "Property Research",
     links: [
-      { label: "Prop Buildings", href: "/terminal/prop-buildings", icon: Building2 },
+      { label: "Buildings", href: "/terminal/buildings", icon: Building2 },
       { label: "Building Comparator", href: "/terminal/building-comparator", icon: Building2 },
       { label: "Floor Plan Pricer", href: "/terminal/floor-plan-pricer", icon: Layers },
       { label: "Developer Track Record", href: "/terminal/developer-track", icon: Users },

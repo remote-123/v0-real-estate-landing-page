@@ -222,7 +222,7 @@ export function SupplyPipelineTable({ projects }: Props) {
                       )}
                     </td>
                     <td className="px-3 py-2.5 text-muted-foreground whitespace-nowrap">
-                      {p.area_name_en ?? "—"}
+                      {p.nc_display_name ?? p.area_name_en ?? "—"}
                     </td>
                     <td className="px-3 py-2.5 text-muted-foreground max-w-[180px] truncate">
                       {p.developer_name ?? "—"}

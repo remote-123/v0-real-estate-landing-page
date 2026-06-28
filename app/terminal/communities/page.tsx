@@ -9,19 +9,23 @@ import { auth } from '@/auth'
 import { isTerminalUnlocked } from '@/lib/terminal-gate'
 import Link from 'next/link'
 import { DUBAI_COMMUNITIES, FEATURED_COMMUNITIES, type DubaiCommunity } from '@/lib/area-data/dubai-communities'
+import { TrendingUp, Zap, BarChart3 } from 'lucide-react'
+import { StatCard } from '@/components/terminal/stat-card'
 
 export const dynamic = 'force-dynamic'
 
 export async function generateMetadata() {
   return terminalPageMeta({
     title: "Community Screener",
-    description: "Institutional-grade metrics across every Dubai community — yield, price/sqft, transaction velocity, and supply pipeline.",
+    description: "Institutional-grade metrics across every Dubai community — price/sqft, transaction velocity, supply pipeline, and momentum signals. Identify breakout areas before wider coverage.",
     path: "/terminal/communities",
   })
 }
 
 type CommunityRow = {
   area_name_en: string
+  nc_display_name: string | null
+  nc_slug: string | null
   txn_count: number
   avg_psf: number
   avg_value: number
@@ -29,6 +33,9 @@ type CommunityRow = {
   total_units: number
   pipeline_units: number
   price_history: number[] | string | null
+  price_mom_pct: number | null
+  vol_mom_pct: number | null
+  momentum_score: number | null
 }
 
 function toSlug(name: string): string {
@@ -39,8 +46,8 @@ function mapToCommunity(r: CommunityRow): Community {
   const totalUnits = r.total_units
   const apartments = Math.round(totalUnits * 0.78)
   return {
-    slug: toSlug(r.area_name_en),
-    name: formatAreaName(r.area_name_en),
+    slug: r.nc_slug ?? toSlug(r.area_name_en),
+    name: r.nc_display_name ?? formatAreaName(r.area_name_en),
     area: '',
     type: 'mixed',
     isFreehold: true,
@@ -55,6 +62,9 @@ function mapToCommunity(r: CommunityRow): Community {
     momChange: r.mom_change ?? 0,
     avgDaysOnMarket: 0,
     priceHistory: r.price_history ? (typeof r.price_history === 'string' ? JSON.parse(r.price_history) : r.price_history) : undefined,
+    priceMomPct: Number(r.price_mom_pct ?? 0),
+    volMomPct: Number(r.vol_mom_pct ?? 0),
+    momentumScore: Number(r.momentum_score ?? 0),
   }
 }
 
@@ -68,6 +78,8 @@ const fetchCommunities = unstable_cache(
       curr AS (
         SELECT
           area_name_en,
+          MAX(nc_display_name) AS nc_display_name,
+          MAX(nc_slug)         AS nc_slug,
           SUM(txn_count)                                                             AS txn_count,
           SUM(txn_count * avg_price_sqm) / NULLIF(SUM(txn_count), 0)               AS avg_psm,
           SUM(txn_count * avg_price)     / NULLIF(SUM(txn_count), 0)               AS avg_val
@@ -82,7 +94,8 @@ const fetchCommunities = unstable_cache(
       prev AS (
         SELECT
           area_name_en,
-          SUM(txn_count * avg_price_sqm) / NULLIF(SUM(txn_count), 0)  AS avg_psm
+          SUM(txn_count * avg_price_sqm) / NULLIF(SUM(txn_count), 0) AS avg_psm,
+          SUM(txn_count) AS prev_vol
         FROM mv_txn_monthly_unified m
         CROSS JOIN latest_month lm
         WHERE m.txn_month = lm.max_month - INTERVAL '1 month'
@@ -121,13 +134,21 @@ const fetchCommunities = unstable_cache(
       )
       SELECT
         c.area_name_en,
+        c.nc_display_name,
+        c.nc_slug,
         c.txn_count::integer                                                         AS txn_count,
         ROUND((c.avg_psm / 10.764)::numeric, 0)::integer                            AS avg_psf,
         ROUND(c.avg_val::numeric, 0)::integer                                        AS avg_value,
         ROUND(((c.avg_psm - p.avg_psm) / NULLIF(p.avg_psm, 0) * 100)::numeric, 1)  AS mom_change,
         COALESCE(s.total_units, 0)::integer                                          AS total_units,
         COALESCE(s.pipeline_units, 0)::integer                                       AS pipeline_units,
-        h.price_history
+        h.price_history,
+        ROUND(((c.avg_psm - p.avg_psm) / NULLIF(p.avg_psm, 0) * 100)::numeric, 2)  AS price_mom_pct,
+        ROUND(((c.txn_count::numeric - p.prev_vol) / NULLIF(p.prev_vol, 0) * 100)::numeric, 1) AS vol_mom_pct,
+        ROUND((
+          COALESCE((c.avg_psm - p.avg_psm) / NULLIF(p.avg_psm, 0), 0)
+          + COALESCE((c.txn_count::numeric - p.prev_vol) / NULLIF(p.prev_vol, 0), 0)
+        ) * 50, 1) AS momentum_score
       FROM curr c
       LEFT JOIN prev p ON c.area_name_en = p.area_name_en
       LEFT JOIN supply s ON c.area_name_en = s.area_name_en
@@ -237,6 +258,13 @@ export default async function CommunitiesPage() {
     ? Math.round(allData.reduce((s, c) => s + c.avgPricePerSqft, 0) / allData.length)
     : 0
 
+  // Momentum stats
+  const breakouts = allData.filter(a => a.priceMomPct > 2 && a.volMomPct > 5).length
+  const avgPriceMom = allData.length > 0
+    ? allData.reduce((s, a) => s + a.priceMomPct, 0) / allData.length
+    : 0
+  const topMomentum = allData.reduce((max, a) => a.momentumScore > max.score ? { name: a.name, score: a.momentumScore } : max, { name: '—', score: 0 })
+
   // Build set of slugs that have live DLD data
   const liveDataSlugs = new Set(allData.map(c => c.slug))
 
@@ -288,9 +316,31 @@ export default async function CommunitiesPage() {
         </div>
       </section>
 
+      {/* Momentum stat cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 px-0">
+        <StatCard
+          label="Breakouts"
+          value={breakouts.toString()}
+          icon={Zap}
+          description="Areas: price >+2% AND vol >+5% MoM"
+        />
+        <StatCard
+          label="Avg Price MoM"
+          value={`${avgPriceMom > 0 ? '+' : ''}${avgPriceMom.toFixed(2)}%`}
+          icon={TrendingUp}
+          description={`Across ${allData.length} active areas`}
+        />
+        <StatCard
+          label="Top Momentum"
+          value={topMomentum.score.toFixed(1)}
+          icon={BarChart3}
+          description={topMomentum.name}
+        />
+      </div>
+
       {/* Data disclaimer */}
       <p className="text-[11px] font-mono text-muted-foreground/50 px-1">
-        Source: Dubai Land Department — Feb 2026 transactions · Census data: Dubai Statistics Centre 2021/2022
+        Source: Dubai Land Department transactions · Census data: Dubai Statistics Centre 2021/2022
       </p>
 
       {/* Live data table */}

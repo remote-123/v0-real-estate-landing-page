@@ -114,7 +114,6 @@ export default async function TransactionPulsePage() {
     "creator": { "@type": "Organization", "name": siteName, "url": base },
     "isBasedOn": [
       { "@type": "Dataset", "name": "Dubai Land Department Transaction Registry", "publisher": { "@type": "GovernmentOrganization", "name": "Dubai Land Department", "url": "https://dubailand.gov.ae" } },
-      { "@type": "Dataset", "name": "Bayut Property Transaction Feed", "publisher": { "@type": "Organization", "name": "Bayut", "url": "https://www.bayut.com" } },
     ],
     "spatialCoverage": { "@type": "Place", "name": "Dubai, United Arab Emirates", "geo": { "@type": "GeoCoordinates", "latitude": "25.2048", "longitude": "55.2708" } },
     "temporalCoverage": "2000-01-01/..",
@@ -130,7 +129,7 @@ export default async function TransactionPulsePage() {
       { "@type": "PropertyValue", "name": "Month-over-Month Volume Change (%)", "unitCode": "P1" },
       { "@type": "PropertyValue", "name": "Year-over-Year Volume Change (%)", "unitCode": "P1" },
     ],
-    "measurementTechnique": "Daily aggregation from Dubai Land Department transaction records, cross-referenced with Bayut listing data. Transactions classified by trans_group_en: Sales, Mortgages, Gifts.",
+    "measurementTechnique": "Weekly aggregation from Dubai Land Department transaction records. Transactions classified by trans_group_en: Sales, Mortgages, Gifts.",
     "keywords": ["Dubai property transactions", "DLD transaction data", "Dubai real estate sales volume", "Dubai monthly transactions 2026", "Dubai Land Department data", "Dubai transaction pulse"],
     "includedInDataCatalog": { "@type": "DataCatalog", "name": `${siteName} — Dubai Real Estate Data Platform`, "url": `${base}/terminal` },
   }

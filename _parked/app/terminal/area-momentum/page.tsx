@@ -20,6 +20,8 @@ export async function generateMetadata() {
 
 interface AreaRow {
   area_name_en: string
+  nc_display_name: string | null
+  nc_slug: string | null
   curr_psf: number | string
   price_mom_pct: number | string
   curr_vol: number | string
@@ -58,6 +60,8 @@ const fetchAreas = unstable_cache(
         )
         SELECT
           c.area_name_en,
+          nc.nc_display_name,
+          nc.nc_slug,
           ROUND((c.curr_psm / 10.764)::numeric, 0)::integer AS curr_psf,
           ROUND(((c.curr_psm - p.prev_psm) / NULLIF(p.prev_psm, 0) * 100)::numeric, 2) AS price_mom_pct,
           c.curr_vol::integer AS curr_vol,
@@ -65,6 +69,12 @@ const fetchAreas = unstable_cache(
           ROUND((((c.curr_psm - p.prev_psm) / NULLIF(p.prev_psm, 0)) + ((c.curr_vol::numeric - p.prev_vol) / NULLIF(p.prev_vol, 0))) * 50, 1) AS momentum_score
         FROM curr c
         JOIN prev p USING (area_name_en)
+        LEFT JOIN (
+          SELECT area_name_en, MAX(nc_display_name) AS nc_display_name, MAX(nc_slug) AS nc_slug
+          FROM mv_txn_monthly_unified
+          WHERE nc_display_name IS NOT NULL
+          GROUP BY area_name_en
+        ) nc ON nc.area_name_en = c.area_name_en
         WHERE c.curr_vol >= 5 AND p.prev_vol >= 5
           AND c.curr_psm > 0 AND p.prev_psm > 0
         ORDER BY momentum_score DESC
@@ -154,7 +164,7 @@ export default async function AreaMomentumPage() {
           label="Top Momentum Score"
           value={topScore.toFixed(1)}
           icon={BarChart3}
-          description={display[0] ? formatAreaName(display[0].area_name_en) : "—"}
+          description={display[0] ? (display[0].nc_display_name ?? formatAreaName(display[0].area_name_en)) : "—"}
         />
       </div>
 
@@ -208,7 +218,7 @@ export default async function AreaMomentumPage() {
                       {i + 1}
                     </td>
                     <td className="px-4 py-3 font-medium text-foreground">
-                      {formatAreaName(area.area_name_en)}
+                      {area.nc_display_name ?? formatAreaName(area.area_name_en)}
                     </td>
                     <td className="px-4 py-3 text-right font-mono text-xs text-foreground">
                       {area.curr_psf.toLocaleString()}

@@ -39,7 +39,7 @@ All pages query `mv_txn_monthly_unified` (DLD + Bayut UNION).
 |---|---|---|
 | Distress Deals | `/terminal/distress-deals` | `distress_listings` (PF cron) |
 | Rental Drops | `/terminal/rental-drops` | `rental_listings` (PF cron) |
-| Buildings | `/terminal/buildings` | `buildings` + `dld_buildings_registry` |
+| Buildings | `/terminal/buildings` | `nc_buildings` (single source of truth) + `nc_areas` — server-side pagination, filters (status/grade/type/freehold/year), GradeBadge/StatusBadge. `/terminal/prop-buildings` redirects here. |
 
 ## Tools
 | Page | Route |

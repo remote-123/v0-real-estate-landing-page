@@ -37,6 +37,17 @@ type Building = {
   project_name_en: string | null
   osm_lat: number | null
   osm_lng: number | null
+  // nc_buildings enrichment
+  building_grade: string | null
+  nearest_highway: string | null
+  view_type: string[] | null
+  units_studio: number | null
+  units_1br: number | null
+  units_2br: number | null
+  units_3br_plus: number | null
+  nearest_metro: string | null
+  metro_walk_mins: number | null
+  nc_service_charge_psf: number | null
 }
 
 type TxnRow = {
@@ -63,16 +74,21 @@ async function fetchByGlobalSlug(globalSlug: string): Promise<Building | null> {
   try {
     const rows = await sql<Building[]>`
       SELECT
-        building_key, global_slug, slug, building_name_en, area_name_en,
-        developer_name, master_developer_name, completion_year,
-        propsearch_status, primary_sub_type,
-        total_floors, total_units, property_types, amenities,
-        is_free_hold, avg_psf, median_psf, txn_count,
-        first_txn_date::text, last_txn_date::text,
-        avg_unit_size_sqft, project_name_en,
-        osm_lat, osm_lng
-      FROM re_buildings
-      WHERE global_slug = ${globalSlug}
+        rb.building_key, rb.global_slug, rb.slug, rb.building_name_en, rb.area_name_en,
+        rb.developer_name, rb.master_developer_name, rb.completion_year,
+        nb.status AS propsearch_status, rb.primary_sub_type,
+        rb.total_floors, rb.total_units, rb.property_types, rb.amenities,
+        rb.is_free_hold, rb.avg_psf, rb.median_psf, rb.txn_count,
+        rb.first_txn_date::text, rb.last_txn_date::text,
+        rb.avg_unit_size_sqft, rb.project_name_en,
+        rb.osm_lat, rb.osm_lng,
+        nb.building_grade, nb.nearest_highway, nb.view_type,
+        nb.units_studio, nb.units_1br, nb.units_2br, nb.units_3br_plus,
+        nb.nearest_metro, nb.metro_walk_mins,
+        nb.service_charge_psf AS nc_service_charge_psf
+      FROM re_buildings rb
+      LEFT JOIN nc_buildings nb ON nb.propsearch_slug = rb.propsearch_slug
+      WHERE rb.global_slug = ${globalSlug}
       LIMIT 1
     `
     return rows[0] ?? null
@@ -316,12 +332,25 @@ export default async function BuildingDetailPage({
             )}
           </div>
 
-          {building.completion_year && (
-            <div className="flex items-center gap-2 text-muted-foreground shrink-0">
-              <Calendar className="h-4 w-4" />
-              <span className="font-mono text-lg font-bold text-foreground">{building.completion_year}</span>
-            </div>
-          )}
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            {building.building_grade && (
+              <span className={cn(
+                "inline-flex items-center rounded border px-2 py-0.5 font-mono text-[10px] font-semibold capitalize",
+                building.building_grade === 'luxury'     ? 'bg-purple-500/15 text-purple-300 border-purple-500/20' :
+                building.building_grade === 'premium'    ? 'bg-blue-500/15 text-blue-300 border-blue-500/20' :
+                building.building_grade === 'mid'        ? 'bg-zinc-500/15 text-zinc-300 border-zinc-500/20' :
+                'bg-green-500/15 text-green-400 border-green-500/20'
+              )}>
+                {building.building_grade}
+              </span>
+            )}
+            {building.completion_year && (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Calendar className="h-4 w-4" />
+                <span className="font-mono text-lg font-bold text-foreground">{building.completion_year}</span>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* KPI grid */}
@@ -410,9 +439,13 @@ export default async function BuildingDetailPage({
           <dl className="space-y-2 text-sm">
             {[
               { label: "Type", value: building.primary_sub_type },
+              { label: "Grade", value: building.building_grade ? building.building_grade.charAt(0).toUpperCase() + building.building_grade.slice(1) : null },
               { label: "Property Mix", value: building.property_types },
               { label: "Avg Unit Size", value: building.avg_unit_size_sqft ? `${Number(building.avg_unit_size_sqft).toFixed(0)} sqft` : null },
               { label: "Median PSF", value: building.median_psf ? `AED ${Number(building.median_psf).toLocaleString()}` : null },
+              { label: "Nearest Highway", value: building.nearest_highway },
+              { label: "Nearest Metro", value: building.nearest_metro ? (building.metro_walk_mins ? `${building.nearest_metro} (${building.metro_walk_mins} min walk)` : building.nearest_metro) : null },
+              { label: "Views", value: building.view_type?.length ? building.view_type.join(", ") : null },
               { label: "First Transaction", value: building.first_txn_date ? new Date(building.first_txn_date).toLocaleDateString("en-GB", { month: "short", year: "numeric" }) : null },
               { label: "Latest Transaction", value: building.last_txn_date ? new Date(building.last_txn_date).toLocaleDateString("en-GB", { month: "short", year: "numeric" }) : null },
               { label: "Tenure", value: building.is_free_hold ? "Freehold" : "Leasehold" },
@@ -423,6 +456,25 @@ export default async function BuildingDetailPage({
               </div>
             ))}
           </dl>
+          {/* Bedroom breakdown from nc_buildings */}
+          {(building.units_1br != null || building.units_2br != null || building.units_3br_plus != null) && (
+            <div className="pt-2 border-t border-border/30">
+              <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60 mb-2">Unit Mix</p>
+              <div className="grid grid-cols-4 gap-2">
+                {[
+                  { label: "Studio", value: building.units_studio },
+                  { label: "1BR", value: building.units_1br },
+                  { label: "2BR", value: building.units_2br },
+                  { label: "3BR+", value: building.units_3br_plus },
+                ].map(u => (
+                  <div key={u.label} className="rounded-md bg-background border border-border/40 p-2 text-center">
+                    <p className="font-mono text-[10px] text-muted-foreground">{u.label}</p>
+                    <p className="font-mono text-sm font-bold text-foreground mt-0.5">{u.value ?? "—"}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </section>
 
         {/* Service Charge + Location */}
@@ -437,6 +489,13 @@ export default async function BuildingDetailPage({
                   AED {Number(sc.avg_cost).toLocaleString()}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">avg/year · {sc.latest_year} budget data</p>
+              </div>
+            ) : building.nc_service_charge_psf ? (
+              <div>
+                <p className="font-mono text-2xl font-bold text-foreground">
+                  AED {Number(building.nc_service_charge_psf).toFixed(2)} <span className="text-sm font-normal text-muted-foreground">/ sqft</span>
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">per sqft / year</p>
               </div>
             ) : (
               <p className="text-xs text-muted-foreground">No service charge data available for this building</p>
