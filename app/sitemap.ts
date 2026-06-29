@@ -1,7 +1,6 @@
 import { MetadataRoute } from 'next'
 import { sql } from '@/lib/db'
 import { unstable_cache } from 'next/cache'
-import { client } from '@/sanity/lib/client'
 
 const BASE = 'https://www.northcapitaldxb.com'
 
@@ -90,9 +89,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.70,
   }))
 
-  // Blog posts from Sanity
+  // Blog posts from Sanity (lazy import — env vars may be missing)
   let researchUrls: MetadataRoute.Sitemap = []
   try {
+    const { client } = await import('@/sanity/lib/client')
     const posts = await client.fetch<{ slug: string; publishedAt: string | null }[]>(
       `*[_type == "post" && defined(slug.current)]{ "slug": slug.current, publishedAt }`
     )
@@ -102,7 +102,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'weekly',
       priority: 0.80,
     }))
-  } catch { /* Sanity unavailable — skip */ }
+  } catch { /* Sanity unavailable or env vars missing — skip */ }
 
   return [...staticRoutes, ...communityUrls, ...areaDeepDiveUrls, ...buildingUrls, ...researchUrls]
 }
