@@ -9,7 +9,12 @@ import {defineConfig} from 'sanity'
 import {structureTool} from 'sanity/structure'
 
 // Go to https://www.sanity.io/docs/api-versioning to learn how API versioning works
-import {apiVersion, dataset, projectId} from './sanity/env'
+import {apiVersion, dataset, projectId as envProjectId} from './sanity/env'
+
+// Fallback to a placeholder so defineConfig() doesn't throw at build time
+// when NEXT_PUBLIC_SANITY_PROJECT_ID is missing. Studio won't work without
+// real env vars, but the build won't crash.
+const projectId = envProjectId || 'placeholder'
 import {schema} from './sanity/schemaTypes'
 import {structure} from './sanity/structure'
 
