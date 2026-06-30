@@ -38,7 +38,7 @@ function formatDate(dateString: string) {
 }
 
 export default async function TerminalResearchPage() {
-  const posts = await client.fetch(query)
+  const posts = client ? await client.fetch(query) : []
 
   if (posts.length === 0) {
     return (

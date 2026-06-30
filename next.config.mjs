@@ -23,6 +23,16 @@ const nextConfig = {
         destination: '/terminal/communities',
         permanent: true,
       },
+      {
+        source: '/terminal/prop-buildings',
+        destination: '/terminal/buildings',
+        permanent: true,
+      },
+      {
+        source: '/terminal/prop-buildings/:slug*',
+        destination: '/terminal/buildings/:slug*',
+        permanent: true,
+      },
     ]
   },
 }

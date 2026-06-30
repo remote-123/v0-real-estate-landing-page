@@ -48,7 +48,7 @@ const TERMINAL_ROUTES = [
   '/terminal/off-plan-pipeline',
   '/terminal/floor-plan-pricer',
   '/terminal/building-comparator',
-  '/terminal/prop-buildings',
+  '/terminal/buildings',
   '/terminal/developer-track',
   '/terminal/calculators',
   '/terminal/price-index',
@@ -83,7 +83,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }))
 
   const buildingUrls: MetadataRoute.Sitemap = buildingSlugs.map((row) => ({
-    url: `${BASE}/terminal/prop-buildings/${row.building_slug}`,
+    url: `${BASE}/terminal/buildings/${row.building_slug}`,
     lastModified: new Date(),
     changeFrequency: 'monthly',
     priority: 0.70,

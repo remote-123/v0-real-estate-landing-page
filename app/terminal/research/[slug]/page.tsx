@@ -35,6 +35,7 @@ const relatedQuery = `*[_type == "post" && slug.current != $slug] | order(publis
 }`
 
 export async function generateStaticParams() {
+  if (!client) return []
   const slugs = await client.fetch(`*[_type == "post" && defined(slug.current)]{"slug": slug.current}`)
   return slugs
 }
@@ -42,7 +43,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
   const [post, { siteName, base }] = await Promise.all([
-    client.fetch(query, { slug }),
+    client ? client.fetch(query, { slug }) : null,
     getTerminalSiteInfo(),
   ])
   if (!post) return { title: "Post Not Found" }
@@ -93,8 +94,8 @@ const ptComponents = {
 export default async function TerminalResearchPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
   const [post, relatedPosts, { base }] = await Promise.all([
-    client.fetch(query, { slug }),
-    client.fetch(relatedQuery, { slug }),
+    client ? client.fetch(query, { slug }) : null,
+    client ? client.fetch(relatedQuery, { slug }) : [],
     getTerminalSiteInfo(),
   ])
   if (!post) notFound()
