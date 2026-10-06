@@ -59,7 +59,13 @@
 
 **Recommendation**: Railway for now (cheapest, lowest friction). Switch to DO Managed if monthly bill exceeds $15 or connection issues appear under user load.
 **Migration**: `pg_dump` Neon → `pg_restore` target → swap `DATABASE_URL` in Vercel env → redeploy. No code changes except possibly `lib/db.ts` SSL flag.
-**Status**: Decision pending. Not yet migrated.
+**Status**: Executed — DigitalOcean Managed Postgres chosen (cluster `main-postgres`, nyc1). `lib/db.ts` uses explicit `ssl:{rejectUnauthorized:false}` since DO's internal CA fails NextAuth's stricter `sslmode=require` verify-full handling.
+
+**Addendum (2026-07-26) — per-project database convention**: the initial Neon→DO migration went straight into the cluster's default database (`defaultdb`) without creating a dedicated one, so it ended up shared with an unrelated project (`layoverclub`) and accumulated three generations of dead auth-migration debris (`neon_auth` schema, old Better Auth tables) along the way. Audited every table against actual code usage before acting — most of what looked "foreign" was actually this project's own abandoned auth tables from prior migrations (Neon Auth → Better Auth → current Auth.js v5), not another project's data.
+
+Fixed by creating a dedicated database per project on the shared cluster, matching how `layoverclub` was already set up: this project now lives in `northcapital_dxb`, `layoverclub` in its own `layoverclub` database, both on `main-postgres` under the same shared `doadmin` user (isolation is by database name, not by DB role — matches existing precedent, no new role created). **Convention going forward: any new project added to this cluster gets `CREATE DATABASE <project_slug>` before any tables are created — never write into `defaultdb`.**
+
+Old tables were left in `defaultdb` for a 48h rollback window (past 2026-07-28) before being dropped, along with the dead `neon_auth` schema — see `memory/project_db_migration.md` for exact commands.
 
 ## ADR-005 — Single CRON_SECRET (2026-03-25)
 **Decision**: Consolidate CRON_SECRET2 (used for fetch-listings) into single CRON_SECRET.

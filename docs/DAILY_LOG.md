@@ -7,6 +7,33 @@
 > 3. **Mandatory Signature:** Every entry must explicitly state the tool name at the start (e.g., *"Built by Antigravity"*, *"Built by Claude Code"*, or *"Built by Cursor"*).
 
 
+## 03 October 2026 — Refreshed `dld_transactions`, closed 3.5-month stale gap
+
+*Built by Claude Code*
+
+- `dld_transactions` was stuck at 2026-06-18 (stale memory note claimed Feb 17 — already wrong once before this). Dubai Pulse portal is gone; DLD data now lives on the new **data.dubai** (DDSE) portal. Found the "Real Estate Transactions" dataset (id `470061`) there, plus an official API-key request path for future automation.
+- User manually exported a filtered CSV (`dld_data/transactions-2026-10-03.csv`, 62,693 rows, 2026-06-17 → 2026-10-03, uppercase `TRANSACTION_NUMBER`/`TRANS_VALUE`/... schema — same shape `/api/admin/ingest-transactions` expects).
+- Added `scripts/ingest/dld_transactions_csv_v2.ts` — mirrors that route's transform/upsert logic so a local bulk CSV can be loaded without going through the HTTP upload endpoint. Ran it: 60,787 rows upserted, then `REFRESH MATERIALIZED VIEW` on `mv_txn_monthly` and `mv_txn_monthly_unified` (CONCURRENTLY).
+- New latest `instance_date`: **2026-10-03**. New latest `mv_txn_monthly_unified` month: **2026-10-01**. transaction-pulse and everything else reading the unified matview (communities, area-momentum, floor-plan-pricer, liquidity) picks this up on next `unstable_cache` revalidate (1h TTL).
+- Not yet automated — refresh is manual per cadence above (data.dubai's declared "Annually" update frequency on the dataset page looks unreliable; the actual export file was generated the same day it was downloaded). Weekly automation plan (GitHub Actions vs. official API key) still open.
+
+## 26 July 2026 — Split off shared `defaultdb` into dedicated `northcapital_dxb` database
+
+*Built by Claude Code*
+
+- Discovered the DO Postgres cluster's `defaultdb` was a shared dumping ground: 46 relations in `public`, of which 43 belonged to this project (three generations of auth debris — dead `neon_auth` schema from the old Neon days, dead singular Better Auth tables, live NextAuth/Auth.js v5 tables — plus all the real terminal data) and 1 (`pets`, 0 rows) belonged to an unrelated project.
+- Created `northcapital_dxb` on the same cluster (matches the isolation pattern already used by the `layoverclub` project). `pg_dump`/`pg_restore` moved the 43 project tables + 2 matviews over, excluding `pets` and the dead singular Better Auth tables (`user`/`session`/`account`/`verification`/`users_legacy`).
+- Swapped `DATABASE_URL` in Vercel Production to point at `northcapital_dxb`, redeployed, smoke-tested (`/terminal/communities`, `/terminal/transaction-pulse` both returning real data). `.env.local` needs a manual update (sandboxed from editing it directly) — see `memory/project_db_migration.md`.
+- **Pending, not automated:** old copies still sit in `defaultdb` as a 48h rollback safety net. Needs an explicit follow-up session to confirm production is stable, then drop the 43 migrated tables + `DROP SCHEMA neon_auth CASCADE`, leaving only `pets` behind.
+
+## 30 June 2026 — Fix Vercel build crash (Sanity) + reduce Fluid CPU
+
+*Built by Claude Code*
+
+- **Sanity build crash fix**: `sanity/env.ts` returns empty string instead of throwing when env vars missing. `sanity/lib/client.ts` validates projectId with regex (`/^[a-z0-9][-a-z0-9]*$/`) before `createClient` — exports `null` when invalid. `sanity.config.ts` uses `'placeholder'` fallback. All research page `client.fetch()` calls guarded with `client ?` checks. Root cause: Vercel had stale/invalid `NEXT_PUBLIC_SANITY_PROJECT_ID` that passed truthy check but failed `createClient` validation.
+- **Fluid CPU reduction**: Replaced serverless `redirect()` functions in `app/terminal/prop-buildings/` with CDN-level wildcard 301 redirects in `next.config.mjs` (`/terminal/prop-buildings/:slug*` → `/terminal/buildings/:slug*`). Zero Active CPU cost. Deleted old redirect pages. Updated `sitemap.ts` to emit `/terminal/buildings/` URLs directly. ~87.5% of CPU hits were these redirects.
+- Deployment green after 5 consecutive ERROR builds. Commit `c306c71`.
+
 ## 23 June 2026 — nc_buildings enrichment: area assignment + sweep round 2
 
 *Built by Claude Code*
