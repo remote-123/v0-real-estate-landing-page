@@ -18,6 +18,7 @@ import fs from "fs"
 import path from "path"
 import { parse } from "csv-parse/sync"
 import { sql } from "./db-client"
+import { normalizeTransGroup, normalizePropertyType, offplanToRegType } from "../../lib/dld-normalize"
 
 const CSV_PATH = process.argv[2]
 if (!CSV_PATH) {
@@ -62,13 +63,13 @@ function transformRow(row: Record<string, string>) {
     transaction_id: nullify(row["TRANSACTION_NUMBER"]),
     procedure_id: null,
     trans_group_id: null,
-    trans_group_en: nullify(row["GROUP_EN"]),
+    trans_group_en: normalizeTransGroup(nullify(row["GROUP_EN"])),
     procedure_name_en: nullify(row["PROCEDURE_EN"]),
     instance_date: parseDate(row["INSTANCE_DATE"]),
-    property_type_en: nullify(row["PROP_TYPE_EN"]),
+    property_type_en: normalizePropertyType(nullify(row["PROP_TYPE_EN"]), nullify(row["PROP_SB_TYPE_EN"])),
     property_sub_type_en: nullify(row["PROP_SB_TYPE_EN"]),
     property_usage_en: nullify(row["USAGE_EN"]),
-    reg_type_en: nullify(row["IS_FREE_HOLD_EN"]),
+    reg_type_en: offplanToRegType(nullify(row["IS_OFFPLAN_EN"])),
     area_id: null,
     area_name_en: nullify(row["AREA_EN"]),
     building_name_en: nullify(row["PROJECT_EN"]),
@@ -139,6 +140,8 @@ async function main() {
           nearest_metro_en     = EXCLUDED.nearest_metro_en,
           property_usage_en    = EXCLUDED.property_usage_en,
           reg_type_en          = EXCLUDED.reg_type_en,
+          property_type_en     = EXCLUDED.property_type_en,
+          property_sub_type_en = EXCLUDED.property_sub_type_en,
           master_project_en    = EXCLUDED.master_project_en,
           project_name_en      = EXCLUDED.project_name_en,
           no_of_parties_role_1 = EXCLUDED.no_of_parties_role_1,
@@ -154,8 +157,9 @@ async function main() {
   }
   console.log(`\nDone. Upserted ${upserted}, skipped ${skipped}`)
 
+  // CONCURRENTLY keeps pages readable during refresh (needs mv_txn_monthly_uk unique index)
   console.log("Refreshing mv_txn_monthly...")
-  await sql`REFRESH MATERIALIZED VIEW mv_txn_monthly`
+  await sql`REFRESH MATERIALIZED VIEW CONCURRENTLY mv_txn_monthly`
   console.log("Refreshing mv_txn_monthly_unified...")
   await sql`REFRESH MATERIALIZED VIEW CONCURRENTLY mv_txn_monthly_unified`
 
@@ -169,6 +173,18 @@ async function main() {
   console.log(`New latest mv_txn_monthly_unified month: ${month?.m}`)
 
   await sql.end()
+
+  // Bust terminal page caches so the live site shows the new data immediately
+  const siteUrl = process.env.SITE_URL ?? "https://www.northcapitaldxb.com"
+  try {
+    const res = await fetch(`${siteUrl}/api/admin/revalidate-terminal`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${process.env.CRON_SECRET}` },
+    })
+    console.log(`Revalidate /terminal: ${res.status} ${(await res.text()).slice(0, 200)}`)
+  } catch (e) {
+    console.error("Revalidate failed — pages will update when caches expire (≤24h):", e)
+  }
 }
 
 main().catch((e) => {

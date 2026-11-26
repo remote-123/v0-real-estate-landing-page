@@ -7,8 +7,8 @@
  * ACTUAL_AREA, ROOMS_EN, PARKING, NEAREST_METRO_EN, NEAREST_MALL_EN,
  * NEAREST_LANDMARK_EN, TOTAL_BUYER, TOTAL_SELLER, MASTER_PROJECT_EN, PROJECT_EN).
  *
- * Upserts into dld_transactions, then refreshes mv_txn_monthly and
- * mv_txn_monthly_unified concurrently.
+ * Upserts into dld_transactions, refreshes mv_txn_monthly then
+ * mv_txn_monthly_unified (concurrently), and busts all /terminal page caches.
  *
  * Auth: admin session OR admin_auth cookie.
  */
@@ -19,20 +19,7 @@ import { revalidatePath } from 'next/cache'
 import { parse } from 'csv-parse/sync'
 import { sql } from '@/lib/db'
 import { auth } from '@/auth'
-
-/** Terminal paths to revalidate after transaction ingestion */
-const TXN_DEPENDENT_PATHS = [
-  '/terminal/transaction-pulse',
-  '/terminal/communities',
-  '/terminal/area-momentum',
-  '/terminal/market-pulse',
-  '/terminal/floor-plan-pricer',
-  '/terminal/liquidity',
-  '/terminal/bear-cases',
-  '/terminal/bull-cases',
-  '/terminal/developer-track',
-  '/terminal/calculators',
-]
+import { normalizeTransGroup, normalizePropertyType, offplanToRegType } from '@/lib/dld-normalize'
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? '').split(',').map(e => e.trim().toLowerCase())
 const BATCH_SIZE = 300
@@ -112,13 +99,13 @@ function transformRow(row: Record<string, string>): TransactionRow {
     transaction_id: nullify(row['TRANSACTION_NUMBER']),
     procedure_id: null,
     trans_group_id: null,
-    trans_group_en: nullify(row['GROUP_EN']),
+    trans_group_en: normalizeTransGroup(nullify(row['GROUP_EN'])),
     procedure_name_en: nullify(row['PROCEDURE_EN']),
     instance_date: parseDate(row['INSTANCE_DATE']),
-    property_type_en: nullify(row['PROP_TYPE_EN']),
+    property_type_en: normalizePropertyType(nullify(row['PROP_TYPE_EN']), nullify(row['PROP_SB_TYPE_EN'])),
     property_sub_type_en: nullify(row['PROP_SB_TYPE_EN']),
     property_usage_en: nullify(row['USAGE_EN']),
-    reg_type_en: nullify(row['IS_FREE_HOLD_EN']),
+    reg_type_en: offplanToRegType(nullify(row['IS_OFFPLAN_EN'])),
     area_id: null,
     area_name_en: nullify(row['AREA_EN']),
     building_name_en: nullify(row['PROJECT_EN']),
@@ -217,6 +204,8 @@ export async function POST(req: NextRequest) {
           nearest_metro_en     = EXCLUDED.nearest_metro_en,
           property_usage_en    = EXCLUDED.property_usage_en,
           reg_type_en          = EXCLUDED.reg_type_en,
+          property_type_en     = EXCLUDED.property_type_en,
+          property_sub_type_en = EXCLUDED.property_sub_type_en,
           master_project_en    = EXCLUDED.master_project_en,
           project_name_en      = EXCLUDED.project_name_en,
           no_of_parties_role_1 = EXCLUDED.no_of_parties_role_1,
@@ -233,6 +222,8 @@ export async function POST(req: NextRequest) {
   // Refresh materialized views
   let refreshError: string | null = null
   try {
+    // Unified view is built from mv_txn_monthly — refresh the base first or no new months appear
+    await sql`REFRESH MATERIALIZED VIEW CONCURRENTLY mv_txn_monthly`
     await sql`REFRESH MATERIALIZED VIEW CONCURRENTLY mv_txn_monthly_unified`
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e)
@@ -241,9 +232,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Bust all terminal page caches that depend on transaction data
-  for (const p of TXN_DEPENDENT_PATHS) {
-    revalidatePath(p)
-  }
+  revalidatePath('/terminal', 'layout')
 
   // New last date
   const [latest] = await sql<{ latest_date: string | null }[]>`
@@ -257,6 +246,6 @@ export async function POST(req: NextRequest) {
     skipped,
     new_latest_date: latest?.latest_date ?? null,
     refresh_error: refreshError,
-    paths_revalidated: TXN_DEPENDENT_PATHS.length,
+    revalidated: '/terminal (layout)',
   })
 }

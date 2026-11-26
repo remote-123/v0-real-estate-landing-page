@@ -65,7 +65,7 @@
 
 Fixed by creating a dedicated database per project on the shared cluster, matching how `layoverclub` was already set up: this project now lives in `northcapital_dxb`, `layoverclub` in its own `layoverclub` database, both on `main-postgres` under the same shared `doadmin` user (isolation is by database name, not by DB role — matches existing precedent, no new role created). **Convention going forward: any new project added to this cluster gets `CREATE DATABASE <project_slug>` before any tables are created — never write into `defaultdb`.**
 
-Old tables were left in `defaultdb` for a 48h rollback window (past 2026-07-28) before being dropped, along with the dead `neon_auth` schema — see `memory/project_db_migration.md` for exact commands.
+Old tables were left in `defaultdb` for a 48h rollback window (past 2026-07-28) before being dropped, along with the dead `neon_auth` schema — see `memory/project_db_migration.md` for exact commands. **Done 2026-10-15:** 43 tables, 2 matviews, 1 view, `neon_auth` schema and `refresh_mv_*` functions dropped from `defaultdb` (only `pets` remains), after an Oct ingest silently landed there via a stale `.env.local`.
 
 ## ADR-005 — Single CRON_SECRET (2026-03-25)
 **Decision**: Consolidate CRON_SECRET2 (used for fetch-listings) into single CRON_SECRET.
