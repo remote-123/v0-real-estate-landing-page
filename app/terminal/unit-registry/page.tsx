@@ -1,13 +1,12 @@
 import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { sql } from "@/lib/db"
 import { unstable_cache } from 'next/cache'
-import { auth } from "@/auth"
 import { isTerminalUnlocked } from "@/lib/terminal-gate"
 import { Building2 } from "lucide-react"
 import { UnitRegistryClient } from "@/components/terminal/unit-registry-client"
 import Link from "next/link"
 
-export const dynamic = "force-dynamic"
+export const revalidate = 3600
 
 export async function generateMetadata() {
   return terminalPageMeta({
@@ -36,8 +35,8 @@ const fetchAreaList = unstable_cache(
 )
 
 export default async function UnitRegistryPage() {
-  const [session, areas] = await Promise.all([auth(), fetchAreaList()])
-  const isAuthenticated = await isTerminalUnlocked(session)
+  const areas = await fetchAreaList()
+  const isAuthenticated = await isTerminalUnlocked(null)
 
   return (
     <>

@@ -4,11 +4,10 @@ import { sql } from "@/lib/db"
 import { unstable_cache } from 'next/cache'
 import { FileText, ChevronRight, ChevronLeft } from "lucide-react"
 import Link from "next/link"
-import { auth } from "@/auth"
 import { isTerminalUnlocked } from "@/lib/terminal-gate"
 import { GatedTableOverlay } from "@/components/auth/gated-table-overlay"
 
-export const dynamic = "force-dynamic"
+export const revalidate = 3600
 
 interface Briefing {
   id: number
@@ -97,10 +96,10 @@ export default async function BriefingPage({ params }: { params: Promise<{ id: s
   const id = Number(idStr)
   if (!Number.isInteger(id) || id < 1) notFound()
 
-  const [session, { briefing, nav }] = await Promise.all([auth(), fetchBriefing(id)])
+  const { briefing, nav } = await fetchBriefing(id)
   if (!briefing) notFound()
 
-  const isAuthenticated = await isTerminalUnlocked(session)
+  const isAuthenticated = await isTerminalUnlocked(null)
 
   return (
     <div className="space-y-6 pb-24 lg:pb-10 px-6 sm:px-0">

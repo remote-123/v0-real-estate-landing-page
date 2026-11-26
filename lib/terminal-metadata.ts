@@ -1,8 +1,9 @@
 /**
  * Domain-aware metadata helper for terminal pages.
- * Reads x-site header (set by middleware.ts) and returns
- * the correct site name, metadataBase, and OG URL for
- * thecityregistry.com vs northcapitaldxb.com.
+ * Returns the site name, metadataBase, and OG URL. Values are constant so
+ * terminal pages stay statically cacheable (reading headers() here used to
+ * force every terminal page to render on every request). The old
+ * thecityregistry.com host split is retired; isCR is kept for callers.
  *
  * Usage:
  *   export async function generateMetadata() {
@@ -10,18 +11,14 @@
  *   }
  */
 
-import { headers } from "next/headers"
 import type { Metadata } from "next"
+
+const SITE_NAME = "North Capital DXB"
+const BASE = "https://www.northcapitaldxb.com"
 
 /** Lightweight helper for pages that need site info without full metadata construction. */
 export async function getTerminalSiteInfo(): Promise<{ siteName: string; base: string; isCR: boolean }> {
-  const h = await headers()
-  const isCR = (h.get("x-site") ?? "") === "cityregistry"
-  return {
-    isCR,
-    siteName: isCR ? "The City Registry" : "North Capital DXB",
-    base: isCR ? "https://thecityregistry.com" : "https://www.northcapitaldxb.com",
-  }
+  return { isCR: false, siteName: SITE_NAME, base: BASE }
 }
 
 export async function terminalPageMeta(opts: {
@@ -29,10 +26,8 @@ export async function terminalPageMeta(opts: {
   description: string
   path: string        // e.g. "/terminal/area-momentum"
 }): Promise<Metadata> {
-  const h = await headers()
-  const isCR = (h.get("x-site") ?? "") === "cityregistry"
-  const siteName = isCR ? "The City Registry" : "North Capital DXB"
-  const base = isCR ? "https://thecityregistry.com" : "https://www.northcapitaldxb.com"
+  const siteName = SITE_NAME
+  const base = BASE
 
   return {
     title: `${opts.title} | ${siteName}`,

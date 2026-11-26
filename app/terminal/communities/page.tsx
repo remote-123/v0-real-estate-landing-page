@@ -5,14 +5,13 @@ import { type Community } from '@/lib/types/community'
 import { sql } from '@/lib/db'
 import { unstable_cache } from 'next/cache'
 import { formatAreaName } from '@/lib/area-names'
-import { auth } from '@/auth'
 import { isTerminalUnlocked } from '@/lib/terminal-gate'
 import Link from 'next/link'
 import { DUBAI_COMMUNITIES, FEATURED_COMMUNITIES, type DubaiCommunity } from '@/lib/area-data/dubai-communities'
 import { TrendingUp, Zap, BarChart3 } from 'lucide-react'
 import { StatCard } from '@/components/terminal/stat-card'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 3600
 
 export async function generateMetadata() {
   return terminalPageMeta({
@@ -249,8 +248,8 @@ function SectorSection({ sector, communities, liveDataSlugs }: SectorSectionProp
 }
 
 export default async function CommunitiesPage() {
-  const [session, allData] = await Promise.all([auth(), fetchCommunities()])
-  const isAuthenticated = await isTerminalUnlocked(session)
+  const allData = await fetchCommunities()
+  const isAuthenticated = await isTerminalUnlocked(null)
   const data = isAuthenticated ? allData : allData.slice(0, FREE_ROWS)
 
   const totalTxns = allData.reduce((s, c) => s + (c.transactions30d || 0), 0)

@@ -7,6 +7,28 @@
 > 3. **Mandatory Signature:** Every entry must explicitly state the tool name at the start (e.g., *"Built by Antigravity"*, *"Built by Claude Code"*, or *"Built by Cursor"*).
 
 
+## 26 November 2026 — Cut Vercel Fluid CPU: make terminal pages cacheable
+
+*Built by Claude Code*
+
+- Vercel CPU-limit alert. Cause: the root `app/layout.tsx` called `auth()` (cookies), so **every page site-wide rendered on every request**. ISR on the ~8k building pages and others had no effect. The terminal pages also called `auth()` for a gate that is disabled (`isTerminalUnlocked` always returns true), and they read the `x-site` header through `lib/terminal-metadata.ts`. Fixes: removed root-layout `auth()` (SessionProvider now fetches the session client-side), stripped `auth()` from 17 terminal pages, made the site-info helpers constant, deleted the no-op `proxy.ts`, and switched 14 pages from `force-dynamic` to `revalidate = 3600`. The build now shows them as ○/● static/ISR.
+- Kept dynamic: `/terminal/buildings` and `/terminal/distress-deals` (they use searchParams) and `/terminal/floor-plan-pricer` (its percentile query takes ~106s on 1.7M rows and times out static generation; data is cached 24h). AI crawlers deliberately left unblocked (lead source). Check Vercel Usage daily CPU 2–3 days after deploy.
+
+## 18 October 2026 — Normalise new data.dubai transaction format to historical vocab
+
+*Built by Claude Code*
+
+- Mortgage bars vanished from transaction-pulse after Feb 2026. Cause: the new export (rows from 2026-02-16) differs from the historical data: `GROUP_EN` says `Mortgage` not `Mortgages`; villas come as `Building` + sub-type `Villa` instead of type `Villa`; and the ingest had mapped `IS_FREE_HOLD_EN` into `reg_type_en` instead of `IS_OFFPLAN_EN`. Added `lib/dld-normalize.ts` and used it in both `/api/admin/ingest-transactions` and `dld_transactions_csv_v2.ts`; the upsert now also overwrites `property_type_en`/`property_sub_type_en`.
+- Prod repair: 24,742 rows → `Mortgages`, 10,233 rows → `Villa`, and re-ingested the two local CSVs (Mar 1–22, Jun 17–Oct 3) to fix `reg_type_en`; matviews refreshed. **Still wrong:** ~56.7k rows (Feb 16–28, Mar 23–Jun 16) keep `Free Hold`/`Non Free Hold` in `reg_type_en` because no source CSV exists locally. Needs a re-export from data.dubai and a run through the script.
+
+## 15 October 2026 — Fix: Oct `dld_transactions` refresh had landed in wrong DB
+
+*Built by Claude Code*
+
+- The 03 Oct refresh (below) wrote to `defaultdb`, not prod `northcapital_dxb`, because `.env.local` `DATABASE_URL` still ended in `/defaultdb` after the 26 Jul split. Live transaction-pulse was still showing June 2026.
+- Upserted 61,292 rows (`instance_date >= 2026-06-17`) from `defaultdb` → `northcapital_dxb` on `transaction_id`. Counts now match (1,793,174, max 2026-10-03). Ran a plain (non-concurrent) `REFRESH` on both matviews, because CONCURRENTLY fails: no unique index on `mv_txn_monthly`. User fixed `.env.local` → `/northcapital_dxb`.
+- Cleanup + hardening: dropped all project tables, matviews, the view, the `neon_auth` schema and the `refresh_mv_*` functions from `defaultdb` (1.4 GB → 10 MB, only `pets` left; DO daily backups through Oct 14). `scripts/ingest/db-client.ts` now exits unless the DB is `northcapital_dxb`. Replaced the partial unique index with `mv_txn_monthly_uk` so both matviews refresh CONCURRENTLY (no read lock under traffic). Fixed `/api/admin/ingest-transactions`, which only refreshed the unified view so uploads never added new months; it now refreshes the base view first. New `/api/admin/revalidate-terminal` (Bearer CRON_SECRET) busts all `/terminal` caches and is called at the end of `dld_transactions_csv_v2.ts`. Fixed vault notes that still listed `defaultdb`.
+
 ## 03 October 2026 — Refreshed `dld_transactions`, closed 3.5-month stale gap
 
 *Built by Claude Code*

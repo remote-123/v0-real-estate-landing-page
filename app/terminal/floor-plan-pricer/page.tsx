@@ -2,10 +2,12 @@ import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { sql } from "@/lib/db"
 import { unstable_cache } from 'next/cache'
 import { PricerControls } from "@/components/terminal/pricer-controls"
-import { auth } from "@/auth"
 import { isTerminalUnlocked } from "@/lib/terminal-gate"
 
-export const dynamic = 'force-dynamic'
+// Stays dynamic: the percentile query takes ~100s on 1.7M rows, which times out
+// static generation at build. Data is cached 24h via unstable_cache, so a
+// request only costs the render.
+export const dynamic = "force-dynamic"
 
 export async function generateMetadata() {
   return terminalPageMeta({
@@ -63,8 +65,8 @@ const fetchPricerData = unstable_cache(
 const FREE_ROWS = 3
 
 export default async function FloorPlanPricerPage() {
-  const [session, allRows] = await Promise.all([auth(), fetchPricerData()])
-  const isAuthenticated = await isTerminalUnlocked(session)
+  const allRows = await fetchPricerData()
+  const isAuthenticated = await isTerminalUnlocked(null)
   const rows = isAuthenticated ? allRows : allRows.slice(0, FREE_ROWS)
 
   const totalTxns = allRows.reduce((sum, r) => sum + r.txn_count, 0)

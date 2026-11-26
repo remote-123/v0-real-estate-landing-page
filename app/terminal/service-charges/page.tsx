@@ -4,10 +4,9 @@ import { unstable_cache } from 'next/cache'
 import { Building2, Calendar, MapPin, Layers } from "lucide-react"
 import { StatCard } from "@/components/terminal/stat-card"
 import { ServiceChargesTable } from "@/components/terminal/service-charges-table"
-import { auth } from "@/auth"
 import { isTerminalUnlocked } from "@/lib/terminal-gate"
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 3600
 
 export async function generateMetadata() {
   return terminalPageMeta({
@@ -57,8 +56,8 @@ const fetchServiceCharges = unstable_cache(
 const FREE_ROWS = 5
 
 export default async function ServiceChargesPage() {
-  const [session, allRows] = await Promise.all([auth(), fetchServiceCharges()])
-  const isAuthenticated = await isTerminalUnlocked(session)
+  const allRows = await fetchServiceCharges()
+  const isAuthenticated = await isTerminalUnlocked(null)
   const rows = isAuthenticated ? allRows : allRows.slice(0, FREE_ROWS)
 
   // Headline stats

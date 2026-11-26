@@ -5,11 +5,10 @@ import { unstable_cache } from 'next/cache'
 import { StatCard } from "@/components/terminal/stat-card"
 import { TransactionPulseChart, type MonthlyRow } from "@/components/terminal/transaction-pulse-chart"
 import { TransactionHeatmap } from "@/components/terminal/transaction-heatmap"
-import { auth } from "@/auth"
 import { GatedTableOverlay } from "@/components/auth/gated-table-overlay"
 import { isTerminalUnlocked } from "@/lib/terminal-gate"
 
-export const dynamic = "force-dynamic"
+export const revalidate = 3600
 
 export async function generateMetadata() {
   return terminalPageMeta({
@@ -97,8 +96,8 @@ function fmtPct(v: number | null): { label: string; dir: "up" | "down" | "neutra
 }
 
 export default async function TransactionPulsePage() {
-  const [session, { monthly, daily }, { siteName, base }] = await Promise.all([auth(), fetchData(), getTerminalSiteInfo()])
-  const isAuthenticated = await isTerminalUnlocked(session)
+  const [{ monthly, daily }, { siteName, base }] = await Promise.all([fetchData(), getTerminalSiteInfo()])
+  const isAuthenticated = await isTerminalUnlocked(null)
   const stats = deriveStats(monthly)
   const mom = fmtPct(stats.mom)
   const yoy = fmtPct(stats.yoy)

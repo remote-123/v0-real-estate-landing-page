@@ -2,13 +2,12 @@ import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { sql } from "@/lib/db"
 import { unstable_cache } from 'next/cache'
 import { formatAreaName } from "@/lib/area-names"
-import { auth } from "@/auth"
 import { isTerminalUnlocked } from "@/lib/terminal-gate"
 import { GatedTableOverlay } from "@/components/auth/gated-table-overlay"
 import Link from "next/link"
 import { AlertTriangle, TrendingDown, Building2, BarChart3 } from "lucide-react"
 
-export const dynamic = "force-dynamic"
+export const revalidate = 3600
 
 export async function generateMetadata() {
   return terminalPageMeta({
@@ -164,8 +163,8 @@ function pipelineMonths(units: number, txn12m: number): number {
 const FREE_ROWS = 5
 
 export default async function BearCasesPage() {
-  const [session, rows] = await Promise.all([auth(), fetchBearCases()])
-  const isAuthenticated = await isTerminalUnlocked(session)
+  const rows = await fetchBearCases()
+  const isAuthenticated = await isTerminalUnlocked(null)
   const display = isAuthenticated ? rows : rows.slice(0, FREE_ROWS)
 
   const totalAnalyzed = rows.length

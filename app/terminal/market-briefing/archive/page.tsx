@@ -3,11 +3,10 @@ import { sql } from "@/lib/db"
 import { unstable_cache } from 'next/cache'
 import { FileText, ChevronRight } from "lucide-react"
 import Link from "next/link"
-import { auth } from "@/auth"
 import { GatedTableOverlay } from "@/components/auth/gated-table-overlay"
 import { isTerminalUnlocked } from "@/lib/terminal-gate"
 
-export const dynamic = "force-dynamic"
+export const revalidate = 3600
 
 export async function generateMetadata() {
   return terminalPageMeta({
@@ -64,8 +63,8 @@ function formatDate(iso: string): string {
 const FREE_ROWS = 3
 
 export default async function MarketBriefingArchivePage() {
-  const [session, briefings] = await Promise.all([auth(), fetchBriefings()])
-  const isAuthenticated = await isTerminalUnlocked(session)
+  const briefings = await fetchBriefings()
+  const isAuthenticated = await isTerminalUnlocked(null)
   const display = isAuthenticated ? briefings : briefings.slice(0, FREE_ROWS)
 
   return (

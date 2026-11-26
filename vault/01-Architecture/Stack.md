@@ -21,14 +21,13 @@ const sql = postgres(DATABASE_URL, { ssl: 'require', max: 1 })
 ```
 `DATABASE_URL` = DO Managed Postgres connection string (Vercel env).
 Host: `main-postgres-do-user-38763524-0.f.db.ondigitalocean.com:25060`
-DB: `defaultdb`, User: `doadmin`
+DB: `northcapital_dxb`, User: `doadmin` (dedicated DB since 2026-07-26; `defaultdb` is not ours)
 
 > pg_dump/psql work directly against DO — no special integration needed. Use connection string from DO MCP or DO dashboard.
 
-## Multi-Domain Split
-- `northcapitaldxb.com` — agency/advisory brand
-- `thecityregistry.com` — data platform brand (same codebase)
-- `middleware.ts` detects `host` header → sets `x-site` header (`cityregistry` | `northcapital`)
+## Multi-Domain Split (retired)
+- `thecityregistry.com` split is retired. `proxy.ts` (formerly `middleware.ts`) was removed 2026-11-26; `lib/terminal-metadata.ts` returns constant North Capital DXB values.
+- **Do not reintroduce `headers()`/`cookies()`/`auth()` in the root layout or terminal pages**: any of them makes every page render on every request and blows through Vercel Hobby's Fluid Active CPU limit. The session is fetched client-side by `SessionProvider`.
 
 ## Key Env Vars
 | Var | Purpose |

@@ -5,7 +5,6 @@ import { DistressFilters } from "@/components/terminal/distress-filters"
 import { EmailCaptureWidget } from "@/components/terminal/email-capture-widget"
 import { sql } from "@/lib/db"
 import { unstable_cache } from 'next/cache'
-import { auth } from "@/auth"
 import { isTerminalUnlocked } from "@/lib/terminal-gate"
 
 // ── DB fetch (replaces live PF API calls) ─────────────────────────────────────
@@ -134,11 +133,10 @@ export default async function DistressDealsPage(props: {
     const sortFilter = typeof searchParams.sort === 'string' ? searchParams.sort : 'biggest-drop'
     const areaFilter = typeof searchParams.area === 'string' ? searchParams.area : ''
 
-    const [rawFetched, session] = await Promise.all([
+    const [rawFetched] = await Promise.all([
         fetchDistressListings(),
-        auth(),
     ])
-    const isAuthenticated = await isTerminalUnlocked(session)
+    const isAuthenticated = await isTerminalUnlocked(null)
 
     let rawDeals = rawFetched.map((deal: any) => {
         const { score: distressScore, tags: distressTags } = scoreDistress(

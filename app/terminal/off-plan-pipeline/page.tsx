@@ -3,7 +3,6 @@ import { sql } from "@/lib/db"
 import { formatAreaName } from "@/lib/area-names"
 import { StatCard } from "@/components/terminal/stat-card"
 import { Building2, BarChart3, Map } from "lucide-react"
-import { auth } from "@/auth"
 import { GatedTableOverlay } from "@/components/auth/gated-table-overlay"
 import { isTerminalUnlocked } from "@/lib/terminal-gate"
 
@@ -140,12 +139,11 @@ function formatYear(dateStr: string | null): string {
 const FREE_ROWS = 5
 
 export default async function OffPlanPipelinePage() {
-  const [session, areas, stats] = await Promise.all([
-    auth(),
+  const [areas, stats] = await Promise.all([
     fetchPipelineByArea(),
     fetchPipelineStats(),
   ])
-  const isAuthenticated = await isTerminalUnlocked(session)
+  const isAuthenticated = await isTerminalUnlocked(null)
   const display = isAuthenticated ? areas : areas.slice(0, FREE_ROWS)
 
   const totalUnits = stats?.total_off_plan_units ?? 0

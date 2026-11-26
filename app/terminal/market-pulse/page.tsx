@@ -2,7 +2,6 @@ import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { sql } from "@/lib/db"
 import { unstable_cache } from 'next/cache'
 import { formatAreaName } from "@/lib/area-names"
-import { auth } from "@/auth"
 import { isTerminalUnlocked } from "@/lib/terminal-gate"
 import { GatedTableOverlay } from "@/components/auth/gated-table-overlay"
 import Link from "next/link"
@@ -17,7 +16,7 @@ import {
   Layers,
 } from "lucide-react"
 
-export const dynamic = "force-dynamic"
+export const revalidate = 3600
 
 export async function generateMetadata() {
   return terminalPageMeta({
@@ -425,8 +424,8 @@ function scoreBar(score: number, max: number, color: string) {
 // ── Page ───────────────────────────────────────────────────────────────────────
 
 export default async function MarketPulsePage() {
-  const [session, data] = await Promise.all([auth(), fetchPulseData()])
-  const isAuthenticated = await isTerminalUnlocked(session)
+  const data = await fetchPulseData()
+  const isAuthenticated = await isTerminalUnlocked(null)
 
   if (!data) {
     return (

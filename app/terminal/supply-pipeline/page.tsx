@@ -4,11 +4,10 @@ import { unstable_cache } from 'next/cache'
 import { Building2, CalendarClock, Layers, MapPin } from "lucide-react"
 import { StatCard } from "@/components/terminal/stat-card"
 import { SupplyPipelineTable } from "@/components/terminal/supply-pipeline-table"
-import { auth } from "@/auth"
 import { GatedTableOverlay } from "@/components/auth/gated-table-overlay"
 import { isTerminalUnlocked } from "@/lib/terminal-gate"
 
-export const dynamic = "force-dynamic"
+export const revalidate = 3600
 
 export async function generateMetadata() {
   return terminalPageMeta({
@@ -88,8 +87,8 @@ function computeStats(projects: Project[]) {
 const FREE_ROWS = 5
 
 export default async function SupplyPipelinePage() {
-  const [session, { active, completedCount }] = await Promise.all([auth(), fetchProjects()])
-  const isAuthenticated = await isTerminalUnlocked(session)
+  const { active, completedCount } = await fetchProjects()
+  const isAuthenticated = await isTerminalUnlocked(null)
   const { totalUnits, due12m, topArea } = computeStats(active)
   const display = isAuthenticated ? active : active.slice(0, FREE_ROWS)
 

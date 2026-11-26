@@ -4,12 +4,11 @@ import { unstable_cache } from 'next/cache'
 import { Building2, TrendingUp, BarChart3 } from "lucide-react"
 import { StatCard } from "@/components/terminal/stat-card"
 import { formatAreaName } from "@/lib/area-names"
-import { auth } from "@/auth"
 import { GatedTableOverlay } from "@/components/auth/gated-table-overlay"
 import { isTerminalUnlocked } from "@/lib/terminal-gate"
 import { getDeveloperProfile, TYPE_COLORS } from "@/lib/area-data/developer-profiles"
 
-export const dynamic = "force-dynamic"
+export const revalidate = 3600
 
 export async function generateMetadata() {
   return terminalPageMeta({
@@ -91,9 +90,9 @@ function pipelineBar(pipeline: number, total: number): string {
 const FREE_ROWS = 5
 
 export default async function DeveloperTrackPage() {
-  const [session, { developers, totalDevelopers, topDeveloper, avgProjectUnits }, { siteName, base }] =
-    await Promise.all([auth(), fetchDeveloperData(), getTerminalSiteInfo()])
-  const isAuthenticated = await isTerminalUnlocked(session)
+  const [{ developers, totalDevelopers, topDeveloper, avgProjectUnits }, { siteName, base }] =
+    await Promise.all([fetchDeveloperData(), getTerminalSiteInfo()])
+  const isAuthenticated = await isTerminalUnlocked(null)
   const display = isAuthenticated ? developers : developers.slice(0, FREE_ROWS)
 
   const topDevUnits = developers[0]?.total_units ?? 0

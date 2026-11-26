@@ -6,11 +6,10 @@ import { StatCard } from "@/components/terminal/stat-card"
 import { LiquidityChart, type LiquidityPoint } from "@/components/terminal/liquidity-chart"
 import { formatAreaName } from "@/lib/area-names"
 import { cn } from "@/lib/utils"
-import { auth } from "@/auth"
 import { GatedTableOverlay } from "@/components/auth/gated-table-overlay"
 import { isTerminalUnlocked } from "@/lib/terminal-gate"
 
-export const dynamic = "force-dynamic"
+export const revalidate = 3600
 
 export async function generateMetadata() {
   return terminalPageMeta({
@@ -123,8 +122,8 @@ function riskLabel(ratio: number): { label: string; color: string } {
 const FREE_ROWS = 5
 
 export default async function LiquidityPage() {
-  const [session, { monthly, areas }] = await Promise.all([auth(), fetchData()])
-  const isAuthenticated = await isTerminalUnlocked(session)
+  const { monthly, areas } = await fetchData()
+  const isAuthenticated = await isTerminalUnlocked(null)
   const displayAreas = isAuthenticated ? areas : areas.slice(0, FREE_ROWS)
   const pivoted = pivotMonthly(monthly)
   const kpis = deriveKpis(pivoted)

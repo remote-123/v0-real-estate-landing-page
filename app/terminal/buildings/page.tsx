@@ -4,7 +4,6 @@ import { unstable_cache } from 'next/cache'
 import { BuildingsTable } from '@/components/terminal/buildings-table'
 import { AreaSelector } from '@/components/terminal/area-selector'
 import { BuildingsFilters } from '@/components/terminal/buildings-filters'
-import { auth } from "@/auth"
 import { GatedTableOverlay } from "@/components/auth/gated-table-overlay"
 import { isTerminalUnlocked } from "@/lib/terminal-gate"
 import { Suspense } from 'react'
@@ -253,14 +252,13 @@ export default async function BuildingsPage({
     filters.status, filters.grade, filters.type, filters.freehold, filters.yearFrom, filters.yearTo,
   ].filter(Boolean).length
 
-  const [session, { rows: buildings, total }, areas, stats] = await Promise.all([
-    auth(),
+  const [{ rows: buildings, total }, areas, stats] = await Promise.all([
     fetchBuildings(filters, page),
     fetchAreas(),
     fetchStats(),
   ])
 
-  const isAuthenticated = await isTerminalUnlocked(session)
+  const isAuthenticated = await isTerminalUnlocked(null)
   const display = isAuthenticated ? buildings : buildings.slice(0, FREE_ROWS)
 
   const totalPages = Math.ceil(total / PAGE_SIZE)

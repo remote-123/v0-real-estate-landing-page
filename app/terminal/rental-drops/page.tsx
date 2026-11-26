@@ -2,10 +2,9 @@ import { terminalPageMeta } from "@/lib/terminal-metadata"
 import { RentalTable, type RentalListing } from "@/components/terminal/rental-table"
 import { sql } from "@/lib/db"
 import { unstable_cache } from 'next/cache'
-import { auth } from "@/auth"
 import { isTerminalUnlocked } from "@/lib/terminal-gate"
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 3600
 
 export async function generateMetadata() {
   return terminalPageMeta({
@@ -92,8 +91,8 @@ const fetchAllListings = unstable_cache(
 const FREE_ROWS = 3
 
 export default async function RentalDropsPage() {
-    const [session, allListings] = await Promise.all([auth(), fetchAllListings()])
-    const isAuthenticated = await isTerminalUnlocked(session)
+    const allListings = await fetchAllListings()
+    const isAuthenticated = await isTerminalUnlocked(null)
     const listings = isAuthenticated ? allListings : allListings.slice(0, FREE_ROWS)
 
     const bayutCount = allListings.filter(l => l.source === "bayut").length
